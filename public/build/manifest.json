@@ -1,0 +1,30 @@
+{
+  "_vendor-Cm4okMZt.js": {
+    "file": "assets/vendor-Cm4okMZt.js",
+    "name": "vendor"
+  },
+  "resources/css/app.css": {
+    "file": "assets/app-8_UHVGhp.css",
+    "src": "resources/css/app.css",
+    "isEntry": true
+  },
+  "resources/css/filament/admin/theme.css": {
+    "file": "assets/theme-C3AtCrZs.css",
+    "src": "resources/css/filament/admin/theme.css",
+    "isEntry": true
+  },
+  "resources/css/modern-form.css": {
+    "file": "assets/modern-form-JP-1zXLG.css",
+    "src": "resources/css/modern-form.css",
+    "isEntry": true
+  },
+  "resources/js/app.js": {
+    "file": "assets/app-AFyXQBEv.js",
+    "name": "app",
+    "src": "resources/js/app.js",
+    "isEntry": true,
+    "imports": [
+      "_vendor-Cm4okMZt.js"
+    ]
+  }
+}
