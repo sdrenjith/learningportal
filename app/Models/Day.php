@@ -1,0 +1,35 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Day extends Model
+{
+    protected $fillable = ['title', 'date', 'course_id', 'day_number'];
+
+    public function course()
+    {
+        return $this->belongsTo(Course::class);
+    }
+
+    public function questions()
+    {
+        return $this->hasMany(Question::class);
+    }
+
+    public function courses()
+    {
+        // For compatibility with views expecting a collection
+        return $this->course() ? $this->course()->get() : collect();
+    }
+
+    protected static function booted()
+    {
+        static::saving(function ($day) {
+            if ($day->day_number) {
+                $day->title = 'Day ' . $day->day_number;
+            }
+        });
+    }
+}

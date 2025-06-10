@@ -1,0 +1,167 @@
+@import '../../app.css';
+/* Import the complete modern styling based on your custom design */
+@import url('../../modern-form.css');
+
+/* Core theme variables */
+:root {
+    --primary: 59 130 246;
+    --gray: 107 114 128;
+    --success: 16 185 129;
+    --danger: 239 68 68;
+    --warning: 245 158 11;
+    --info: 6 182 212;
+}
+
+/* Enhanced sidebar styling */
+.fi-sidebar {
+    background: linear-gradient(180deg, #1e293b 0%, #334155 100%);
+    border-right: 1px solid #334155;
+}
+
+.fi-topbar {
+    background: white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border-bottom: 1px solid #e5e7eb;
+}
+
+/* Enhanced navigation with your modern style */
+.fi-sidebar-nav-item {
+    border-radius: 10px;
+    margin: 6px 12px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.fi-sidebar-nav-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transition: left 0.5s ease;
+}
+
+.fi-sidebar-nav-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateX(6px) scale(1.02);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.fi-sidebar-nav-item:hover::before {
+    left: 100%;
+}
+
+.fi-sidebar-nav-item[aria-current="page"] {
+    background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+    box-shadow: 0 6px 12px rgba(59, 130, 246, 0.4);
+    transform: translateX(4px);
+}
+
+.fi-sidebar-nav-item[aria-current="page"]::before {
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+}
+
+/* Sidebar brand/logo area */
+.fi-sidebar-header {
+    padding: 1.5rem 1rem;
+    border-bottom: 1px solid #334155;
+    background: linear-gradient(135deg, #1e293b 0%, #2d3748 100%);
+}
+
+/* Navigation text styling */
+.fi-sidebar-nav-item-label {
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.fi-sidebar-nav-item:hover .fi-sidebar-nav-item-label {
+    font-weight: 600;
+}
+
+.fi-sidebar-nav-item[aria-current="page"] .fi-sidebar-nav-item-label {
+    font-weight: 700;
+    color: white;
+}
+
+/* Navigation icons */
+.fi-sidebar-nav-item-icon {
+    transition: all 0.3s ease;
+}
+
+.fi-sidebar-nav-item:hover .fi-sidebar-nav-item-icon {
+    transform: scale(1.1);
+}
+
+/* Collapsible sidebar groups */
+.fi-sidebar-group {
+    margin: 0.5rem 0;
+}
+
+.fi-sidebar-group-label {
+    color: #94a3b8;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.5rem 1rem;
+    margin-bottom: 0.25rem;
+}
+
+/* User menu/profile area styling */
+.fi-user-menu {
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+.fi-user-menu:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: scale(1.02);
+}
+
+/* Ensure all modern styling takes precedence */
+.fi-main-content {
+    background: #f8fafc;
+    min-height: 100vh;
+}
+
+/* Page wrapper for consistent spacing */
+.fi-page-wrapper {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+}
+
+/* Make sure tables inherit the modern styling */
+.fi-ta-table-container {
+    margin: 1.5rem 0;
+}
+
+/* Ensure form sections are properly spaced */
+.fi-form-section {
+    margin-bottom: 2rem;
+}
+
+/* Global animation for smooth transitions */
+* {
+    scroll-behavior: smooth;
+}
+
+/* Custom scrollbar for sidebar */
+.fi-sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.fi-sidebar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.fi-sidebar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+}
+
+.fi-sidebar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}

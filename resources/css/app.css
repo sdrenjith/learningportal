@@ -1,0 +1,321 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body, html {
+  font-family: 'Inter', 'Segoe UI', 'Roboto', Arial, sans-serif !important;
+}
+
+.fi-sidebar, .fi-sidebar-header {
+  background: #0a192f !important; /* dark blue (blackblue) */
+}
+
+.db-card {
+  background-color: #111827 !important; /* Tailwind gray-900 */
+  border-color: #1f2937 !important;      /* Tailwind gray-800 */
+  color: #fff !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.18), 0 1.5px 4px rgba(0,0,0,0.08);
+}
+
+.db-card a {
+  color: #60a5fa !important; /* Tailwind blue-400 */
+}
+
+.db-card a:hover {
+  color: #3b82f6 !important; /* Tailwind blue-500 */
+}
+
+.db-card:hover {
+    transform: translateY(-2px);
+}
+
+/* Sidebar menu text color */
+.fi-sidebar .fi-sidebar-item-label,
+.fi-sidebar .fi-sidebar-group-label,
+.fi-sidebar .fi-sidebar-group .fi-sidebar-group-items .fi-sidebar-item-label,
+.fi-sidebar .fi-sidebar-group .fi-sidebar-group-label,
+.fi-sidebar .fi-sidebar-group .fi-sidebar-group-items .fi-sidebar-item-label a,
+.fi-sidebar .fi-sidebar-group .fi-sidebar-group-items .fi-sidebar-item-label svg,
+.fi-sidebar .fi-sidebar-group .fi-sidebar-group-label a {
+  color: #fff !important;
+}
+
+/* Sidebar 'Available Courses' label and details - force white */
+.fi-sidebar .fi-sidebar-group-label,
+.fi-sidebar .fi-sidebar-group .fi-sidebar-group-items .fi-sidebar-item-label {
+  color: #fff !important;
+}
+
+.ac {
+    color: inherit !important;
+}
+
+.fi-main-ctn {
+  background: #fff !important;
+  border-left: 1px solid #e5e7eb !important; /* Tailwind gray-200 */
+}
+
+.fi-topbar, .fi-topbar nav {
+  background: #fff !important;
+}
+
+/* Modern clean Filament table style */
+.fi-ta-table-container {
+  background: #fff !important;
+  border: 1px solid #1a202c !important;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  border-radius: 16px !important;
+  overflow: hidden;
+}
+.fi-ta-table {
+  width: 100%;
+  background: #fff !important;
+  color: #1a202c !important;
+}
+.fi-ta-table thead tr {
+  background: #f9fafb !important;
+  color: #1a202c !important;
+}
+.fi-ta-table th, .fi-ta-table td {
+  padding: 1rem 0.75rem !important;
+  border-bottom: 1px solid #1a202c !important;
+  font-size: 1rem;
+  color: #1a202c !important;
+}
+.fi-ta-table tbody tr {
+  background: #fff !important;
+  transition: background 0.2s;
+  color: #1a202c !important;
+}
+.fi-ta-table tbody tr:hover {
+  background: #f3f4f6 !important;
+}
+.fi-ta-table input[type='checkbox'] {
+  accent-color: #374151 !important;
+  background: #fff !important;
+  border: 1px solid #1a202c !important;
+}
+.fi-ta-pagination {
+  background: #fff !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  border-bottom-left-radius: 16px;
+  border-bottom-right-radius: 16px;
+  color: #1a202c !important;
+}
+
+.fi-ta-header-cell-label {
+  color: #1a202c !important;
+}
+
+.fi-ta-text-item-label {
+  color: #1a202c !important;
+}
+
+.fi-ta-pagination-summary, .fi-ta-pagination-per-page, .fi-ta-pagination-per-page * {
+  color: #1a202c !important;
+}
+
+.fi-pagination-overview, .fi-input-wrp-label {
+  color: #1a202c !important;
+}
+
+/* Primary (Edit) button: dark blue */
+.fi-btn.fi-btn-color-primary, .fi-btn.bg-custom-600 {
+  background-color: #2563eb !important;
+  color: #fff !important;
+  border: none !important;
+}
+.fi-btn.fi-btn-color-primary:hover, .fi-btn.bg-custom-600:hover {
+  background-color: #1d4ed8 !important;
+}
+.fi-btn.fi-btn-color-primary:focus-visible, .fi-btn.bg-custom-600:focus-visible {
+  box-shadow: 0 0 0 2px #2563eb33 !important;
+}
+
+/* View button: black */
+.fi-btn.fi-btn-color-gray {
+  background-color: #374151 !important;
+  color: #fff !important;
+  border: none !important;
+}
+.fi-btn.fi-btn-color-gray:hover {
+  background-color: #1f2937 !important;
+}
+
+/* Delete button: red */
+.fi-btn.fi-btn-color-danger {
+  background-color: #dc2626 !important;
+  color: #fff !important;
+  border: none !important;
+}
+.fi-btn.fi-btn-color-danger:hover {
+  background-color: #b91c1c !important;
+}
+
+/* Edit button text color */
+.text-custom-600 {
+  color: #2563eb !important;
+}
+/* View button text color */
+.fi-btn.fi-btn-color-gray .fi-btn-label {
+  color: #fff !important;
+}
+/* Delete button text color */
+.fi-btn.fi-btn-color-danger .fi-btn-label, .fi-btn.fi-btn-color-danger {
+  color: #dc2626 !important;
+}
+
+.text-gray-700, .fi-btn-label.text-gray-700 {
+  color: #111 !important;
+}
+.text-custom-600, .fi-btn-label.text-custom-600 {
+  color: #dc2626 !important;
+}
+
+.fi-btn-label, .fi-btn {
+  color: #fff !important;
+}
+
+.fi-input, .fi-text-input, .fi-form-label, .fi-form-helper-text, .fi-form-hint, .fi-form-error, .fi-ta-header-cell-label, .fi-ta-text-item-label {
+  color: #1a202c !important;
+}
+
+/* Form fields and labels: dark text and borders for visibility */
+input, textarea, select, .fi-input, .fi-text-input, .fi-select, .fi-form-label, .fi-form-helper-text, .fi-form-hint, .fi-form-error, .fi-ta-header-cell-label, .fi-ta-text-item-label {
+  color: #1a202c !important;
+  border-color: #1a202c !important;
+  background-color: #fff !important;
+}
+
+input:focus, textarea:focus, select:focus, .fi-input:focus, .fi-text-input:focus, .fi-select:focus {
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 2px #2563eb33 !important;
+}
+
+.fi-btn.fi-btn-color-primary, .fi-btn-label, .fi-btn.fi-btn-color-primary .fi-btn-label {
+  color: #fff !important;
+}
+
+/* Input field: black border, rounded, no shadow */
+.fi-input, input.fi-input, .fi-text-input {
+  border: none !important;
+  border-top-right-radius: 0.5rem !important;
+  border-bottom-right-radius: 0.5rem !important;
+  box-shadow: none !important;
+  outline: none !important;
+  border-left-width: 1px !important;
+  padding-left: 1rem !important;
+}
+
+/* Edit button: blue text */
+.text-custom-600, .fi-btn-label.text-custom-600 {
+  color: #2563eb !important;
+}
+
+/* Edit (blue) action button */
+.action-edit {
+  color: #2563eb !important;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* Delete (red) action button */
+.action-delete {
+  color: #dc2626 !important;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* Remove blue border and make badge number only */
+.fi-badge {
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  color: #3b82f6 !important; /* or your preferred number color */
+  padding: 0 !important;
+  min-width: 0 !important;
+  font-size: 1em !important;
+}
+.fi-badge svg, .fi-badge *:not(:only-child) {
+  display: none !important;
+}
+
+/* Make the background for the search icon also white */
+.fi-input-wrp-prefix {
+  background: #fff !important;
+  border-radius: 0.5rem 0 0 0.5rem !important; /* match input rounding if needed */
+}
+
+/* Style the select input with a gray 1px border and custom dropdown arrow */
+.fi-select-input {
+  border: 1px solid #d1d5db !important; /* Tailwind gray-300 */
+  border-radius: 0.5rem !important;
+  background: #fff !important;
+  color: #111 !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' fill='none' stroke='%239ca3af' stroke-width='2' viewBox='0 0 24 24'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 1.25em 1.25em;
+  padding-right: 2.5rem !important;
+}
+.fi-select-input option {
+  background: #111827 !important;
+  color: #fff !important;
+}
+.fi-select-input option:checked, .fi-select-input option:focus, .fi-select-input option:hover {
+  background: #2563eb !important;
+  color: #fff !important;
+}
+
+/* Style date and dayname input fields with gray border and black placeholder */
+input[type="date"],
+input[name*="dayname"],
+input.dayname-field {
+  border: 1px solid #d1d5db !important; /* Tailwind gray-300 */
+  border-radius: 0.5rem !important;
+  background: #fff !important;
+  color: #111 !important;
+}
+input[type="date"]::placeholder,
+input[name*="dayname"]::placeholder,
+input.dayname-field::placeholder {
+  color: #111 !important;
+  opacity: 1 !important;
+}
+
+/* Add border and black text for .fi-input-wrp and its input */
+.fi-input-wrp {
+  border: 1px solid #d1d5db !important;
+  border-radius: 0.5rem !important;
+  background: #fff !important;
+}
+.fi-input-wrp input {
+  color: #111 !important;
+}
+
+/* Make placeholder color for date and select fields match Day Name (black) */
+input[type="date"]::placeholder,
+.fi-select-input::placeholder {
+  color: #111 !important;
+  opacity: 1 !important;
+}
+
+/* Set form field label color to black */
+.fi-fo-field-wrp-label,
+.fi-fo-field-wrp-label span {
+  color: #111 !important;
+}
+
+/* Set placeholder color for date and select fields to gray */
+input[type="date"]::placeholder,
+.fi-select-input::placeholder {
+  color: #6b7280 !important; /* Tailwind gray-500 */
+  opacity: 1 !important;
+}
