@@ -25,6 +25,19 @@
                     <!-- Question Details Section -->
                     <div class="section-block">
                         <h3 class="section-title">Question Details</h3>
+                        
+                        <!-- File Preservation Notice -->
+                        <div class="file-preservation-notice mb-6">
+                            <div class="flex items-center space-x-2">
+                                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <div>
+                                    <strong>File Management:</strong> Existing images, audio files, and text options will be preserved unless you upload new files to replace them. Only upload new files if you want to change the current content.
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label class="modern-label">Day Number *</label>
@@ -172,7 +185,7 @@ unset($__errorArgs, $__bag); ?><!--[if ENDBLOCK]><![endif]-->
                     </div>
 
                     <div x-data="{ type: $wire.entangle('question_type_id') }">
-                        <!-- Audio Image Text Single Section -->
+                        <!-- Audio Image Text Single Section - FIXED -->
                         <div class="section-block" id="audio-image-text-single-section" x-show="type === 'audio_image_text_single'">
                             <h3 class="section-title">Audio Image Text - Single Audio with Image to Text Matching</h3>
                             <div class="info-banner">
@@ -187,28 +200,53 @@ unset($__errorArgs, $__bag); ?><!--[if ENDBLOCK]><![endif]-->
                                 <h4 class="sub-question-title mb-4">🎵 Context Audio File</h4>
                                 <div class="audio-upload-section">
                                     <label class="modern-label">Upload Audio File (Context/Hint)</label>
-                                    <!--[if BLOCK]><![endif]--><?php if($record->audio_image_text_audio_file ?? null): ?>
+                                    <?php
+                                        $currentAudioFile = $record->audio_image_text_audio_file ?? null;
+                                        if (!$currentAudioFile && $record->question_data) {
+                                            $questionData = json_decode($record->question_data, true);
+                                            $currentAudioFile = $questionData['audio_file'] ?? null;
+                                        }
+                                    ?>
+                                    
+                                    <!--[if BLOCK]><![endif]--><?php if($currentAudioFile): ?>
                                         <div class="mb-2 p-3 bg-green-50 border border-green-200 rounded-lg">
                                             <div class="flex items-center justify-between">
                                                 <span class="text-sm text-green-800">
                                                     <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path>
                                                     </svg>
-                                                    Current: <?php echo e(basename($record->audio_image_text_audio_file)); ?>
+                                                    Current: <?php echo e(basename($currentAudioFile)); ?>
 
                                                 </span>
-                                                <a href="<?php echo e(\Illuminate\Support\Facades\Storage::url($record->audio_image_text_audio_file)); ?>" target="_blank" class="text-blue-600 hover:text-blue-800">
+                                                <a href="<?php echo e(\Illuminate\Support\Facades\Storage::url($currentAudioFile)); ?>" target="_blank" class="text-blue-600 hover:text-blue-800">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
                                                     </svg>
                                                 </a>
                                             </div>
-                                            <audio controls style="width: 100%; margin-top: 0.5rem;">
-                                                <source src="<?php echo e(\Illuminate\Support\Facades\Storage::url($record->audio_image_text_audio_file)); ?>" type="audio/mpeg">
-                                                Your browser does not support the audio element.
-                                            </audio>
+                                            <div class="mt-3 modern-audio-player">
+                                                <audio controls style="width: 100%;" class="rounded-lg">
+                                                    <source src="<?php echo e(\Illuminate\Support\Facades\Storage::url($currentAudioFile)); ?>" type="audio/mpeg">
+                                                    Your browser does not support the audio element.
+                                                </audio>
+                                            </div>
                                         </div>
                                     <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+                                    
+                                    <div wire:loading wire:target="audio_image_text_audio_file" class="mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                        <div class="flex items-center space-x-3">
+                                            <div class="loading-spinner">
+                                                <svg class="w-6 h-6 text-yellow-600 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                                </svg>
+                                            </div>
+                                            <div>
+                                                <p class="font-semibold !text-yellow-800 !important" style="color: #92400e !important;">Uploading audio file...</p>
+                                                <p class="text-sm !text-yellow-700 !important" style="color: #a16207 !important;">Please wait while your audio file is being processed</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     <input type="file" wire:model="audio_image_text_audio_file" class="modern-input" accept="audio/*" placeholder="Upload audio file">
                                     <!--[if BLOCK]><![endif]--><?php $__errorArgs = ['audio_image_text_audio_file'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
@@ -227,11 +265,20 @@ unset($__errorArgs, $__bag); ?><!--[if ENDBLOCK]><![endif]-->
                                                 </svg>
                                                 <div>
                                                     <p class="font-semibold text-green-800"><?php echo e($audio_image_text_audio_file->getClientOriginalName()); ?></p>
-                                                    <p class="text-sm text-green-600">New audio file uploaded</p>
-                                                    <audio controls style="width: 100%; margin-top: 0.5rem;">
-                                                        <source src="<?php echo e($audio_image_text_audio_file->temporaryUrl()); ?>" type="audio/mpeg">
-                                                        Your browser does not support the audio element.
-                                                    </audio>
+                                                    <p class="text-sm text-green-600">New audio file uploaded - will replace current audio</p>
+                                                    <!-- Audio Preparation Message -->
+                                                    <div class="mb-2 p-2 bg-blue-50 border border-blue-200 rounded text-center">
+                                                        <p class="text-sm text-blue-700 font-medium">🎵 Your audio is being prepared, please wait...</p>
+                                                    </div>
+                                                    <div class="mt-3 modern-audio-player" x-data="{ audioReady: false }" x-init="setTimeout(() => audioReady = true, 1500)">
+                                                        <div x-show="!audioReady" class="text-center p-4 bg-yellow-50 border border-yellow-200 rounded">
+                                                            <p class="text-sm text-yellow-700">⏳ Preparing audio controls...</p>
+                                                        </div>
+                                                        <audio x-show="audioReady" controls style="width: 100%;" class="rounded-lg">
+                                                            <source src="<?php echo e($audio_image_text_audio_file->temporaryUrl()); ?>" type="audio/mpeg">
+                                                            Your browser does not support the audio element.
+                                                        </audio>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -239,7 +286,8 @@ unset($__errorArgs, $__bag); ?><!--[if ENDBLOCK]><![endif]-->
                                     
                                     <div class="mt-2 text-sm text-gray-500">
                                         <strong>Supported formats:</strong> MP3, WAV, OGG, M4A (Max size: 10MB)<br>
-                                        <strong>Purpose:</strong> This audio provides context or hints to help students match images to text options.
+                                        <strong>Purpose:</strong> This audio provides context or hints to help students match images to text options.<br>
+                                        <strong>Note:</strong> <span class="text-blue-600">If no new audio is uploaded, the current audio file will be preserved.</span>
                                     </div>
                                 </div>
                             </div>
@@ -251,6 +299,11 @@ unset($__errorArgs, $__bag); ?><!--[if ENDBLOCK]><![endif]-->
                                     <div id="audio-image-text-images-container">
                                         <?php
                                             $existingImages = $record->audio_image_text_images ?? [];
+                                            // If not found, try to get from question_data
+                                            if (empty($existingImages) && $record->question_data) {
+                                                $questionData = json_decode($record->question_data, true);
+                                                $existingImages = $questionData['images'] ?? [];
+                                            }
                                         ?>
                                         <!--[if BLOCK]><![endif]--><?php if(is_array($audio_image_text_image_uploads ?? []) && count($audio_image_text_image_uploads) > 0): ?>
                                             <!--[if BLOCK]><![endif]--><?php $__currentLoopData = $audio_image_text_image_uploads; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $idx => $imageUpload): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
@@ -283,6 +336,18 @@ unset($__errorArgs, $__bag); ?><!--[if ENDBLOCK]><![endif]-->
                                                         </div>
                                                     <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
                                                     
+                                                    <!-- Loading indicator for image upload -->
+                                                    <div wire:loading wire:target="audio_image_text_image_uploads.<?php echo e($idx); ?>" class="mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                                        <div class="flex items-center space-x-3">
+                                                            <div class="loading-spinner">
+                                                                <svg class="w-5 h-5 text-yellow-600 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                                                </svg>
+                                                            </div>
+                                                            <span class="text-sm font-medium !text-yellow-800 !important" style="color: #92400e !important;">Uploading image...</span>
+                                                        </div>
+                                                    </div>
+
                                                     <input type="file" wire:model="audio_image_text_image_uploads.<?php echo e($idx); ?>" class="modern-input" accept="image/*" placeholder="Upload image">
                                                     <!--[if BLOCK]><![endif]--><?php $__errorArgs = ["audio_image_text_image_uploads.{$idx}"];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
@@ -295,7 +360,7 @@ unset($__errorArgs, $__bag); ?><!--[if ENDBLOCK]><![endif]-->
                                                     
                                                     <!--[if BLOCK]><![endif]--><?php if(isset($audio_image_text_image_uploads[$idx]) && $audio_image_text_image_uploads[$idx]): ?>
                                                         <div class="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
-                                                            <p class="text-sm text-green-800 font-medium mb-2">New Image Preview:</p>
+                                                            <p class="text-sm text-green-800 font-medium mb-2">New Image Preview - will replace current image:</p>
                                                             <div class="image-preview-container">
                                                                 <img src="<?php echo e($audio_image_text_image_uploads[$idx]->temporaryUrl()); ?>" 
                                                                      alt="New Preview <?php echo e($idx + 1); ?>" 
@@ -306,31 +371,37 @@ unset($__errorArgs, $__bag); ?><!--[if ENDBLOCK]><![endif]-->
                                                 </div>
                                             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><!--[if ENDBLOCK]><![endif]-->
                                         <?php else: ?>
-                                            <div class="picture-mcq-image-item flex flex-col mb-4 p-4 border-2 border-dashed border-purple-300 rounded-lg">
-                                                <div class="flex items-center justify-between mb-2">
-                                                    <span class="font-medium text-gray-700">Image 1</span>
-                                                </div>
-                                                
-                                                <!--[if BLOCK]><![endif]--><?php if(isset($existingImages[0])): ?>
-                                                    <div class="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                                                        <div class="flex items-center justify-between mb-2">
-                                                            <span class="text-sm text-blue-800 font-medium">Current Image:</span>
-                                                            <a href="<?php echo e(\Illuminate\Support\Facades\Storage::url($existingImages[0])); ?>" target="_blank" class="text-blue-600 hover:text-blue-800">
-                                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
-                                                                </svg>
-                                                            </a>
-                                                        </div>
-                                                        <div class="image-preview-container">
-                                                            <img src="<?php echo e(\Illuminate\Support\Facades\Storage::url($existingImages[0])); ?>" 
-                                                                 alt="Current Image 1" 
-                                                                 class="image-preview-thumb">
-                                                        </div>
+                                            <!--[if BLOCK]><![endif]--><?php $__currentLoopData = range(0, max(0, count($existingImages) - 1)); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $idx): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                <div class="picture-mcq-image-item flex flex-col mb-4 p-4 border-2 border-dashed border-purple-300 rounded-lg" wire:key="audio_image_text_image_<?php echo e($idx); ?>">
+                                                    <div class="flex items-center justify-between mb-2">
+                                                        <span class="font-medium text-gray-700">Image <?php echo e($idx + 1); ?></span>
+                                                        <!--[if BLOCK]><![endif]--><?php if($idx > 0): ?>
+                                                            <button type="button" wire:click="removeAudioImageTextImage(<?php echo e($idx); ?>)" class="remove-btn-small">
+                                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                                            </button>
+                                                        <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
                                                     </div>
-                                                <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
-                                                
-                                                <input type="file" wire:model="audio_image_text_image_uploads.0" class="modern-input" accept="image/*" placeholder="Upload image">
-                                                <!--[if BLOCK]><![endif]--><?php $__errorArgs = ["audio_image_text_image_uploads.0"];
+                                                    
+                                                    <!--[if BLOCK]><![endif]--><?php if(isset($existingImages[$idx])): ?>
+                                                        <div class="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                                            <div class="flex items-center justify-between mb-2">
+                                                                <span class="text-sm text-blue-800 font-medium">Current Image:</span>
+                                                                <a href="<?php echo e(\Illuminate\Support\Facades\Storage::url($existingImages[$idx])); ?>" target="_blank" class="text-blue-600 hover:text-blue-800">
+                                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                                                                    </svg>
+                                                                </a>
+                                                            </div>
+                                                            <div class="image-preview-container">
+                                                                <img src="<?php echo e(\Illuminate\Support\Facades\Storage::url($existingImages[$idx])); ?>" 
+                                                                     alt="Current Image <?php echo e($idx + 1); ?>" 
+                                                                     class="image-preview-thumb">
+                                                            </div>
+                                                        </div>
+                                                    <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+                                                    
+                                                    <input type="file" wire:model="audio_image_text_image_uploads.<?php echo e($idx); ?>" class="modern-input" accept="image/*" placeholder="Upload image">
+                                                    <!--[if BLOCK]><![endif]--><?php $__errorArgs = ["audio_image_text_image_uploads.{$idx}"];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
 if (isset($message)) { $__messageOriginal = $message; }
@@ -338,7 +409,25 @@ $message = $__bag->first($__errorArgs[0]); ?> <p class="error-text"><?php echo e
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
 unset($__errorArgs, $__bag); ?><!--[if ENDBLOCK]><![endif]-->
-                                            </div>
+                                                </div>
+                                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><!--[if ENDBLOCK]><![endif]-->
+                                            
+                                            <!--[if BLOCK]><![endif]--><?php if(count($existingImages) === 0): ?>
+                                                <div class="picture-mcq-image-item flex flex-col mb-4 p-4 border-2 border-dashed border-purple-300 rounded-lg">
+                                                    <div class="flex items-center justify-between mb-2">
+                                                        <span class="font-medium text-gray-700">Image 1</span>
+                                                    </div>
+                                                    <input type="file" wire:model="audio_image_text_image_uploads.0" class="modern-input" accept="image/*" placeholder="Upload image">
+                                                    <!--[if BLOCK]><![endif]--><?php $__errorArgs = ["audio_image_text_image_uploads.0"];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> <p class="error-text"><?php echo e($message); ?></p> <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?><!--[if ENDBLOCK]><![endif]-->
+                                                </div>
+                                            <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
                                         <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
                                     </div>
                                     <button type="button" wire:click="addAudioImageTextImage" class="add-btn mt-2">
@@ -400,7 +489,12 @@ unset($__errorArgs, $__bag); ?><!--[if ENDBLOCK]><![endif]-->
                             <div class="mt-6">
                                 <div class="flex items-center justify-between mb-4">
                                     <h4 class="sub-question-title">Correct Answer Pairs</h4>
-                                    <button type="button" wire:click="$set('audio_image_text_correct_pairs', [['left' => '', 'right' => ''], ['left' => '', 'right' => '']])" class="clear-all-btn">
+                                    <button type="button" onclick="
+                                        window.Livewire.find('<?php echo e($_instance->getId()); ?>').set('audio_image_text_correct_pairs.0.left', '');
+                                        window.Livewire.find('<?php echo e($_instance->getId()); ?>').set('audio_image_text_correct_pairs.0.right', '');
+                                        window.Livewire.find('<?php echo e($_instance->getId()); ?>').set('audio_image_text_correct_pairs.1.left', '');
+                                        window.Livewire.find('<?php echo e($_instance->getId()); ?>').set('audio_image_text_correct_pairs.1.right', '');
+                                    " class="clear-all-btn">
                                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                         </svg>
@@ -415,50 +509,77 @@ unset($__errorArgs, $__bag); ?><!--[if ENDBLOCK]><![endif]-->
                                         <div class="option-item" wire:key="audio-image-text-pair-<?php echo e($pairIdx); ?>">
                                             <div class="flex items-center justify-between mb-3">
                                                 <div class="font-semibold" style="color: #000 !important;">Correct Pair <?php echo e($pairIdx+1); ?></div>
-                                                <button type="button" wire:click="$set('audio_image_text_correct_pairs.<?php echo e($pairIdx); ?>.left', ''); $set('audio_image_text_correct_pairs.<?php echo e($pairIdx); ?>.right', '')" class="clear-pair-btn" title="Clear this pair">
+                                                <button type="button" 
+                                                        onclick="window.Livewire.find('<?php echo e($_instance->getId()); ?>').set('audio_image_text_correct_pairs.<?php echo e($pairIdx); ?>.left', ''); window.Livewire.find('<?php echo e($_instance->getId()); ?>').set('audio_image_text_correct_pairs.<?php echo e($pairIdx); ?>.right', '');" 
+                                                        class="clear-pair-btn" title="Clear this pair">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                                                     </svg>
                                                 </button>
                                             </div>
                                             <div class="flex gap-4">
-                                                <div class="flex-1">
+                                                                <div class="flex-1">
                                                     <label class="modern-label">Image</label>
-                                                    <select class="option-input" wire:model.live="audio_image_text_correct_pairs.<?php echo e($pairIdx); ?>.left" wire:key="audio-image-text-left-select-<?php echo e($pairIdx); ?>-<?php echo e(count($audio_image_text_image_uploads ?? [])); ?>">
+                                                    <select class="option-input" wire:model.live="audio_image_text_correct_pairs.<?php echo e($pairIdx); ?>.left" wire:key="audio-image-text-left-select-<?php echo e($pairIdx); ?>-<?php echo e(count($audio_image_text_image_uploads ?? [])); ?>-<?php echo e(json_encode($audio_image_text_correct_pairs)); ?>">
                                                         <option value="">Select Image</option>
-                                                        <!--[if BLOCK]><![endif]--><?php $__currentLoopData = $this->getFilteredAudioImageTextImages(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $idx => $image): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                        <?php
+                                                            // Get existing images from database
+                                                            $existingImages = $record->audio_image_text_images ?? [];
+                                                            if (empty($existingImages) && $record->question_data) {
+                                                                $questionData = json_decode($record->question_data, true);
+                                                                $existingImages = $questionData['images'] ?? [];
+                                                            }
+                                                            
+                                                            // Combine existing images with any new uploads
+                                                            $allImages = [];
+                                                            foreach($existingImages as $idx => $imagePath) {
+                                                                $allImages[$idx] = $imagePath;
+                                                            }
+                                                            
+                                                            // Override with new uploads if they exist
+                                                            if(is_array($audio_image_text_image_uploads ?? []) && count($audio_image_text_image_uploads) > 0) {
+                                                                foreach($audio_image_text_image_uploads as $idx => $upload) {
+                                                                    if($upload) {
+                                                                        $allImages[$idx] = $upload->getClientOriginalName();
+                                                                    }
+                                                                }
+                                                            }
+                                                        ?>
+                                                        <!--[if BLOCK]><![endif]--><?php $__currentLoopData = $allImages; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $idx => $image): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                             <?php
                                                                 $alreadySelected = false;
                                                                 $pairs = $audio_image_text_correct_pairs ?? [];
                                                                 foreach ($pairs as $otherIdx => $pair) {
-                                                                    if ($otherIdx !== $pairIdx && isset($pair['left']) && $pair['left'] !== '' && $pair['left'] == $idx) {
+                                                                    if ($otherIdx !== $pairIdx && isset($pair['left']) && $pair['left'] !== '' && $pair['left'] !== null && $pair['left'] == $idx) {
                                                                         $alreadySelected = true;
                                                                         break;
                                                                     }
                                                                 }
+                                                                // Always show simple naming
+                                                                $imageName = "Image " . ($idx + 1);
                                                             ?>
                                                             <!--[if BLOCK]><![endif]--><?php if(!$alreadySelected): ?>
-                                                                <option value="<?php echo e($idx); ?>"><?php echo e($idx); ?>. Image <?php echo e($idx + 1); ?></option>
+                                                                <option value="<?php echo e($idx); ?>"><?php echo e($idx); ?>. <?php echo e($imageName); ?></option>
                                                             <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
                                                         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><!--[if ENDBLOCK]><![endif]-->
                                                     </select>
                                                 </div>
                                                 <div class="flex-1">
                                                     <label class="modern-label">Text Option</label>
-                                                    <select class="option-input" wire:model.live="audio_image_text_correct_pairs.<?php echo e($pairIdx); ?>.right" wire:key="audio-image-text-right-select-<?php echo e($pairIdx); ?>-<?php echo e(count($audio_image_text_right_options ?? [])); ?>">
+                                                    <select class="option-input" wire:model.live="audio_image_text_correct_pairs.<?php echo e($pairIdx); ?>.right" wire:key="audio-image-text-right-select-<?php echo e($pairIdx); ?>-<?php echo e(count($audio_image_text_right_options ?? [])); ?>-<?php echo e(json_encode($audio_image_text_correct_pairs)); ?>-<?php echo e(json_encode($audio_image_text_right_options)); ?>">
                                                         <option value="">Select Text Option</option>
-                                                        <!--[if BLOCK]><![endif]--><?php $__currentLoopData = $this->getFilteredAudioImageTextRightOptions(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $idx => $option): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                        <!--[if BLOCK]><![endif]--><?php $__currentLoopData = $audio_image_text_right_options ?? []; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $idx => $option): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                             <?php
                                                                 $alreadySelected = false;
                                                                 $pairs = $audio_image_text_correct_pairs ?? [];
                                                                 foreach ($pairs as $otherIdx => $pair) {
-                                                                    if ($otherIdx !== $pairIdx && isset($pair['right']) && $pair['right'] !== '' && $pair['right'] == $idx) {
+                                                                    if ($otherIdx !== $pairIdx && isset($pair['right']) && $pair['right'] !== '' && $pair['right'] !== null && $pair['right'] == $idx) {
                                                                         $alreadySelected = true;
                                                                         break;
                                                                     }
                                                                 }
                                                             ?>
-                                                            <!--[if BLOCK]><![endif]--><?php if(!$alreadySelected): ?>
+                                                            <!--[if BLOCK]><![endif]--><?php if(!$alreadySelected && trim($option ?? '') !== ''): ?>
                                                                 <option value="<?php echo e($idx); ?>"><?php echo e($idx); ?>. <?php echo e($option); ?></option>
                                                             <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
                                                         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><!--[if ENDBLOCK]><![endif]-->
@@ -471,7 +592,7 @@ unset($__errorArgs, $__bag); ?><!--[if ENDBLOCK]><![endif]-->
                             </div>
                         </div>
 
-                        <!-- Audio Image Text Multiple Section -->
+                        <!-- Audio Image Text Multiple Section - FIXED -->
                         <div class="section-block" id="audio-image-text-multiple-section" x-show="type === 'audio_image_text_multiple'">
                             <h3 class="section-title">Multiple Audio, Multiple Images & Texts</h3>
                             <div class="info-banner">
@@ -488,6 +609,11 @@ unset($__errorArgs, $__bag); ?><!--[if ENDBLOCK]><![endif]-->
                                     <div id="audio-image-text-multiple-pairs-container">
                                         <?php
                                             $existingPairs = $record->audio_image_text_multiple_pairs ?? [];
+                                            // If not found, try to get from question_data
+                                            if (empty($existingPairs) && $record->question_data) {
+                                                $questionData = json_decode($record->question_data, true);
+                                                $existingPairs = $questionData['image_audio_pairs'] ?? [];
+                                            }
                                         ?>
                                         <!--[if BLOCK]><![endif]--><?php if(is_array($audio_image_text_multiple_pairs ?? []) && count($audio_image_text_multiple_pairs) > 0): ?>
                                             <!--[if BLOCK]><![endif]--><?php $__currentLoopData = $audio_image_text_multiple_pairs; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $idx => $pair): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
@@ -523,6 +649,19 @@ unset($__errorArgs, $__bag); ?><!--[if ENDBLOCK]><![endif]-->
                                                     <!-- Image Upload -->
                                                     <div class="mb-3">
                                                         <label class="modern-label text-sm">🖼️ Image File *</label>
+                                                        
+                                                        <!-- Loading indicator for image upload -->
+                                                        <div wire:loading wire:target="audio_image_text_multiple_pairs.<?php echo e($idx); ?>.image" class="mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                                            <div class="flex items-center space-x-3">
+                                                                <div class="loading-spinner">
+                                                                    <svg class="w-5 h-5 text-yellow-600 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                                                    </svg>
+                                                                </div>
+                                                                <span class="text-sm font-medium !text-yellow-800 !important" style="color: #92400e !important;">Uploading image...</span>
+                                                            </div>
+                                                        </div>
+
                                                         <input type="file" wire:model="audio_image_text_multiple_pairs.<?php echo e($idx); ?>.image" class="modern-input" accept="image/*" placeholder="Upload image">
                                                         <!--[if BLOCK]><![endif]--><?php $__errorArgs = ["audio_image_text_multiple_pairs.{$idx}.image"];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
@@ -535,7 +674,7 @@ unset($__errorArgs, $__bag); ?><!--[if ENDBLOCK]><![endif]-->
                                                         
                                                         <!--[if BLOCK]><![endif]--><?php if(isset($audio_image_text_multiple_pairs[$idx]['image']) && $audio_image_text_multiple_pairs[$idx]['image']): ?>
                                                             <div class="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
-                                                                <p class="text-sm text-green-800 font-medium mb-2">New Image Preview:</p>
+                                                                <p class="text-sm text-green-800 font-medium mb-2">New Image Preview - will replace current image:</p>
                                                                 <div class="image-preview-container">
                                                                     <img src="<?php echo e($audio_image_text_multiple_pairs[$idx]['image']->temporaryUrl()); ?>" 
                                                                          alt="New Preview <?php echo e($idx + 1); ?>" 
@@ -556,16 +695,32 @@ unset($__errorArgs, $__bag); ?><!--[if ENDBLOCK]><![endif]-->
                                                                     </svg>
                                                                 </a>
                                                             </div>
-                                                            <audio controls style="width: 100%;">
-                                                                <source src="<?php echo e(\Illuminate\Support\Facades\Storage::url($existingPairs[$idx]['audio'])); ?>" type="audio/mpeg">
-                                                                Your browser does not support the audio element.
-                                                            </audio>
+                                                            <span class="text-sm font-medium text-green-700"><?php echo e(basename($existingPairs[$idx]['audio'])); ?></span>
+                                                            <div class="mt-2 modern-audio-player">
+                                                                <audio controls style="width: 100%;" class="rounded-lg">
+                                                                    <source src="<?php echo e(\Illuminate\Support\Facades\Storage::url($existingPairs[$idx]['audio'])); ?>" type="audio/mpeg">
+                                                                    Your browser does not support the audio element.
+                                                                </audio>
+                                                            </div>
                                                         </div>
                                                     <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
                                                     
                                                     <!-- Audio Upload -->
                                                     <div class="mb-2">
                                                         <label class="modern-label text-sm">🎵 Audio File *</label>
+                                                        
+                                                        <!-- Loading indicator for audio upload -->
+                                                        <div wire:loading wire:target="audio_image_text_multiple_pairs.<?php echo e($idx); ?>.audio" class="mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                                            <div class="flex items-center space-x-3">
+                                                                <div class="loading-spinner">
+                                                                    <svg class="w-5 h-5 text-yellow-600 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                                                    </svg>
+                                                                </div>
+                                                                <span class="text-sm font-medium !text-yellow-800 !important" style="color: #92400e !important;">Uploading audio...</span>
+                                                            </div>
+                                                        </div>
+
                                                         <input type="file" wire:model="audio_image_text_multiple_pairs.<?php echo e($idx); ?>.audio" class="modern-input" accept="audio/*" placeholder="Upload audio">
                                                         <!--[if BLOCK]><![endif]--><?php $__errorArgs = ["audio_image_text_multiple_pairs.{$idx}.audio"];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
@@ -578,53 +733,73 @@ unset($__errorArgs, $__bag); ?><!--[if ENDBLOCK]><![endif]-->
                                                         
                                                         <!--[if BLOCK]><![endif]--><?php if(isset($audio_image_text_multiple_pairs[$idx]['audio']) && $audio_image_text_multiple_pairs[$idx]['audio']): ?>
                                                             <div class="mt-2 p-2 bg-green-50 border border-green-200 rounded">
-                                                                <div class="flex items-center space-x-2">
+                                                                <div class="flex items-center space-x-2 mb-2">
                                                                     <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path>
                                                                     </svg>
                                                                     <span class="text-sm font-medium text-green-700"><?php echo e($audio_image_text_multiple_pairs[$idx]['audio']->getClientOriginalName()); ?></span>
+                                                                </div>
+                                                                <p class="text-xs text-green-600 mb-2">New audio file - will replace current audio</p>
+                                                                <!-- Audio Preparation Message -->
+                                                                <div class="mb-2 p-2 bg-blue-50 border border-blue-200 rounded text-center">
+                                                                    <p class="text-sm text-blue-700 font-medium">🎵 Your audio is being prepared, please wait...</p>
+                                                                </div>
+                                                                <div class="mt-2 modern-audio-player" x-data="{ audioReady: false }" x-init="setTimeout(() => audioReady = true, 1500)">
+                                                                    <div x-show="!audioReady" class="text-center p-4 bg-yellow-50 border border-yellow-200 rounded">
+                                                                        <p class="text-sm text-yellow-700">⏳ Preparing audio controls...</p>
+                                                                    </div>
+                                                                    <audio x-show="audioReady" controls style="width: 100%;" class="rounded-lg">
+                                                                        <source src="<?php echo e($audio_image_text_multiple_pairs[$idx]['audio']->temporaryUrl()); ?>" type="audio/mpeg">
+                                                                        Your browser does not support the audio element.
+                                                                    </audio>
                                                                 </div>
                                                             </div>
                                                         <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
                                                     </div>
                                                     
                                                     <div class="text-xs text-gray-500 mt-1">
-                                                        Upload new files to replace existing ones, or leave empty to keep current files.
+                                                        <strong>Note:</strong> <span class="text-blue-600">Upload new files to replace existing ones. If no new files are uploaded, current files will be preserved.</span>
                                                     </div>
                                                 </div>
                                             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><!--[if ENDBLOCK]><![endif]-->
                                         <?php else: ?>
-                                            <div class="audio-image-pair-item flex flex-col mb-6 p-4 border-2 border-dashed border-indigo-300 rounded-lg bg-gradient-to-br from-indigo-50 to-purple-50">
-                                                <div class="flex items-center justify-between mb-3">
-                                                    <span class="font-bold text-indigo-700">📱 Pair 1</span>
-                                                </div>
-                                                
-                                                <?php
-                                                    $existingPair = $existingPairs[0] ?? null;
-                                                ?>
-                                                
-                                                <!--[if BLOCK]><![endif]--><?php if($existingPair && isset($existingPair['image'])): ?>
-                                                    <div class="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                                                        <div class="flex items-center justify-between mb-2">
-                                                            <span class="text-sm text-blue-800 font-medium">Current Image:</span>
-                                                            <a href="<?php echo e(\Illuminate\Support\Facades\Storage::url($existingPair['image'])); ?>" target="_blank" class="text-blue-600 hover:text-blue-800">
-                                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
-                                                                </svg>
-                                                            </a>
-                                                        </div>
-                                                        <div class="image-preview-container">
-                                                            <img src="<?php echo e(\Illuminate\Support\Facades\Storage::url($existingPair['image'])); ?>" 
-                                                                 alt="Current Image 1" 
-                                                                 class="image-preview-thumb">
-                                                        </div>
+                                            <!--[if BLOCK]><![endif]--><?php $__currentLoopData = range(0, max(0, count($existingPairs) - 1)); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $idx): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                <div class="audio-image-pair-item flex flex-col mb-6 p-4 border-2 border-dashed border-indigo-300 rounded-lg bg-gradient-to-br from-indigo-50 to-purple-50" wire:key="audio_image_text_multiple_pair_<?php echo e($idx); ?>">
+                                                    <div class="flex items-center justify-between mb-3">
+                                                        <span class="font-bold text-indigo-700">📱 Pair <?php echo e($idx + 1); ?></span>
+                                                        <!--[if BLOCK]><![endif]--><?php if($idx > 0): ?>
+                                                            <button type="button" wire:click="removeAudioImageTextMultiplePair(<?php echo e($idx); ?>)" class="remove-btn-small">
+                                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                                            </button>
+                                                        <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
                                                     </div>
-                                                <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
-                                                
-                                                <div class="mb-3">
-                                                    <label class="modern-label text-sm">🖼️ Image File *</label>
-                                                    <input type="file" wire:model="audio_image_text_multiple_pairs.0.image" class="modern-input" accept="image/*" placeholder="Upload image">
-                                                    <!--[if BLOCK]><![endif]--><?php $__errorArgs = ["audio_image_text_multiple_pairs.0.image"];
+                                                    
+                                                    <?php
+                                                        $existingPair = $existingPairs[$idx] ?? null;
+                                                    ?>
+                                                    
+                                                    <!--[if BLOCK]><![endif]--><?php if($existingPair && isset($existingPair['image'])): ?>
+                                                        <div class="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                                            <div class="flex items-center justify-between mb-2">
+                                                                <span class="text-sm text-blue-800 font-medium">Current Image:</span>
+                                                                <a href="<?php echo e(\Illuminate\Support\Facades\Storage::url($existingPair['image'])); ?>" target="_blank" class="text-blue-600 hover:text-blue-800">
+                                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                                                                    </svg>
+                                                                </a>
+                                                            </div>
+                                                            <div class="image-preview-container">
+                                                                <img src="<?php echo e(\Illuminate\Support\Facades\Storage::url($existingPair['image'])); ?>" 
+                                                                     alt="Current Image <?php echo e($idx + 1); ?>" 
+                                                                     class="image-preview-thumb">
+                                                            </div>
+                                                        </div>
+                                                    <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+                                                    
+                                                    <div class="mb-3">
+                                                        <label class="modern-label text-sm">🖼️ Image File *</label>
+                                                        <input type="file" wire:model="audio_image_text_multiple_pairs.<?php echo e($idx); ?>.image" class="modern-input" accept="image/*" placeholder="Upload image">
+                                                        <!--[if BLOCK]><![endif]--><?php $__errorArgs = ["audio_image_text_multiple_pairs.{$idx}.image"];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
 if (isset($message)) { $__messageOriginal = $message; }
@@ -632,29 +807,45 @@ $message = $__bag->first($__errorArgs[0]); ?> <p class="error-text"><?php echo e
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
 unset($__errorArgs, $__bag); ?><!--[if ENDBLOCK]><![endif]-->
-                                                </div>
-                                                
-                                                <!--[if BLOCK]><![endif]--><?php if($existingPair && isset($existingPair['audio'])): ?>
-                                                    <div class="mb-3 p-3 bg-green-50 border border-green-200 rounded-lg">
-                                                        <div class="flex items-center justify-between mb-2">
-                                                            <span class="text-sm text-green-800 font-medium">Current Audio:</span>
-                                                            <a href="<?php echo e(\Illuminate\Support\Facades\Storage::url($existingPair['audio'])); ?>" target="_blank" class="text-blue-600 hover:text-blue-800">
-                                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
-                                                                </svg>
-                                                            </a>
-                                                        </div>
-                                                        <audio controls style="width: 100%;">
-                                                            <source src="<?php echo e(\Illuminate\Support\Facades\Storage::url($existingPair['audio'])); ?>" type="audio/mpeg">
-                                                            Your browser does not support the audio element.
-                                                        </audio>
                                                     </div>
-                                                <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
-                                                
-                                                <div class="mb-2">
-                                                    <label class="modern-label text-sm">🎵 Audio File *</label>
-                                                    <input type="file" wire:model="audio_image_text_multiple_pairs.0.audio" class="modern-input" accept="audio/*" placeholder="Upload audio">
-                                                    <!--[if BLOCK]><![endif]--><?php $__errorArgs = ["audio_image_text_multiple_pairs.0.audio"];
+                                                    
+                                                    <!--[if BLOCK]><![endif]--><?php if($existingPair && isset($existingPair['audio'])): ?>
+                                                        <div class="mb-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                                                            <div class="flex items-center justify-between mb-2">
+                                                                <span class="text-sm text-green-800 font-medium">Current Audio:</span>
+                                                                <a href="<?php echo e(\Illuminate\Support\Facades\Storage::url($existingPair['audio'])); ?>" target="_blank" class="text-blue-600 hover:text-blue-800">
+                                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                                                                    </svg>
+                                                                </a>
+                                                            </div>
+                                                            <span class="text-sm font-medium text-green-700"><?php echo e(basename($existingPair['audio'])); ?></span>
+                                                            <div class="mt-2 modern-audio-player">
+                                                                <audio controls style="width: 100%;" class="rounded-lg">
+                                                                    <source src="<?php echo e(\Illuminate\Support\Facades\Storage::url($existingPair['audio'])); ?>" type="audio/mpeg">
+                                                                    Your browser does not support the audio element.
+                                                                </audio>
+                                                            </div>
+                                                        </div>
+                                                    <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+                                                    
+                                                    <div class="mb-2">
+                                                        <label class="modern-label text-sm">🎵 Audio File *</label>
+                                                        
+                                                        <!-- Loading indicator for audio upload -->
+                                                        <div wire:loading wire:target="audio_image_text_multiple_pairs.<?php echo e($idx); ?>.audio" class="mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                                            <div class="flex items-center space-x-3">
+                                                                <div class="loading-spinner">
+                                                                    <svg class="w-5 h-5 text-yellow-600 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                                                    </svg>
+                                                                </div>
+                                                                <span class="text-sm font-medium !text-yellow-800 !important" style="color: #92400e !important;">Uploading audio...</span>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <input type="file" wire:model="audio_image_text_multiple_pairs.<?php echo e($idx); ?>.audio" class="modern-input" accept="audio/*" placeholder="Upload audio">
+                                                        <!--[if BLOCK]><![endif]--><?php $__errorArgs = ["audio_image_text_multiple_pairs.{$idx}.audio"];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
 if (isset($message)) { $__messageOriginal = $message; }
@@ -662,8 +853,56 @@ $message = $__bag->first($__errorArgs[0]); ?> <p class="error-text"><?php echo e
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
 unset($__errorArgs, $__bag); ?><!--[if ENDBLOCK]><![endif]-->
+                                                    </div>
                                                 </div>
-                                            </div>
+                                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><!--[if ENDBLOCK]><![endif]-->
+                                            
+                                            <!--[if BLOCK]><![endif]--><?php if(count($existingPairs) === 0): ?>
+                                                <div class="audio-image-pair-item flex flex-col mb-6 p-4 border-2 border-dashed border-indigo-300 rounded-lg bg-gradient-to-br from-indigo-50 to-purple-50">
+                                                    <div class="flex items-center justify-between mb-3">
+                                                        <span class="font-bold text-indigo-700">📱 Pair 1</span>
+                                                    </div>
+                                                    
+                                                    <div class="mb-3">
+                                                        <label class="modern-label text-sm">🖼️ Image File *</label>
+                                                        <input type="file" wire:model="audio_image_text_multiple_pairs.0.image" class="modern-input" accept="image/*" placeholder="Upload image">
+                                                        <!--[if BLOCK]><![endif]--><?php $__errorArgs = ["audio_image_text_multiple_pairs.0.image"];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> <p class="error-text"><?php echo e($message); ?></p> <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?><!--[if ENDBLOCK]><![endif]-->
+                                                    </div>
+                                                    
+                                                    <div class="mb-2">
+                                                        <label class="modern-label text-sm">🎵 Audio File *</label>
+                                                        
+                                                        <!-- Loading indicator for audio upload -->
+                                                        <div wire:loading wire:target="audio_image_text_multiple_pairs.0.audio" class="mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                                            <div class="flex items-center space-x-3">
+                                                                <div class="loading-spinner">
+                                                                    <svg class="w-5 h-5 text-yellow-600 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                                                    </svg>
+                                                                </div>
+                                                                <span class="text-sm font-medium !text-yellow-800 !important" style="color: #92400e !important;">Uploading audio...</span>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <input type="file" wire:model="audio_image_text_multiple_pairs.0.audio" class="modern-input" accept="audio/*" placeholder="Upload audio">
+                                                        <!--[if BLOCK]><![endif]--><?php $__errorArgs = ["audio_image_text_multiple_pairs.0.audio"];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> <p class="error-text"><?php echo e($message); ?></p> <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?><!--[if ENDBLOCK]><![endif]-->
+                                                    </div>
+                                                </div>
+                                            <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
                                         <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
                                     </div>
                                     <button type="button" wire:click="addAudioImageTextMultiplePair" class="add-btn mt-2">
@@ -725,22 +964,28 @@ unset($__errorArgs, $__bag); ?><!--[if ENDBLOCK]><![endif]-->
                             <div class="mt-6">
                                 <div class="flex items-center justify-between mb-4">
                                     <h4 class="sub-question-title">Correct Answer Pairs</h4>
-                                    <button type="button" wire:click="$set('audio_image_text_multiple_correct_pairs', [['left' => '', 'right' => ''], ['left' => '', 'right' => '']])" class="clear-all-btn">
+                                    <button type="button" onclick="window.Livewire.find('<?php echo e($_instance->getId()); ?>').set('audio_image_text_multiple_correct_pairs', Array(<?php echo e(max(2, count($audio_image_text_multiple_correct_pairs ?? []) )); ?>).fill({left: '', right: ''}))" class="clear-all-btn">
                                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                         </svg>
                                         Clear All Pairs
                                     </button>
+                                    <button type="button" wire:click="addAudioImageTextMultipleCorrectPair" class="add-btn ml-2">
+                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                        </svg>
+                                        Add Answer Key
+                                    </button>
                                 </div>
                                 <div class="info-banner-small">
-                                    <span class="text-sm">Select exactly 2 pairs. Pair indices: 0 = first image+audio pair, 1 = second pair, etc. Text indices: 0 = first text option, 1 = second text option, etc.</span>
+                                    <span class="text-sm">Select at least 2 pairs. Pair indices: 0 = first image+audio pair, 1 = second pair, etc. Text indices: 0 = first text option, 1 = second text option, etc.</span>
                                 </div>
                                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4" wire:key="audio-image-text-multiple-correct-pairs-section">
-                                    <!--[if BLOCK]><![endif]--><?php $__currentLoopData = [0,1]; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $pairIdx): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <!--[if BLOCK]><![endif]--><?php $__currentLoopData = $audio_image_text_multiple_correct_pairs; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $pairIdx => $pair): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                         <div class="option-item" wire:key="audio-image-text-multiple-pair-<?php echo e($pairIdx); ?>">
                                             <div class="flex items-center justify-between mb-3">
                                                 <div class="font-semibold" style="color: #000 !important;">Correct Pair <?php echo e($pairIdx+1); ?></div>
-                                                <button type="button" wire:click="$set('audio_image_text_multiple_correct_pairs.<?php echo e($pairIdx); ?>.left', ''); $set('audio_image_text_multiple_correct_pairs.<?php echo e($pairIdx); ?>.right', '')" class="clear-pair-btn" title="Clear this pair">
+                                                <button type="button" onclick="window.Livewire.find('<?php echo e($_instance->getId()); ?>').set('audio_image_text_multiple_correct_pairs.<?php echo e($pairIdx); ?>.left', ''); window.Livewire.find('<?php echo e($_instance->getId()); ?>').set('audio_image_text_multiple_correct_pairs.<?php echo e($pairIdx); ?>.right', '');" class="clear-pair-btn" title="Clear this pair">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                                                     </svg>
@@ -749,14 +994,37 @@ unset($__errorArgs, $__bag); ?><!--[if ENDBLOCK]><![endif]-->
                                             <div class="flex gap-4">
                                                 <div class="flex-1">
                                                     <label class="modern-label">Image+Audio Pair</label>
-                                                    <select class="option-input" wire:model.live="audio_image_text_multiple_correct_pairs.<?php echo e($pairIdx); ?>.left" wire:key="audio-image-text-multiple-left-select-<?php echo e($pairIdx); ?>-<?php echo e(count($audio_image_text_multiple_pairs ?? [])); ?>">
+                                                    <select class="option-input" wire:model.live="audio_image_text_multiple_correct_pairs.<?php echo e($pairIdx); ?>.left" wire:key="audio-image-text-multiple-left-select-<?php echo e($pairIdx); ?>-<?php echo e(count($audio_image_text_multiple_pairs ?? [])); ?>-<?php echo e(json_encode($audio_image_text_multiple_correct_pairs)); ?>">
                                                         <option value="">Select Pair</option>
-                                                        <!--[if BLOCK]><![endif]--><?php $__currentLoopData = $this->getFilteredAudioImageTextMultiplePairs(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $idx => $pair): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                        <?php
+                                                            $existingPairs = $record->audio_image_text_multiple_pairs ?? [];
+                                                            if (empty($existingPairs) && $record->question_data) {
+                                                                $questionData = json_decode($record->question_data, true);
+                                                                $existingPairs = $questionData['image_audio_pairs'] ?? [];
+                                                            }
+                                                            $allPairs = [];
+                                                            foreach($existingPairs as $idx => $pair) {
+                                                                if (!empty($pair['image']) && !empty($pair['audio'])) {
+                                                                    $allPairs[$idx] = $pair;
+                                                                }
+                                                            }
+                                                            if(is_array($audio_image_text_multiple_pairs ?? []) && count($audio_image_text_multiple_pairs) > 0) {
+                                                                foreach($audio_image_text_multiple_pairs as $idx => $uploadPair) {
+                                                                    if(
+                                                                        (isset($uploadPair['image']) && $uploadPair['image']) &&
+                                                                        (isset($uploadPair['audio']) && $uploadPair['audio'])
+                                                                    ) {
+                                                                        $allPairs[$idx] = $uploadPair;
+                                                                    }
+                                                                }
+                                                            }
+                                                        ?>
+                                                        <!--[if BLOCK]><![endif]--><?php $__currentLoopData = $allPairs; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $idx => $pair): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                             <?php
                                                                 $alreadySelected = false;
                                                                 $pairs = $audio_image_text_multiple_correct_pairs ?? [];
                                                                 foreach ($pairs as $otherIdx => $correctPair) {
-                                                                    if ($otherIdx !== $pairIdx && isset($correctPair['left']) && $correctPair['left'] !== '' && $correctPair['left'] == $idx) {
+                                                                    if ($otherIdx !== $pairIdx && isset($correctPair['left']) && $correctPair['left'] !== '' && $correctPair['left'] !== null && $correctPair['left'] == $idx) {
                                                                         $alreadySelected = true;
                                                                         break;
                                                                     }
@@ -770,20 +1038,20 @@ unset($__errorArgs, $__bag); ?><!--[if ENDBLOCK]><![endif]-->
                                                 </div>
                                                 <div class="flex-1">
                                                     <label class="modern-label">Text Option</label>
-                                                    <select class="option-input" wire:model.live="audio_image_text_multiple_correct_pairs.<?php echo e($pairIdx); ?>.right" wire:key="audio-image-text-multiple-right-select-<?php echo e($pairIdx); ?>-<?php echo e(count($audio_image_text_multiple_right_options ?? [])); ?>">
+                                                    <select class="option-input" wire:model.live="audio_image_text_multiple_correct_pairs.<?php echo e($pairIdx); ?>.right" wire:key="audio-image-text-multiple-right-select-<?php echo e($pairIdx); ?>-<?php echo e(count($audio_image_text_multiple_right_options ?? [])); ?>-<?php echo e(json_encode($audio_image_text_multiple_correct_pairs)); ?>-<?php echo e(json_encode($audio_image_text_multiple_right_options)); ?>">
                                                         <option value="">Select Text Option</option>
-                                                        <!--[if BLOCK]><![endif]--><?php $__currentLoopData = $this->getFilteredAudioImageTextMultipleRightOptions(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $idx => $option): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                        <!--[if BLOCK]><![endif]--><?php $__currentLoopData = $audio_image_text_multiple_right_options ?? []; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $idx => $option): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                             <?php
                                                                 $alreadySelected = false;
                                                                 $pairs = $audio_image_text_multiple_correct_pairs ?? [];
                                                                 foreach ($pairs as $otherIdx => $correctPair) {
-                                                                    if ($otherIdx !== $pairIdx && isset($correctPair['right']) && $correctPair['right'] !== '' && $correctPair['right'] == $idx) {
+                                                                    if ($otherIdx !== $pairIdx && isset($correctPair['right']) && $correctPair['right'] !== '' && $correctPair['right'] !== null && $correctPair['right'] == $idx) {
                                                                         $alreadySelected = true;
                                                                         break;
                                                                     }
                                                                 }
                                                             ?>
-                                                            <!--[if BLOCK]><![endif]--><?php if(!$alreadySelected): ?>
+                                                            <!--[if BLOCK]><![endif]--><?php if(!$alreadySelected && trim($option ?? '') !== ''): ?>
                                                                 <option value="<?php echo e($idx); ?>"><?php echo e($idx); ?>. <?php echo e($option); ?></option>
                                                             <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
                                                         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><!--[if ENDBLOCK]><![endif]-->
@@ -826,6 +1094,22 @@ $message = $__bag->first($__errorArgs[0]); ?> <p class="error-text"><?php echo e
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
 unset($__errorArgs, $__bag); ?><!--[if ENDBLOCK]><![endif]-->
+                                    
+                                    <!-- Loading indicator for audio upload -->
+                                    <div wire:loading wire:target="audio_mcq_file" class="mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                        <div class="flex items-center space-x-3">
+                                            <div class="loading-spinner">
+                                                <svg class="w-6 h-6 text-yellow-600 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                                </svg>
+                                            </div>
+                                            <div>
+                                                <p class="font-semibold !text-yellow-800 !important" style="color: #92400e !important;">Uploading audio file...</p>
+                                                <p class="text-sm !text-yellow-700 !important" style="color: #a16207 !important;">Please wait while your audio file is being processed</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
                                     <!--[if BLOCK]><![endif]--><?php if($existingAudioFile && $audio_mcq_file): ?>
                                         <div class="flex flex-row gap-6 mt-3">
                                             <div class="flex-1 p-4 bg-blue-50 border-2 border-blue-200 rounded-lg flex flex-col items-center">
@@ -843,7 +1127,12 @@ unset($__errorArgs, $__bag); ?><!--[if ENDBLOCK]><![endif]-->
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path>
                                                 </svg>
                                                 <div class="font-semibold text-green-800 mb-1">New audio: <?php echo e($audio_mcq_file->getClientOriginalName()); ?></div>
-                                                <audio id="audio_mcq_preview" controls style="width: 100%; margin-top: 0.5rem; display:none;"></audio>
+                                                <div class="mt-3 modern-audio-player" style="width: 100%;">
+                                                    <audio id="audio_mcq_preview" controls style="width: 100%;" class="rounded-lg">
+                                                        <source src="<?php echo e($audio_mcq_file->temporaryUrl()); ?>" type="audio/mpeg">
+                                                        Your browser does not support the audio element.
+                                                    </audio>
+                                                </div>
                                             </div>
                                         </div>
                                     <?php else: ?>
@@ -865,7 +1154,12 @@ unset($__errorArgs, $__bag); ?><!--[if ENDBLOCK]><![endif]-->
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path>
                                                 </svg>
                                                 <div class="font-semibold text-green-800 mb-1">New audio: <?php echo e($audio_mcq_file->getClientOriginalName()); ?></div>
-                                                <audio id="audio_mcq_preview" controls style="width: 100%; margin-top: 0.5rem; display:none;"></audio>
+                                                <div class="mt-3 modern-audio-player" style="width: 100%;">
+                                                    <audio id="audio_mcq_preview" controls style="width: 100%;" class="rounded-lg">
+                                                        <source src="<?php echo e($audio_mcq_file->temporaryUrl()); ?>" type="audio/mpeg">
+                                                        Your browser does not support the audio element.
+                                                    </audio>
+                                                </div>
                                             </div>
                                         <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
                                     <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
@@ -1086,7 +1380,12 @@ unset($__errorArgs, $__bag); ?><!--[if ENDBLOCK]><![endif]-->
                             <div class="mt-6">
                                 <div class="flex items-center justify-between mb-4">
                                     <h4 class="sub-question-title">Correct Answer Pairs</h4>
-                                    <button type="button" wire:click="clearAllPictureMcqPairs" class="clear-all-btn">
+                                    <button type="button" onclick="
+                                        window.Livewire.find('<?php echo e($_instance->getId()); ?>').set('picture_mcq_correct_pairs.0.left', '');
+                                        window.Livewire.find('<?php echo e($_instance->getId()); ?>').set('picture_mcq_correct_pairs.0.right', '');
+                                        window.Livewire.find('<?php echo e($_instance->getId()); ?>').set('picture_mcq_correct_pairs.1.left', '');
+                                        window.Livewire.find('<?php echo e($_instance->getId()); ?>').set('picture_mcq_correct_pairs.1.right', '');
+                                    " class="clear-all-btn">
                                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                         </svg>
@@ -1101,48 +1400,71 @@ unset($__errorArgs, $__bag); ?><!--[if ENDBLOCK]><![endif]-->
                                         <div class="option-item" wire:key="picture-mcq-pair-<?php echo e($pairIdx); ?>">
                                             <div class="flex items-center justify-between mb-3">
                                                 <div class="font-semibold" style="color: #000 !important;">Correct Pair <?php echo e($pairIdx+1); ?></div>
-                                                <button type="button" wire:click="clearPictureMcqPair(<?php echo e($pairIdx); ?>)" class="clear-pair-btn" title="Clear this pair">
+                                                <button type="button" 
+                                                        onclick="window.Livewire.find('<?php echo e($_instance->getId()); ?>').set('picture_mcq_correct_pairs.<?php echo e($pairIdx); ?>.left', ''); window.Livewire.find('<?php echo e($_instance->getId()); ?>').set('picture_mcq_correct_pairs.<?php echo e($pairIdx); ?>.right', '');" 
+                                                        class="clear-pair-btn" title="Clear this pair">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                                                     </svg>
                                                 </button>
                                             </div>
                                             <div class="flex gap-4">
-                                                <div class="flex-1">
+                                                                <div class="flex-1">
                                                     <label class="modern-label">Image</label>
-                                                    <select class="option-input" wire:model.live="picture_mcq_correct_pairs.<?php echo e($pairIdx); ?>.left" wire:key="picture-mcq-left-select-<?php echo e($pairIdx); ?>-<?php echo e(count($picture_mcq_image_uploads)); ?>">
+                                                    <select class="option-input" wire:model.live="picture_mcq_correct_pairs.<?php echo e($pairIdx); ?>.left" wire:key="picture-mcq-left-select-<?php echo e($pairIdx); ?>-<?php echo e(count($picture_mcq_image_uploads)); ?>-<?php echo e(json_encode($picture_mcq_correct_pairs)); ?>">
                                                         <option value="">Select Image</option>
-                                                        <!--[if BLOCK]><![endif]--><?php $__currentLoopData = $this->getFilteredPictureMcqImages(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $idx => $image): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                        <?php
+                                                            // Get existing images from database
+                                                            $existingPictureMcqImages = $picture_mcq_images ?? [];
+                                                            
+                                                            // Combine existing images with any new uploads
+                                                            $allPictureMcqImages = [];
+                                                            foreach($existingPictureMcqImages as $idx => $imagePath) {
+                                                                $allPictureMcqImages[$idx] = $imagePath;
+                                                            }
+                                                            
+                                                            // Override with new uploads if they exist
+                                                            if(is_array($picture_mcq_image_uploads ?? []) && count($picture_mcq_image_uploads) > 0) {
+                                                                foreach($picture_mcq_image_uploads as $idx => $upload) {
+                                                                    if($upload) {
+                                                                        $allPictureMcqImages[$idx] = $upload->getClientOriginalName();
+                                                                    }
+                                                                }
+                                                            }
+                                                        ?>
+                                                        <!--[if BLOCK]><![endif]--><?php $__currentLoopData = $allPictureMcqImages; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $idx => $image): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                             <?php
                                                                 $alreadySelected = false;
                                                                 foreach ($picture_mcq_correct_pairs as $otherIdx => $pair) {
-                                                                    if ($otherIdx !== $pairIdx && isset($pair['left']) && $pair['left'] !== '' && $pair['left'] == $idx) {
+                                                                    if ($otherIdx !== $pairIdx && isset($pair['left']) && $pair['left'] !== '' && $pair['left'] !== null && $pair['left'] == $idx) {
                                                                         $alreadySelected = true;
                                                                         break;
                                                                     }
                                                                 }
+                                                                // Always show simple naming
+                                                                $imageName = "Image " . ($idx + 1);
                                                             ?>
                                                             <!--[if BLOCK]><![endif]--><?php if(!$alreadySelected): ?>
-                                                                <option value="<?php echo e($idx); ?>"><?php echo e($idx); ?>. Image <?php echo e($idx + 1); ?></option>
+                                                                <option value="<?php echo e($idx); ?>"><?php echo e($idx); ?>. <?php echo e($imageName); ?></option>
                                                             <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
                                                         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><!--[if ENDBLOCK]><![endif]-->
                                                     </select>
                                                 </div>
                                                 <div class="flex-1">
                                                     <label class="modern-label">Text Option</label>
-                                                    <select class="option-input" wire:model.live="picture_mcq_correct_pairs.<?php echo e($pairIdx); ?>.right" wire:key="picture-mcq-right-select-<?php echo e($pairIdx); ?>-<?php echo e(count($picture_mcq_right_options)); ?>">
+                                                    <select class="option-input" wire:model.live="picture_mcq_correct_pairs.<?php echo e($pairIdx); ?>.right" wire:key="picture-mcq-right-select-<?php echo e($pairIdx); ?>-<?php echo e(count($picture_mcq_right_options)); ?>-<?php echo e(json_encode($picture_mcq_correct_pairs)); ?>">
                                                         <option value="">Select Text Option</option>
-                                                        <!--[if BLOCK]><![endif]--><?php $__currentLoopData = $this->getFilteredPictureMcqRightOptions(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $idx => $option): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                        <!--[if BLOCK]><![endif]--><?php $__currentLoopData = $picture_mcq_right_options; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $idx => $option): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                             <?php
                                                                 $alreadySelected = false;
                                                                 foreach ($picture_mcq_correct_pairs as $otherIdx => $pair) {
-                                                                    if ($otherIdx !== $pairIdx && isset($pair['right']) && $pair['right'] !== '' && $pair['right'] == $idx) {
+                                                                    if ($otherIdx !== $pairIdx && isset($pair['right']) && $pair['right'] !== '' && $pair['right'] !== null && $pair['right'] == $idx) {
                                                                         $alreadySelected = true;
                                                                         break;
                                                                     }
                                                                 }
                                                             ?>
-                                                            <!--[if BLOCK]><![endif]--><?php if(!$alreadySelected): ?>
+                                                            <!--[if BLOCK]><![endif]--><?php if(!$alreadySelected && trim($option ?? '') !== ''): ?>
                                                                 <option value="<?php echo e($idx); ?>"><?php echo e($idx); ?>. <?php echo e($option); ?></option>
                                                             <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
                                                         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><!--[if ENDBLOCK]><![endif]-->
@@ -2043,6 +2365,79 @@ unset($__errorArgs, $__bag); ?><!--[if ENDBLOCK]><![endif]-->
         margin: 0 !important;
     }
 
+    /* Loading Spinner Styles */
+    .loading-spinner {
+        display: inline-block;
+    }
+
+    .loading-spinner svg {
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        from {
+            transform: rotate(0deg);
+        }
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Fixed Loading States - Made text color more visible */
+    .loading-container {
+        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        border: 2px solid #f59e0b;
+        border-radius: 12px;
+        padding: 1rem;
+        margin: 0.75rem 0;
+        transition: all 0.3s ease;
+    }
+
+    .loading-container:hover {
+        background: linear-gradient(135deg, #fde68a 0%, #fcd34d 100%);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 6px -1px rgba(245, 158, 11, 0.2);
+    }
+
+    /* Force text color visibility in loading states */
+    .loading-container p,
+    .loading-container span,
+    [wire\:loading] p,
+    [wire\:loading] span {
+        color: #92400e !important;
+        font-weight: 600 !important;
+    }
+
+    /* Upload Progress Indicators */
+    .upload-success {
+        background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+        border: 2px solid #10b981;
+        animation: slideInSuccess 0.5s ease-out;
+    }
+
+    @keyframes slideInSuccess {
+        from {
+            opacity: 0;
+            transform: translateY(20px) scale(0.9);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    /* File Preservation Notice */
+    .file-preservation-notice {
+        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        border: 1px solid #3b82f6;
+        border-radius: 8px;
+        padding: 0.75rem;
+        margin-top: 0.5rem;
+        font-size: 0.875rem;
+        color: #1e40af;
+        font-weight: 500;
+    }
+
     /* Modern Single Card Form Styling */
     .modern-question-form {
         max-width: 98vw;
@@ -2110,6 +2505,38 @@ unset($__errorArgs, $__bag); ?><!--[if ENDBLOCK]><![endif]-->
         height: 100%;
         background: linear-gradient(135deg, #3b82f6, #8b5cf6);
         border-radius: 2px;
+    }
+
+    /* Modern Audio Player Styling */
+    .modern-audio-player audio {
+        width: 100%;
+        height: 40px;
+        border-radius: 8px;
+        background: #f8fafc;
+        border: 2px solid #e2e8f0;
+        outline: none;
+        transition: all 0.3s ease;
+    }
+
+    .modern-audio-player audio:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    /* Enhanced Audio Player */
+    .modern-audio-player {
+        padding: 0.75rem;
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        border-radius: 12px;
+        border: 2px solid #e2e8f0;
+        transition: all 0.3s ease;
+    }
+
+    .modern-audio-player:hover {
+        border-color: #3b82f6;
+        background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     }
 
     /* Image Preview Container */
@@ -2181,6 +2608,9 @@ unset($__errorArgs, $__bag); ?><!--[if ENDBLOCK]><![endif]-->
         background: linear-gradient(145deg, #fef7ff 0%, #f3e8ff 100%);
         border: 2px dashed #a855f7;
         transition: all 0.3s ease;
+        padding: 1rem;
+        border-radius: 12px;
+        margin-bottom: 1rem;
     }
 
     .picture-mcq-image-item:hover {
@@ -2934,6 +3364,33 @@ unset($__errorArgs, $__bag); ?><!--[if ENDBLOCK]><![endif]-->
         box-shadow: 0 10px 15px -3px rgba(107, 114, 128, 0.4) !important;
     }
 
+    /* Audio Upload Section Styling */
+    .audio-upload-section {
+        background: linear-gradient(145deg, #f0f9ff 0%, #e0f2fe 100%);
+        border: 2px solid #0ea5e9;
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .audio-upload-section:hover {
+        border-color: #0284c7;
+        background: linear-gradient(145deg, #e0f2fe 0%, #bae6fd 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px -3px rgba(14, 165, 233, 0.2);
+    }
+
+    .audio-upload-section .modern-input {
+        border-color: #0ea5e9 !important;
+        background: white !important;
+    }
+
+    .audio-upload-section .modern-input:focus {
+        border-color: #0284c7 !important;
+        box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1) !important;
+    }
+
     /* Info Banner */
     .info-banner {
         display: flex;
@@ -2971,34 +3428,7 @@ unset($__errorArgs, $__bag); ?><!--[if ENDBLOCK]><![endif]-->
         border-radius: 6px !important;
     }
 
-    /* Audio Upload Section Styling */
-    .audio-upload-section {
-        background: linear-gradient(145deg, #f0f9ff 0%, #e0f2fe 100%);
-        border: 2px solid #0ea5e9;
-        border-radius: 16px;
-        padding: 1.5rem;
-        margin-bottom: 1rem;
-        transition: all 0.3s ease;
-    }
-
-    .audio-upload-section:hover {
-        border-color: #0284c7;
-        background: linear-gradient(145deg, #e0f2fe 0%, #bae6fd 100%);
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px -3px rgba(14, 165, 233, 0.2);
-    }
-
-    .audio-upload-section .modern-input {
-        border-color: #0ea5e9 !important;
-        background: white !important;
-    }
-
-    .audio-upload-section .modern-input:focus {
-        border-color: #0284c7 !important;
-        box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1) !important;
-    }
-
-    /* Current file display */
+    /* Current file display colors */
     .bg-blue-50 {
         background-color: #eff6ff !important;
     }
@@ -3057,16 +3487,122 @@ unset($__errorArgs, $__bag); ?><!--[if ENDBLOCK]><![endif]-->
         background: #e5e7eb;
         color: #000;
     }
+
+    /* Responsive Design */
+    @media (min-width: 1200px) {
+        .modern-question-form {
+            max-width: 95vw;
+            padding: 0 2rem;
+        }
+        
+        .card-content {
+            padding: 2.5rem;
+        }
+    }
+
+    @media (max-width: 1024px) {
+        .modern-question-form {
+            max-width: 98vw;
+            padding: 0 1rem;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .modern-question-form {
+            max-width: 100vw;
+            padding: 0 0.5rem;
+        }
+        
+        .card-content {
+            padding: 1.5rem;
+        }
+        
+        .grid-cols-1.md\\:grid-cols-2 {
+            grid-template-columns: 1fr;
+        }
+        
+        .section-block {
+            padding: 1rem 0;
+        }
+
+        .true-false-options {
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .fragments-preview {
+            flex-direction: column;
+        }
+
+        .filled-paragraph-main {
+            font-size: 1rem;
+            padding: 1.5rem;
+        }
+
+        .picture-mcq-image-item {
+            margin-bottom: 1rem;
+        }
+
+        .picture-mcq-image-item img {
+            width: 100%;
+            max-width: 200px;
+            height: auto;
+        }
+
+        .image-preview-thumb {
+            width: 100px !important;
+            height: 100px !important;
+        }
+
+        .audio-image-pair-item {
+            margin-bottom: 1rem;
+            padding: 1rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .image-preview-thumb {
+            width: 70px !important;
+            height: 70px !important;
+        }
+
+        .audio-upload-section {
+            padding: 1rem;
+        }
+
+        .picture-mcq-image-item {
+            margin-bottom: 1rem;
+        }
+
+        .picture-mcq-image-item img {
+            width: 100%;
+            max-width: 200px;
+            height: auto;
+        }
+
+        .audio-image-pair-item {
+            margin-bottom: 1rem;
+            padding: 1rem;
+        }
+    }
     </style>
     <?php $__env->stopPush(); ?>
+
     <script>
     function previewAudio(event) {
         const file = event.target.files[0];
         if (file) {
             const audio = document.getElementById('audio_mcq_preview');
-            audio.src = URL.createObjectURL(file);
-            audio.style.display = 'block';
-            audio.load();
+            if (audio) {
+                audio.src = URL.createObjectURL(file);
+                audio.style.display = 'block';
+                audio.load();
+                // Remove any existing modern-audio-player wrapper to show the audio
+                const wrapper = audio.closest('.modern-audio-player');
+                if (wrapper) {
+                    wrapper.style.display = 'block';
+                }
+            }
         }
     }
     </script>
