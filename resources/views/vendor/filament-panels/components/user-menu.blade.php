@@ -12,15 +12,28 @@
     $items = \Illuminate\Support\Arr::except($items, ['account', 'logout', 'profile']);
 @endphp
 
+<style>
+    .fi-user-menu .fi-dropdown-panel {
+        top: auto !important;
+    }
+    .fi-user-menu .fi-dropdown-panel[style*="opacity: 0"],
+    .fi-user-menu .fi-dropdown-panel[style*="pointer-events: none"],
+    .fi-user-menu .fi-dropdown-panel[style*="visibility: hidden"] {
+        display: none !important;
+    }
+</style>
+
 {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::USER_MENU_BEFORE) }}
 
 <x-filament::dropdown
-    placement="bottom-end"
+    placement="bottom-start"
     teleport
+    trigger="click"
     :attributes="
         \Filament\Support\prepare_inherited_attributes($attributes)
             ->class(['fi-user-menu'])
     "
+    style="--popperjs-placement: bottom-start;"
 >
     <x-slot name="trigger">
         <button

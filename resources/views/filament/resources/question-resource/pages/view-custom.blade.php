@@ -9,8 +9,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label class="modern-label">Day Number</label>
-                            <input type="number" value="{{ $record->day->day_number ?? '' }}" class="modern-input" readonly>
-                        </div>
+                            <input type="text" value="{{ $record->day->name ?? '' }}" class="modern-input" readonly>                        </div>
 
                         <div>
                             <label class="modern-label">Course</label>
@@ -80,13 +79,85 @@
                     $isAudioMcqSingle = ($record->questionType->name ?? '') === 'audio_mcq_single';
                     $isAudioImageTextSingle = ($record->questionType->name ?? '') === 'audio_image_text_single';
                     $isAudioImageTextMultiple = ($record->questionType->name ?? '') === 'audio_image_text_multiple';
+                    $isAudioFillBlank = ($record->questionType->name ?? '') === 'audio_fill_blank';
+                    $isPictureFillBlank = ($record->questionType->name ?? '') === 'picture_fill_blank';
+                    $isVideoFillBlank = ($record->questionType->name ?? '') === 'video_fill_blank';
+                    $isAudioPictureMatch = ($record->questionType->name ?? '') === 'audio_picture_match';
 
                     // Decode question and answer data
                     $questionData = is_string($record->question_data) ? json_decode($record->question_data, true) : $record->question_data;
                     $answerData = is_string($record->answer_data) ? json_decode($record->answer_data, true) : $record->answer_data;
                 @endphp
 
-                @if($isAudioImageTextSingle)
+                <!-- Audio Fill in the Blanks Display -->
+                @if($isAudioFillBlank)
+                    <div class="space-y-6">
+                        <!-- Audio Player -->
+                        <div>
+                            <h3 class="text-lg font-medium text-gray-900">Audio</h3>
+                            <audio controls class="mt-2 w-full">
+                                <source src="{{ Storage::url($questionData['audio_file']) }}" type="audio/mpeg">
+                                Your browser does not support the audio element.
+                            </audio>
+                        </div>
+
+                        <!-- Paragraph with Blanks -->
+                        <div>
+                            <h3 class="text-lg font-medium text-gray-900">Paragraph with Blanks</h3>
+                            @php
+                                $paragraph = $questionData['paragraph'] ?? '';
+                            @endphp
+                            <div class="paragraph-text">{{ $paragraph }}</div>
+                            @if($paragraph)
+                                <div class="paragraph-info">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <span>Contains {{ substr_count($paragraph, '___') }} blank(s) to fill.</span>
+                                </div>
+                            @endif
+                        </div>
+
+                        <!-- Preview - Complete Sentence -->
+                        @php
+                            $answerKeys = $answerData['answer_keys'] ?? [];
+                        @endphp
+                        @if($paragraph && count($answerKeys) > 0)
+                            <div class="mb-6">
+                                <h4 class="sub-question-title mb-4">Preview - Complete Sentence</h4>
+                                <div class="preview-section">
+                                    @php
+                                        $answerIndex = 0;
+                                        $filledParagraph = preg_replace_callback('/___/', function($matches) use ($answerKeys, &$answerIndex) {
+                                            if ($answerIndex < count($answerKeys)) {
+                                                $answer = trim($answerKeys[$answerIndex]);
+                                                $answerIndex++;
+                                                if (!empty($answer)) {
+                                                    return '<span class="filled-answer">' . $answer . '</span>';
+                                                }
+                                            }
+                                            return '<span class="empty-blank">___</span>';
+                                        }, $paragraph);
+                                    @endphp
+                                    <div class="filled-paragraph-main">
+                                        <p class="preview-label-main">✅ Complete Sentence with Answers:</p>
+                                        <div class="paragraph-preview-filled">{!! $filledParagraph !!}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+
+                        <!-- Correct Answers -->
+                        <div>
+                            <h3 class="text-lg font-medium text-gray-900">Correct Answers</h3>
+                            <ul class="mt-2 list-disc list-inside text-gray-700">
+                                @foreach($answerKeys as $answer)
+                                    <li>{{ $answer }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    </div>
+                @elseif($isAudioImageTextSingle)
                     <!-- Audio Image Text Single Section -->
                     <div class="section-block">
                         <h3 class="section-title">Audio Image Text - Single Audio with Image to Text Matching</h3>
@@ -277,7 +348,7 @@
                         @endif
                     </div>
 
-                @elseif($isAudioImageTextMultiple)
+                    @elseif($isAudioImageTextMultiple)
                     <!-- Audio Image Text Multiple Section -->
                     <div class="section-block">
                         <h3 class="section-title">Multiple Audio, Multiple Images & Texts</h3>
@@ -288,17 +359,26 @@
                             This question has multiple image+audio pairs on the left side that students match to text descriptions on the right.
                         </div>
                         
+                        @php
+                            // Get question data from JSON
+                            $questionData = json_decode($record->question_data, true) ?? [];
+                            
+                            // Try multiple possible keys for the audio pairs data
+                            $imagePairs = $record->audio_image_text_multiple_pairs ?? 
+                                          $questionData['audio_pairs'] ?? 
+                                          $questionData['image_audio_pairs'] ?? 
+                                          $questionData['pairs'] ?? 
+                                          [];
+                        @endphp
+                        
                         <div class="grid grid-cols-2 gap-6">
                             <!-- Left Side - Image + Audio Pairs -->
                             <div>
                                 <h5 class="font-semibold mb-4 text-lg">🎭 Image + Audio Pairs</h5>
                                 <div class="space-y-6">
-                                    @php
-                                        $imagePairs = $record->audio_image_text_multiple_pairs ?? ($questionData['image_audio_pairs'] ?? []);
-                                    @endphp
                                     @if(count($imagePairs) > 0)
                                         @foreach($imagePairs as $idx => $pair)
-                                            <div class="audio-image-pair-item">
+                                            <div class="audio-image-pair-item p-4 border-2 border-dashed border-indigo-300 rounded-lg bg-gradient-to-br from-indigo-50 to-purple-50">
                                                 <div class="flex items-center justify-between mb-3">
                                                     <span class="font-bold text-indigo-700">📱 Pair {{ $idx + 1 }}</span>
                                                 </div>
@@ -308,7 +388,17 @@
                                                     <div class="mb-3">
                                                         <label class="modern-label text-sm">🖼️ Image File</label>
                                                         <div class="mt-2">
-                                                            <img src="{{ Storage::url($pair['image']) }}" alt="Pair {{ $idx + 1 }} Image" class="w-20 h-20 object-cover rounded border-2 border-indigo-200">
+                                                            <img src="{{ Storage::url($pair['image']) }}" 
+                                                                 alt="Pair {{ $idx + 1 }} Image" 
+                                                                 class="w-20 h-20 object-cover rounded border-2 border-indigo-200">
+                                                        </div>
+                                                        <div class="text-xs text-gray-500 mt-1">{{ basename($pair['image']) }}</div>
+                                                    </div>
+                                                @else
+                                                    <div class="mb-3">
+                                                        <label class="modern-label text-sm">🖼️ Image File</label>
+                                                        <div class="mt-2 p-2 bg-gray-100 border border-gray-300 rounded">
+                                                            <span class="text-sm text-gray-600">No image for this pair</span>
                                                         </div>
                                                     </div>
                                                 @endif
@@ -321,15 +411,25 @@
                                                             <span class="text-sm font-medium text-green-700">{{ basename($pair['audio']) }}</span>
                                                             <audio controls style="width: 100%; margin-top: 0.5rem; display: block;">
                                                                 <source src="{{ Storage::url($pair['audio']) }}" type="audio/mpeg">
+                                                                <source src="{{ Storage::url($pair['audio']) }}" type="audio/wav">
+                                                                <source src="{{ Storage::url($pair['audio']) }}" type="audio/ogg">
+                                                                <source src="{{ Storage::url($pair['audio']) }}" type="audio/m4a">
                                                                 Your browser does not support the audio element.
                                                             </audio>
+                                                        </div>
+                                                    </div>
+                                                @else
+                                                    <div class="mb-2">
+                                                        <label class="modern-label text-sm">🎵 Audio File</label>
+                                                        <div class="mt-2 p-2 bg-gray-100 border border-gray-300 rounded">
+                                                            <span class="text-sm text-gray-600">No audio for this pair</span>
                                                         </div>
                                                     </div>
                                                 @endif
                                             </div>
                                         @endforeach
                                     @else
-                                        <div class="audio-image-pair-item">
+                                        <div class="audio-image-pair-item p-4 border-2 border-dashed border-gray-300 rounded-lg">
                                             <p class="text-gray-500">No image-audio pairs available</p>
                                         </div>
                                     @endif
@@ -396,7 +496,7 @@
 
                         <!-- Preview Section -->
                         @php
-                            $imagePairs = $record->audio_image_text_multiple_pairs ?? ($questionData['image_audio_pairs'] ?? []);
+                            // Use the same $imagePairs variable from above
                             $rightOptions = $record->right_options ?? [];
                             $correctPairs = $record->correct_pairs ?? [];
                         @endphp
@@ -414,28 +514,44 @@
                                                 $textOption = $rightOptions[$textIndex] ?? '';
                                             @endphp
                                             
-                                            @if($imagePair && isset($imagePair['image']) && isset($imagePair['audio']) && $textOption)
+                                            @if($imagePair && $textOption)
                                                 <div class="audio-image-multiple-match-item">
                                                     <div class="flex flex-col md:flex-row items-center justify-center space-y-4 md:space-y-0 md:space-x-8 p-6 bg-white border-2 border-green-200 rounded-xl">
                                                         <!-- Image + Audio Section -->
                                                         <div class="flex flex-col items-center space-y-3">
-                                                            <div class="image-container">
-                                                                <img src="{{ Storage::url($imagePair['image']) }}" 
-                                                                     alt="Image {{ $pairIndex + 1 }}" 
-                                                                     class="preview-image object-cover rounded-lg border-2 border-indigo-300">
-                                                            </div>
-                                                            <div class="audio-indicator bg-indigo-100 border-2 border-indigo-300 px-3 py-2 rounded-lg">
-                                                                <div class="flex items-center space-x-2">
-                                                                    <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path>
-                                                                    </svg>
-                                                                    <span class="text-sm font-medium text-indigo-700">🎵 {{ basename($imagePair['audio']) }}</span>
+                                                            @if(isset($imagePair['image']) && $imagePair['image'])
+                                                                <div class="image-container">
+                                                                    <img src="{{ Storage::url($imagePair['image']) }}" 
+                                                                         alt="Image {{ $pairIndex + 1 }}" 
+                                                                         class="preview-image object-cover rounded-lg border-2 border-indigo-300">
                                                                 </div>
-                                                            </div>
+                                                            @endif
+                                                            @if(isset($imagePair['audio']) && $imagePair['audio'])
+                                                                <div class="audio-indicator bg-indigo-100 border-2 border-indigo-300 px-3 py-2 rounded-lg">
+                                                                    <div class="flex items-center space-x-2">
+                                                                        <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path>
+                                                                        </svg>
+                                                                        <span class="text-sm font-medium text-indigo-700">🎵 {{ basename($imagePair['audio']) }}</span>
+                                                                    </div>
+                                                                </div>
+                                                            @endif
+                                                            <span class="text-sm font-medium text-gray-700 bg-gray-100 px-2 py-1 rounded">Pair {{ $pairIndex + 1 }}</span>
                                                         </div>
+                                                        
+                                                        <!-- Arrow -->
+                                                        <div class="flex items-center px-4">
+                                                            <svg class="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                                                            </svg>
+                                                        </div>
+                                                        
                                                         <!-- Answer Preview Section -->
                                                         <div class="flex flex-col items-center w-full md:w-auto">
-                                                            <div class="answer-preview">{{ $textOption }}</div>
+                                                            <div class="text-container bg-blue-50 border-2 border-blue-300 px-6 py-3 rounded-lg">
+                                                                <span class="font-bold text-blue-900 text-lg">{{ $textOption }}</span>
+                                                            </div>
+                                                            <span class="text-sm font-medium text-gray-700 bg-gray-100 px-2 py-1 rounded mt-2">Text Option</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -444,9 +560,29 @@
                                     </div>
                                 </div>
                             </div>
+                        @else
+                            <div class="mb-6">
+                                <h4 class="sub-question-title mb-4">Preview - Image+Audio to Text Matching</h4>
+                                <div class="preview-section">
+                                    <div class="text-center py-8">
+                                        <div class="text-gray-500 mb-2">
+                                            <svg class="w-16 h-16 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                            </svg>
+                                        </div>
+                                        <p class="text-gray-500 font-medium">
+                                            Missing data for preview: 
+                                            @if(count($imagePairs) == 0) No audio-image pairs @endif
+                                            @if(count($rightOptions) == 0) No text options @endif
+                                            @if(count($correctPairs) == 0) No correct pairs @endif
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
                         @endif
                     </div>
-
+                
+                
                 @elseif($isAudioMcqSingle)
                     <!-- Audio MCQ Single Section -->
                     <div class="section-block">
@@ -1238,6 +1374,167 @@
                         </div>
                     </div>
 
+                @elseif($isPictureFillBlank)
+                    <div class="space-y-6">
+                        <!-- Image Display -->
+                        <div>
+                            <h3 class="text-lg font-medium text-gray-900">Image</h3>
+                            <img src="{{ Storage::url($questionData['image_file']) }}" alt="Question Image" class="rounded border w-64 h-auto mt-2">
+                        </div>
+                        <!-- Paragraph with Blanks -->
+                        <div>
+                            <h3 class="text-lg font-medium text-gray-900">Paragraph with Blanks</h3>
+                            @php
+                                $paragraph = $questionData['paragraph'] ?? '';
+                            @endphp
+                            <div class="paragraph-text">{{ $paragraph }}</div>
+                            @if($paragraph)
+                                <div class="paragraph-info">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <span>Contains {{ substr_count($paragraph, '___') }} blank(s) to fill.</span>
+                                </div>
+                            @endif
+                        </div>
+                        <!-- Preview - Complete Sentence -->
+                        @php
+                            $answerKeys = $answerData['answer_keys'] ?? [];
+                            $filteredAnswerKeys = array_filter($answerKeys, fn($a) => trim($a ?? '') !== '');
+                            $hasValidPreview = $paragraph && count($filteredAnswerKeys) > 0;
+                            if ($hasValidPreview) {
+                                $answerIndex = 0;
+                                $filledParagraph = preg_replace_callback('/___/', function($matches) use ($filteredAnswerKeys, &$answerIndex) {
+                                    if ($answerIndex < count($filteredAnswerKeys)) {
+                                        $answer = trim($filteredAnswerKeys[$answerIndex]);
+                                        $answerIndex++;
+                                        if (!empty($answer)) {
+                                            return '<span class="filled-answer">' . $answer . '</span>';
+                                        }
+                                    }
+                                    return '<span class="empty-blank">___</span>';
+                                }, $paragraph);
+                            }
+                        @endphp
+                        @if($hasValidPreview)
+                            <div class="preview-filled-main">
+                                <p class="preview-label-main">✅ Final Sentence with Answers:</p>
+                                <div class="filled-paragraph-main">{!! $filledParagraph !!}</div>
+                            </div>
+                        @endif
+                    </div>
+                @elseif($isVideoFillBlank)
+                    <div class="space-y-6">
+                        <!-- Video Player -->
+                        <div>
+                            <h3 class="text-lg font-medium text-gray-900">Video</h3>
+                            <video controls class="mt-2 w-full max-w-lg rounded border-2 border-blue-300">
+                                <source src="{{ Storage::url($questionData['video_file']) }}" type="video/mp4">
+                                Your browser does not support the video tag.
+                            </video>
+                        </div>
+                        <!-- Paragraph with Blanks -->
+                        <div>
+                            <h3 class="text-lg font-medium text-gray-900">Paragraph with Blanks</h3>
+                            @php
+                                $paragraph = $questionData['paragraph'] ?? '';
+                            @endphp
+                            <div class="paragraph-text">{{ $paragraph }}</div>
+                            @if($paragraph)
+                                <div class="paragraph-info">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <span>Contains {{ substr_count($paragraph, '___') }} blank(s) to fill.</span>
+                                </div>
+                            @endif
+                        </div>
+                        <!-- Preview - Complete Sentence -->
+                        @php
+                            $answerKeys = $answerData['answer_keys'] ?? [];
+                            $filteredAnswerKeys = array_filter($answerKeys, fn($a) => trim($a ?? '') !== '');
+                            $hasValidPreview = $paragraph && count($filteredAnswerKeys) > 0;
+                            if ($hasValidPreview) {
+                                $answerIndex = 0;
+                                $filledParagraph = preg_replace_callback('/___/', function($matches) use ($filteredAnswerKeys, &$answerIndex) {
+                                    if ($answerIndex < count($filteredAnswerKeys)) {
+                                        $answer = trim($filteredAnswerKeys[$answerIndex]);
+                                        $answerIndex++;
+                                        if (!empty($answer)) {
+                                            return '<span class="filled-answer">' . $answer . '</span>';
+                                        }
+                                    }
+                                    return '<span class="empty-blank">___</span>';
+                                }, $paragraph);
+                            }
+                        @endphp
+                        @if($hasValidPreview)
+                            <div class="preview-filled-main">
+                                <p class="preview-label-main">✅ Final Sentence with Answers:</p>
+                                <div class="filled-paragraph-main">{!! $filledParagraph !!}</div>
+                            </div>
+                        @endif
+                    </div>
+                @elseif($isAudioPictureMatch)
+                    <div class="space-y-6">
+                        <!-- Audio + Picture Matching Display -->
+                        <div>
+                            <h3 class="text-lg font-medium text-gray-900">Audio + Picture Matching</h3>
+                        </div>
+                        <!-- Preview - Correct Pairs -->
+                        @php
+                            $audios = $questionData['audios'] ?? [];
+                            $images = $questionData['images'] ?? [];
+                            $pairs = $answerData['correct_pairs'] ?? [];
+                        @endphp
+                        @if(count($pairs) > 0)
+                            <div class="preview-label mb-4">💡 Audio to Picture Matching:</div>
+                            <div class="space-y-6">
+                                @foreach($pairs as $index => $pair)
+                                    @php
+                                        $audioIndex = (int)($pair['left'] ?? -1);
+                                        $imageIndex = (int)($pair['right'] ?? -1);
+                                        $audioPath = $audios[$audioIndex] ?? null;
+                                        $imagePath = $images[$imageIndex] ?? null;
+                                    @endphp
+                                    @if($audioPath && $imagePath)
+                                        <div class="audio-picture-match-item">
+                                            <div class="flex items-center justify-center space-x-8 p-6 bg-white border-2 border-green-200 rounded-xl">
+                                                <!-- Audio Section -->
+                                                <div class="flex flex-col items-center space-y-2">
+                                                    <audio controls class="w-40">
+                                                        <source src="{{ Storage::url($audioPath) }}" type="audio/mpeg">
+                                                        Your browser does not support the audio element.
+                                                    </audio>
+                                                    <span class="text-sm font-medium text-gray-700 bg-gray-100 px-2 py-1 rounded">Audio {{ $audioIndex + 1 }}</span>
+                                                </div>
+                                                <!-- Arrow -->
+                                                <div class="flex items-center px-4">
+                                                    <svg class="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                                                    </svg>
+                                                </div>
+                                                <!-- Image Section -->
+                                                <div class="flex flex-col items-center space-y-2">
+                                                    <img src="{{ Storage::url($imagePath) }}" alt="Image {{ $imageIndex + 1 }}" class="preview-image object-cover rounded-lg border-2 border-blue-300">
+                                                    <span class="text-sm font-medium text-gray-700 bg-gray-100 px-2 py-1 rounded">Image {{ $imageIndex + 1 }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endif
+                                @endforeach
+                            </div>
+                        @else
+                            <div class="text-center py-8">
+                                <div class="text-gray-500 mb-2">
+                                    <svg class="w-16 h-16 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                    </svg>
+                                </div>
+                                <p class="text-gray-500 font-medium">No matching pairs set for this question.</p>
+                            </div>
+                        @endif
+                    </div>
                 @else
                     <!-- Regular Question Options Section -->
                     <div class="section-block">

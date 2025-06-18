@@ -54,4 +54,12 @@ class User extends Authenticatable
     {
         return $this->role === 'admin';
     }
+
+    /**
+     * Check if the user is a datamanager.
+     */
+    public function isDataManager(): bool
+    {
+        return $this->role === 'datamanager';
+    }
 }

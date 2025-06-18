@@ -116,11 +116,6 @@
     transition: all 0.3s ease;
 }
 
-.fi-user-menu:hover {
-    background: rgba(255, 255, 255, 0.1);
-    transform: scale(1.02);
-}
-
 /* Ensure all modern styling takes precedence */
 .fi-main-content {
     background: #f8fafc;

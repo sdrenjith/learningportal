@@ -8,7 +8,7 @@ class Question extends Model
 {
     protected $fillable = [
         'day_id',
-        'level_id',
+        'course_id',
         'subject_id',
         'question_type_id',
         'instruction',
@@ -16,11 +16,18 @@ class Question extends Model
         'answer_data',
         'explanation',
         'points',
-        'course_id',
         'left_options',
         'right_options',
         'correct_pairs',
         'is_active',
+        'audio_image_text_images',
+        'audio_image_text_audio_file',
+        'picture_mcq_images',
+        'audio_image_text_multiple_pairs',
+        'true_false_questions',
+        'form_fill_paragraph',
+        'reorder_fragments',
+        'reorder_answer_key',
     ];
 
     protected $casts = [
@@ -29,6 +36,12 @@ class Question extends Model
         'left_options' => 'array',
         'right_options' => 'array',
         'correct_pairs' => 'array',
+        'audio_image_text_images' => 'array',
+        'picture_mcq_images' => 'array',
+        'audio_image_text_multiple_pairs' => 'array',
+        'true_false_questions' => 'array',
+        'reorder_fragments' => 'array',
+        'is_active' => 'boolean',
     ];
 
     public function subject()

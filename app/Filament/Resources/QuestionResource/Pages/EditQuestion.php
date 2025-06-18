@@ -3,13 +3,13 @@
 namespace App\Filament\Resources\QuestionResource\Pages;
 
 use App\Filament\Resources\QuestionResource;
-use App\Models\Question;
-use App\Models\Day;
-use App\Models\Level;
+use Filament\Notifications\Notification;
+use Filament\Resources\Pages\Page;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Livewire\WithFileUploads;
 use App\Models\Subject;
 use App\Models\QuestionType;
-use Filament\Resources\Pages\Page;
-use Filament\Notifications\Notification;
 
 class EditQuestion extends Page
 {
@@ -105,6 +105,26 @@ class EditQuestion extends Page
         ['left' => '', 'right' => ''],
     ];
 
+    // Properties for Audio Fill Blank
+    public $audio_fill_paragraph = '';
+    public $audio_fill_answer_key = [''];
+    public $audio_fill_audio_file = null;
+
+    // Properties for Picture Fill Blank
+    public $picture_fill_paragraph = '';
+    public $picture_fill_answer_key = [''];
+    public $picture_fill_image = null;
+
+    // Properties for Video Fill Blank
+    public $video_fill_paragraph = '';
+    public $video_fill_answer_key = [''];
+    public $video_fill_video = null;
+
+    // Add these properties for Audio + Picture Matching
+    public $audio_picture_audios = [null];
+    public $audio_picture_images = [null];
+    public $audio_picture_pairs = [ ['left' => '', 'right' => ''] ];
+
     public $rules = [
         'left_options' => 'array',
         'left_options.*' => 'string|nullable',
@@ -169,6 +189,27 @@ class EditQuestion extends Page
         'audio_image_text_multiple_correct_pairs' => 'array',
         'audio_image_text_multiple_correct_pairs.*.left' => 'nullable',
         'audio_image_text_multiple_correct_pairs.*.right' => 'nullable',
+        // Audio Fill Blank validation rules
+        'audio_fill_paragraph' => 'string|nullable',
+        'audio_fill_answer_key' => 'array',
+        'audio_fill_answer_key.*' => 'string|nullable',
+        'audio_fill_audio_file' => 'nullable|file|mimes:mp3,wav,ogg,m4a|max:10240',
+        // Picture Fill Blank validation rules
+        'picture_fill_paragraph' => 'string|nullable',
+        'picture_fill_answer_key' => 'array',
+        'picture_fill_answer_key.*' => 'string|nullable',
+        'picture_fill_image' => 'nullable|image|max:4096',
+        // Video Fill Blank validation rules
+        'video_fill_paragraph' => 'string|nullable',
+        'video_fill_answer_key' => 'array',
+        'video_fill_answer_key.*' => 'string|nullable',
+        'video_fill_video' => 'nullable|file|mimes:mp4,webm,ogg|max:20480',
+        // Audio Picture Match validation rules
+        'audio_picture_audios.*' => 'nullable|file|mimes:mp3,wav,ogg,m4a|max:10240',
+        'audio_picture_images.*' => 'nullable|image|max:2048',
+        'audio_picture_pairs' => 'array',
+        'audio_picture_pairs.*.left' => 'nullable',
+        'audio_picture_pairs.*.right' => 'nullable',
     ];
 
     public function mount($record)
@@ -186,11 +227,11 @@ class EditQuestion extends Page
         $this->is_active = $record->is_active;
         $this->instruction = $record->instruction;
         $this->explanation = $record->explanation;
-        $this->day_number_input = $record->day->day_number ?? 1;
+        $this->day_number_input = $record->day->number ?? 1;
 
         // Determine question type and set question_type_id
         $questionTypeName = $record->questionType->name ?? '';
-        if (in_array($questionTypeName, ['statement_match', 'opinion', 'mcq_multiple', 'true_false_multiple', 'true_false', 'reorder', 'form_fill', 'picture_mcq', 'audio_mcq_single', 'audio_image_text_single', 'audio_image_text_multiple'])) {
+        if (in_array($questionTypeName, ['statement_match', 'opinion', 'mcq_multiple', 'true_false_multiple', 'true_false', 'reorder', 'form_fill', 'picture_mcq', 'audio_mcq_single', 'audio_image_text_single', 'audio_image_text_multiple', 'audio_fill_blank', 'picture_fill_blank', 'video_fill_blank', 'audio_picture_match'])) {
             $this->question_type_id = $questionTypeName;
         } else {
             $this->question_type_id = $record->question_type_id;
@@ -203,6 +244,13 @@ class EditQuestion extends Page
     private function loadQuestionTypeData($record, $questionTypeName)
     {
         switch ($questionTypeName) {
+            case 'audio_fill_blank':
+                $questionData = is_string($record->question_data) ? json_decode($record->question_data, true) : $record->question_data;
+                $answerData = is_string($record->answer_data) ? json_decode($record->answer_data, true) : $record->answer_data;
+                $this->audio_fill_paragraph = $questionData['paragraph'] ?? '';
+                $this->audio_fill_answer_key = $answerData['answer_keys'] ?? [''];
+                break;
+
             case 'statement_match':
                 $this->left_options = $record->left_options ?? [''];
                 $this->right_options = $record->right_options ?? [''];
@@ -304,6 +352,30 @@ class EditQuestion extends Page
                     ['left' => '', 'right' => ''],
                 ];
                 $this->audio_image_text_multiple_pairs = array_fill(0, max(1, count($this->audio_image_text_multiple_existing_pairs)), ['image' => null, 'audio' => null]);
+                break;
+
+            case 'picture_fill_blank':
+                $questionData = is_string($record->question_data) ? json_decode($record->question_data, true) : $record->question_data;
+                $answerData = is_string($record->answer_data) ? json_decode($record->answer_data, true) : $record->answer_data;
+                $this->picture_fill_paragraph = $questionData['paragraph'] ?? '';
+                $this->picture_fill_answer_key = $answerData['answer_keys'] ?? [''];
+                break;
+
+            case 'video_fill_blank':
+                $questionData = is_string($record->question_data) ? json_decode($record->question_data, true) : $record->question_data;
+                $answerData = is_string($record->answer_data) ? json_decode($record->answer_data, true) : $record->answer_data;
+                $this->video_fill_paragraph = $questionData['paragraph'] ?? '';
+                $this->video_fill_answer_key = $answerData['answer_keys'] ?? [''];
+                break;
+
+            case 'audio_picture_match':
+                $questionData = is_string($record->question_data) ? json_decode($record->question_data, true) : $record->question_data;
+                $answerData = is_string($record->answer_data) ? json_decode($record->answer_data, true) : $record->answer_data;
+                
+                // Initialize arrays with existing data
+                $this->audio_picture_audios = $questionData['audios'] ?? [null];
+                $this->audio_picture_images = $questionData['images'] ?? [null];
+                $this->audio_picture_pairs = $answerData['correct_pairs'] ?? [['left' => '', 'right' => '']];
                 break;
 
             default:
@@ -494,7 +566,24 @@ class EditQuestion extends Page
             $this->reorder_fragments = array_values($this->reorder_fragments);
         }
     }
+    public function addStatementMatchPair()
+{
+    $this->correct_pairs[] = ['left' => '', 'right' => ''];
+}
 
+
+public function removeStatementMatchPair($index)
+{
+    if (count($this->correct_pairs) > 1) {
+        unset($this->correct_pairs[$index]);
+        $this->correct_pairs = array_values($this->correct_pairs);
+    }
+}
+    public function clearAllStatementMatchPairs()
+    {
+        $this->correct_pairs = [['left' => '', 'right' => ''], ['left' => '', 'right' => '']];
+    }
+    
     // Form Fill methods
     public function addFormFillOption()
     {
@@ -743,6 +832,48 @@ class EditQuestion extends Page
         }
     }
 
+    // Picture MCQ Pair Management Methods
+public function addPictureMcqPair()
+{
+    $this->picture_mcq_correct_pairs[] = ['left' => '', 'right' => ''];
+}
+
+public function removePictureMcqPair($index)
+{
+    if (count($this->picture_mcq_correct_pairs) > 1) {
+        unset($this->picture_mcq_correct_pairs[$index]);
+        $this->picture_mcq_correct_pairs = array_values($this->picture_mcq_correct_pairs);
+    }
+}
+
+// Audio Image Text Single Pair Management Methods
+public function addAudioImageTextPair()
+{
+    $this->audio_image_text_correct_pairs[] = ['left' => '', 'right' => ''];
+}
+
+public function removeAudioImageTextPair($index)
+{
+    if (count($this->audio_image_text_correct_pairs) > 1) {
+        unset($this->audio_image_text_correct_pairs[$index]);
+        $this->audio_image_text_correct_pairs = array_values($this->audio_image_text_correct_pairs);
+    }
+}
+
+// Audio Image Text Multiple Pair Management Methods  
+public function addAudioImageTextMultiplePair_Answer()
+{
+    $this->audio_image_text_multiple_correct_pairs[] = ['left' => '', 'right' => ''];
+}
+
+public function removeAudioImageTextMultiplePair_Answer($index)
+{
+    if (count($this->audio_image_text_multiple_correct_pairs) > 1) {
+        unset($this->audio_image_text_multiple_correct_pairs[$index]);
+        $this->audio_image_text_multiple_correct_pairs = array_values($this->audio_image_text_multiple_correct_pairs);
+    }
+}
+
     // Validation methods
     public function updatedLeftOptions()
     {
@@ -853,15 +984,84 @@ class EditQuestion extends Page
     public function update()
     {
         // Find or create the Day by day_number and course_id
+        // Create Day with fallback approach
+try {
+    $day = \App\Models\Day::firstOrCreate(
+        [
+            'number' => $this->day_number_input,
+            'course_id' => $this->course_id,
+        ],
+        [
+            'name' => 'Day ' . $this->day_number_input,
+            'title' => 'Day ' . $this->day_number_input,
+        ]
+    );
+} catch (\Exception $e) {
+    try {
         $day = \App\Models\Day::firstOrCreate(
             [
-                'day_number' => $this->day_number_input,
-                'course_id' => $this->course_id,
+                'number' => $this->day_number_input,
             ],
             [
                 'title' => 'Day ' . $this->day_number_input,
             ]
         );
+        
+        try {
+            $day->course_id = $this->course_id;
+            $day->save();
+        } catch (\Exception $e2) {
+            // course_id column doesn't exist, continue
+        }
+    } catch (\Exception $e2) {
+        try {
+            $day = \App\Models\Day::firstOrCreate(
+                [
+                    'title' => 'Day ' . $this->day_number_input,
+                ]
+            );
+            
+            try {
+                $day->number = $this->day_number_input;
+                $day->course_id = $this->course_id;
+                $day->save();
+            } catch (\Exception $e3) {
+                // Some columns don't exist, continue
+            }
+        } catch (\Exception $e3) {
+            try {
+                $dayId = \DB::table('days')->insertGetId([
+                    'title' => 'Day ' . $this->day_number_input,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+                
+                try {
+                    \DB::table('days')->where('id', $dayId)->update([
+                        'number' => $this->day_number_input,
+                        'course_id' => $this->course_id,
+                    ]);
+                } catch (\Exception $e4) {
+                    // Additional fields don't exist, continue
+                }
+                
+                $day = \App\Models\Day::find($dayId);
+            } catch (\Exception $e4) {
+                $day = new \App\Models\Day();
+                $day->title = 'Day ' . $this->day_number_input;
+                
+                try {
+                    $day->number = $this->day_number_input;
+                    $day->course_id = $this->course_id;
+                } catch (\Exception $e5) {
+                    // Fields don't exist, continue
+                }
+                
+                $day->save();
+                    }
+                }
+            }
+        }
         $this->day_id = $day->id;
 
         // Validate required fields
@@ -887,8 +1087,14 @@ class EditQuestion extends Page
         $isAudioMcqSingle = ($this->question_type_id === 'audio_mcq_single');
         $isAudioImageTextSingle = ($this->question_type_id === 'audio_image_text_single');
         $isAudioImageTextMultiple = ($this->question_type_id === 'audio_image_text_multiple');
+        $isAudioFillBlank = ($this->question_type_id === 'audio_fill_blank');
+        $isPictureFillBlank = ($this->question_type_id === 'picture_fill_blank');
+        $isVideoFillBlank = ($this->question_type_id === 'video_fill_blank');
+        $isAudioPictureMatch = ($this->question_type_id === 'audio_picture_match');
 
-        if ($isAudioImageTextMultiple) {
+        if ($isAudioFillBlank) {
+            return $this->updateAudioFillBlank();
+        } elseif ($isAudioImageTextMultiple) {
             return $this->updateAudioImageTextMultiple();
         } elseif ($isAudioImageTextSingle) {
             return $this->updateAudioImageTextSingle();
@@ -910,216 +1116,220 @@ class EditQuestion extends Page
             return $this->updateOpinion();
         } elseif ($isStatementMatch) {
             return $this->updateStatementMatch();
+        } elseif ($isPictureFillBlank) {
+            return $this->updatePictureFillBlank();
+        } elseif ($isVideoFillBlank) {
+            return $this->updateVideoFillBlank();
+        } elseif ($isAudioPictureMatch) {
+            return $this->updateAudioPictureMatch();
         } else {
             return $this->updateRegularMcq();
         }
     }
 
     private function updateAudioImageTextMultiple()
-    {
-        $rightOptions = array_filter($this->audio_image_text_multiple_right_options, fn($v) => trim($v) !== '');
-        $pairs = array_filter($this->audio_image_text_multiple_correct_pairs, function($pair) {
-            return isset($pair['left'], $pair['right']) && 
-                   $pair['left'] !== '' && $pair['right'] !== '' &&
-                   $pair['left'] !== null && $pair['right'] !== null;
-        });
-        $pairs = array_map(function($pair) {
-            $pair['left'] = (int) $pair['left'];
-            $pair['right'] = (int) $pair['right'];
-            return $pair;
-        }, $pairs);
+{
+    $rightOptions = array_filter($this->audio_image_text_multiple_right_options, fn($v) => trim($v) !== '');
+    $pairs = array_filter($this->audio_image_text_multiple_correct_pairs, function($pair) {
+        return isset($pair['left'], $pair['right']) && 
+               $pair['left'] !== '' && $pair['right'] !== '' &&
+               $pair['left'] !== null && $pair['right'] !== null;
+    });
+    $pairs = array_map(function($pair) {
+        $pair['left'] = (int) $pair['left'];
+        $pair['right'] = (int) $pair['right'];
+        return $pair;
+    }, $pairs);
 
-        // Handle existing and new image-audio pairs
-        $uploadedPairs = [];
-        $validPairCount = 0;
+    // Handle existing and new audio pairs (image is optional)
+    $uploadedPairs = [];
+    $validPairCount = 0;
+    
+    foreach ($this->audio_image_text_multiple_pairs as $index => $pair) {
+        $hasNewImage = !empty($pair['image']);
+        $hasNewAudio = !empty($pair['audio']);
+        $hasExistingData = !empty($this->audio_image_text_multiple_existing_pairs[$index] ?? null);
         
-        foreach ($this->audio_image_text_multiple_pairs as $index => $pair) {
-            $hasNewImage = !empty($pair['image']);
-            $hasNewAudio = !empty($pair['audio']);
-            $hasExistingData = !empty($this->audio_image_text_multiple_existing_pairs[$index] ?? null);
-            
-            if ($hasNewImage && $hasNewAudio) {
-                // Both new files uploaded
-                $validPairCount++;
-                $imagePath = $pair['image']->store('question-images', 'public');
-                $audioPath = $pair['audio']->store('question-audio', 'public');
-                $uploadedPairs[$index] = [
-                    'image' => $imagePath,
-                    'audio' => $audioPath
-                ];
-            } elseif ($hasNewImage && !$hasNewAudio && $hasExistingData) {
-                // New image, keep existing audio
-                $validPairCount++;
-                $imagePath = $pair['image']->store('question-images', 'public');
-                $uploadedPairs[$index] = [
-                    'image' => $imagePath,
-                    'audio' => $this->audio_image_text_multiple_existing_pairs[$index]['audio']
-                ];
-            } elseif (!$hasNewImage && $hasNewAudio && $hasExistingData) {
-                // Keep existing image, new audio
-                $validPairCount++;
-                $audioPath = $pair['audio']->store('question-audio', 'public');
-                $uploadedPairs[$index] = [
-                    'image' => $this->audio_image_text_multiple_existing_pairs[$index]['image'],
-                    'audio' => $audioPath
-                ];
-            } elseif (!$hasNewImage && !$hasNewAudio && $hasExistingData) {
-                // Keep both existing files
-                $validPairCount++;
-                $uploadedPairs[$index] = [
-                    'image' => $this->audio_image_text_multiple_existing_pairs[$index]['image'],
-                    'audio' => $this->audio_image_text_multiple_existing_pairs[$index]['audio']
-                ];
-            }
+        // Check existing audio and image
+        $hasExistingAudio = $hasExistingData && !empty($this->audio_image_text_multiple_existing_pairs[$index]['audio']);
+        $hasExistingImage = $hasExistingData && !empty($this->audio_image_text_multiple_existing_pairs[$index]['image']);
+        
+        // Audio is required (either new or existing), image is optional
+        $finalAudio = null;
+        $finalImage = null;
+        
+        // Handle audio (required)
+        if ($hasNewAudio) {
+            $finalAudio = $pair['audio']->store('question-audio', 'public');
+        } elseif ($hasExistingAudio) {
+            $finalAudio = $this->audio_image_text_multiple_existing_pairs[$index]['audio'];
         }
-
-        if ($validPairCount < 2 || count($rightOptions) < 2) {
-            Notification::make()
-                ->title('Validation Error')
-                ->body('Please ensure at least 2 image-audio pairs and 2 text options exist.')
-                ->danger()
-                ->send();
-            return;
+        
+        // Handle image (optional)
+        if ($hasNewImage) {
+            $finalImage = $pair['image']->store('question-images', 'public');
+        } elseif ($hasExistingImage) {
+            $finalImage = $this->audio_image_text_multiple_existing_pairs[$index]['image'];
         }
-
-        if (count($pairs) < 2) {
-            Notification::make()
-                ->title('Validation Error')
-                ->body('Please select at least 2 correct pairs.')
-                ->danger()
-                ->send();
-            return;
+        
+        // Only add pair if it has audio (image is optional)
+        if ($finalAudio) {
+            $validPairCount++;
+            $uploadedPairs[$index] = [
+                'audio' => $finalAudio,
+                'image' => $finalImage // Can be null
+            ];
         }
-
-        $explanationFilePath = $this->explanation;
-        if ($this->explanation_file) {
-            $explanationFilePath = $this->explanation_file->store('explanations', 'public');
-        }
-
-        $questionType = QuestionType::firstOrCreate(['name' => 'audio_image_text_multiple']);
-
-        $this->record->update([
-            'day_id' => $this->day_id,
-            'course_id' => $this->course_id,
-            'subject_id' => $this->subject_id,
-            'question_type_id' => $questionType->id,
-            'instruction' => $this->instruction,
-            'explanation' => $explanationFilePath,
-            'points' => $this->points ?: 1,
-            'is_active' => $this->is_active,
-            'question_data' => json_encode([
-                'main_instruction' => $this->instruction,
-                'image_audio_pairs' => array_values($uploadedPairs),
-                'right_options' => array_values($rightOptions)
-            ]),
-            'answer_data' => json_encode([
-                'correct_pairs' => array_values($pairs)
-            ]),
-            'right_options' => array_values($rightOptions),
-            'correct_pairs' => array_values($pairs),
-            'audio_image_text_multiple_pairs' => array_values($uploadedPairs),
-        ]);
-
-        $this->showSuccessAndRedirect('audio image text multiple question');
     }
 
-    private function updateAudioImageTextSingle()
-    {
-        $rightOptions = array_filter($this->audio_image_text_right_options, fn($v) => trim($v) !== '');
-        $pairs = array_filter($this->audio_image_text_correct_pairs, function($pair) {
-            return isset($pair['left'], $pair['right']) && 
-                   $pair['left'] !== '' && $pair['right'] !== '' &&
-                   $pair['left'] !== null && $pair['right'] !== null;
-        });
-        
-        $pairs = array_map(function($pair) {
-            $pair['left'] = (int) $pair['left'];
-            $pair['right'] = (int) $pair['right'];
-            return $pair;
-        }, $pairs);
-
-        // Handle existing and new images
-        $uploadedImages = [];
-        $validImageCount = 0;
-        
-        foreach ($this->audio_image_text_image_uploads as $index => $imageFile) {
-            if ($imageFile) {
-                // New image uploaded
-                $validImageCount++;
-                $imagePath = $imageFile->store('question-images', 'public');
-                $uploadedImages[$index] = $imagePath;
-            } elseif (isset($this->audio_image_text_images[$index])) {
-                // Keep existing image
-                $validImageCount++;
-                $uploadedImages[$index] = $this->audio_image_text_images[$index];
-            }
-        }
-
-        if ($validImageCount < 2 || count($rightOptions) < 2) {
-            Notification::make()
-                ->title('Validation Error')
-                ->body('Please ensure at least 2 images and 2 text options exist.')
-                ->danger()
-                ->send();
-            return;
-        }
-
-        if (count($pairs) !== 2) {
-            Notification::make()
-                ->title('Validation Error')
-                ->body('Please select exactly 2 correct pairs.')
-                ->danger()
-                ->send();
-            return;
-        }
-
-        $explanationFilePath = $this->explanation;
-        if ($this->explanation_file) {
-            $explanationFilePath = $this->explanation_file->store('explanations', 'public');
-        }
-
-        // Handle audio file
-        $audioFilePath = null;
-        if ($this->record->question_data) {
-            $questionData = json_decode($this->record->question_data, true);
-            $audioFilePath = $questionData['audio_file'] ?? null;
-        }
-        if (!$audioFilePath && $this->record->audio_image_text_audio_file) {
-            $audioFilePath = $this->record->audio_image_text_audio_file;
-        }
-        
-        if ($this->audio_image_text_audio_file) {
-            $audioFilePath = $this->audio_image_text_audio_file->store('question-audio', 'public');
-        }
-
-        $questionType = QuestionType::firstOrCreate(['name' => 'audio_image_text_single']);
-        
-        $this->record->update([
-            'day_id' => $this->day_id,
-            'course_id' => $this->course_id,
-            'subject_id' => $this->subject_id,
-            'question_type_id' => $questionType->id,
-            'instruction' => $this->instruction,
-            'explanation' => $explanationFilePath,
-            'points' => $this->points ?: 1,
-            'is_active' => $this->is_active,
-            'question_data' => json_encode([
-                'main_instruction' => $this->instruction,
-                'audio_file' => $audioFilePath,
-                'images' => array_values($uploadedImages),
-                'right_options' => array_values($rightOptions)
-            ]),
-            'answer_data' => json_encode([
-                'correct_pairs' => array_values($pairs)
-            ]),
-            'right_options' => array_values($rightOptions),
-            'correct_pairs' => array_values($pairs),
-            'audio_image_text_images' => array_values($uploadedImages),
-            'audio_image_text_audio_file' => $audioFilePath,
-        ]);
-        
-        $this->showSuccessAndRedirect('audio image text single question');
+    if ($validPairCount < 2 || count($rightOptions) < 2) {
+        Notification::make()
+            ->title('Validation Error')
+            ->body('Please ensure at least 2 audio pairs and 2 text options exist.')
+            ->danger()
+            ->send();
+        return;
     }
+
+    if (count($pairs) < 2) {
+        Notification::make()
+            ->title('Validation Error')
+            ->body('Please select at least 2 correct pairs.')
+            ->danger()
+            ->send();
+        return;
+    }
+
+    $explanationFilePath = $this->explanation;
+    if ($this->explanation_file) {
+        $explanationFilePath = $this->explanation_file->store('explanations', 'public');
+    }
+
+    $questionType = QuestionType::firstOrCreate(['name' => 'audio_image_text_multiple']);
+
+    $this->record->update([
+        'day_id' => $this->day_id,
+        'course_id' => $this->course_id,
+        'subject_id' => $this->subject_id,
+        'question_type_id' => $questionType->id,
+        'instruction' => $this->instruction,
+        'explanation' => $explanationFilePath,
+        'points' => $this->points ?: 1,
+        'is_active' => $this->is_active,
+        'question_data' => json_encode([
+            'main_instruction' => $this->instruction,
+            'image_audio_pairs' => array_values($uploadedPairs),
+            'right_options' => array_values($rightOptions)
+        ]),
+        'answer_data' => json_encode([
+            'correct_pairs' => array_values($pairs)
+        ]),
+        'right_options' => array_values($rightOptions),
+        'correct_pairs' => array_values($pairs),
+        'audio_image_text_multiple_pairs' => array_values($uploadedPairs),
+    ]);
+
+    $this->showSuccessAndRedirect('audio image text multiple question');
+}
+
+private function updateAudioImageTextSingle()
+{
+    $rightOptions = array_filter($this->audio_image_text_right_options, fn($v) => trim($v) !== '');
+    $pairs = array_filter($this->audio_image_text_correct_pairs, function($pair) {
+        return isset($pair['left'], $pair['right']) && 
+               $pair['left'] !== '' && $pair['right'] !== '' &&
+               $pair['left'] !== null && $pair['right'] !== null;
+    });
+    
+    $pairs = array_map(function($pair) {
+        $pair['left'] = (int) $pair['left'];
+        $pair['right'] = (int) $pair['right'];
+        return $pair;
+    }, $pairs);
+
+    // Handle existing and new images
+    $uploadedImages = [];
+    $validImageCount = 0;
+    
+    foreach ($this->audio_image_text_image_uploads as $index => $imageFile) {
+        if ($imageFile) {
+            // New image uploaded
+            $validImageCount++;
+            $imagePath = $imageFile->store('question-images', 'public');
+            $uploadedImages[$index] = $imagePath;
+        } elseif (isset($this->audio_image_text_images[$index])) {
+            // Keep existing image
+            $validImageCount++;
+            $uploadedImages[$index] = $this->audio_image_text_images[$index];
+        }
+    }
+
+    if ($validImageCount < 2 || count($rightOptions) < 2) {
+        Notification::make()
+            ->title('Validation Error')
+            ->body('Please ensure at least 2 images and 2 text options exist.')
+            ->danger()
+            ->send();
+        return;
+    }
+
+    // Changed validation: Allow at least 1 pair instead of exactly 2
+    if (count($pairs) < 1) {
+        Notification::make()
+            ->title('Validation Error')
+            ->body('Please select at least 1 correct pair.')
+            ->danger()
+            ->send();
+        return;
+    }
+
+    $explanationFilePath = $this->explanation;
+    if ($this->explanation_file) {
+        $explanationFilePath = $this->explanation_file->store('explanations', 'public');
+    }
+
+    // Handle audio file
+    $audioFilePath = null;
+    if ($this->record->question_data) {
+        $questionData = json_decode($this->record->question_data, true);
+        $audioFilePath = $questionData['audio_file'] ?? null;
+    }
+    if (!$audioFilePath && $this->record->audio_image_text_audio_file) {
+        $audioFilePath = $this->record->audio_image_text_audio_file;
+    }
+    
+    if ($this->audio_image_text_audio_file) {
+        $audioFilePath = $this->audio_image_text_audio_file->store('question-audio', 'public');
+    }
+
+    $questionType = QuestionType::firstOrCreate(['name' => 'audio_image_text_single']);
+    
+    $this->record->update([
+        'day_id' => $this->day_id,
+        'course_id' => $this->course_id,
+        'subject_id' => $this->subject_id,
+        'question_type_id' => $questionType->id,
+        'instruction' => $this->instruction,
+        'explanation' => $explanationFilePath,
+        'points' => $this->points ?: 1,
+        'is_active' => $this->is_active,
+        'question_data' => json_encode([
+            'main_instruction' => $this->instruction,
+            'audio_file' => $audioFilePath,
+            'images' => array_values($uploadedImages),
+            'right_options' => array_values($rightOptions)
+        ]),
+        'answer_data' => json_encode([
+            'correct_pairs' => array_values($pairs)
+        ]),
+        'right_options' => array_values($rightOptions),
+        'correct_pairs' => array_values($pairs),
+        'audio_image_text_images' => array_values($uploadedImages),
+        'audio_image_text_audio_file' => $audioFilePath,
+    ]);
+    
+    $this->showSuccessAndRedirect('audio image text single question');
+}
 
     private function updateAudioMcqSingle()
     {
@@ -1762,10 +1972,10 @@ class EditQuestion extends Page
             return;
         }
 
-        if (count($pairs) !== 2) {
+        if (count($pairs) < 1) {
             Notification::make()
                 ->title('Validation Error')
-                ->body('Please select exactly 2 correct pairs.')
+                ->body('Please select at least 1 correct pair.')
                 ->danger()
                 ->send();
             return;
@@ -1820,8 +2030,14 @@ class EditQuestion extends Page
             'left_options' => array_values($leftOptions),
             'right_options' => array_values($rightOptions),
             'correct_pairs' => array_values($pairs),
-            'question_data' => null,
-            'answer_data' => null,
+            'question_data' => json_encode([
+                'main_instruction' => $this->instruction,
+                'left_options' => array_values($leftOptions),
+                'right_options' => array_values($rightOptions)
+            ]),
+            'answer_data' => json_encode([
+                'correct_pairs' => array_values($pairs)
+            ]),
         ]);
 
         $this->showSuccessAndRedirect('statement match question');
@@ -1936,5 +2152,517 @@ class EditQuestion extends Page
             url('/admin/questions') => 'Questions',
             '' => 'Edit Question',
         ];
+    }
+
+    private function updateAudioFillBlank()
+    {
+        $paragraph = trim($this->audio_fill_paragraph);
+        $answerKeys = array_filter($this->audio_fill_answer_key, fn($v) => trim($v) !== '');
+        
+        if (empty($paragraph)) {
+            Notification::make()
+                ->title('Validation Error')
+                ->body('Please provide the paragraph with blanks marked as ___ (three underscores).')
+                ->danger()
+                ->send();
+            return;
+        }
+        
+        $blankCount = substr_count($paragraph, '___');
+        
+        if ($blankCount === 0) {
+            Notification::make()
+                ->title('Validation Error')
+                ->body('Paragraph must contain at least one blank marked as ___ (three underscores).')
+                ->danger()
+                ->send();
+            return;
+        }
+        
+        if (count($answerKeys) !== $blankCount) {
+            Notification::make()
+                ->title('Validation Error')
+                ->body("Please provide exactly {$blankCount} answer key(s) to match the number of blanks in the paragraph.")
+                ->danger()
+                ->send();
+            return;
+        }
+
+        $explanationFilePath = $this->explanation;
+        if ($this->explanation_file) {
+            $explanationFilePath = $this->explanation_file->store('explanations', 'public');
+        }
+
+        // Handle audio file - keep existing if no new one uploaded
+        $existingAudioFile = null;
+        if ($this->record->question_data) {
+            $questionData = json_decode($this->record->question_data, true);
+            $existingAudioFile = $questionData['audio_file'] ?? null;
+        }
+        
+        $audioFilePath = $existingAudioFile;
+        if ($this->audio_fill_audio_file) {
+            $audioFilePath = $this->audio_fill_audio_file->store('question-audio', 'public');
+        }
+        
+        $questionType = QuestionType::firstOrCreate(['name' => 'audio_fill_blank']);
+        
+        $this->record->update([
+            'day_id' => $this->day_id,
+            'course_id' => $this->course_id,
+            'subject_id' => $this->subject_id,
+            'question_type_id' => $questionType->id,
+            'instruction' => $this->instruction,
+            'explanation' => $explanationFilePath,
+            'points' => $this->points ?: 1,
+            'is_active' => $this->is_active,
+            'question_data' => json_encode([
+                'main_instruction' => $this->instruction,
+                'paragraph' => $paragraph,
+                'audio_file' => $audioFilePath,
+                'blank_count' => $blankCount
+            ]),
+            'answer_data' => json_encode([
+                'answer_keys' => array_values($answerKeys),
+                'blank_count' => $blankCount
+            ]),
+            'left_options' => null,
+            'right_options' => null,
+            'correct_pairs' => null,
+        ]);
+        
+        $this->showSuccessAndRedirect('audio fill in the blank question');
+    }
+
+    // Audio Fill Blank methods
+    public function addAudioFillAnswerKey()
+    {
+        $this->audio_fill_answer_key[] = '';
+    }
+
+    public function removeAudioFillAnswerKey($index)
+    {
+        if (count($this->audio_fill_answer_key) > 1) {
+            unset($this->audio_fill_answer_key[$index]);
+            $this->audio_fill_answer_key = array_values($this->audio_fill_answer_key);
+        }
+    }
+
+    public function adjustAudioFillAnswerKeysToBlankCount()
+    {
+        if (!empty($this->audio_fill_paragraph)) {
+            $blankCount = substr_count($this->audio_fill_paragraph, '___');
+            $currentAnswerKeyCount = count($this->audio_fill_answer_key);
+            
+            if ($blankCount > $currentAnswerKeyCount) {
+                for ($i = $currentAnswerKeyCount; $i < $blankCount; $i++) {
+                    $this->audio_fill_answer_key[] = '';
+                }
+            } elseif ($blankCount < $currentAnswerKeyCount && $blankCount > 0) {
+                $this->audio_fill_answer_key = array_slice($this->audio_fill_answer_key, 0, $blankCount);
+            }
+            
+            if (empty($this->audio_fill_answer_key) || $blankCount === 0) {
+                $this->audio_fill_answer_key = [''];
+            }
+        }
+    }
+
+    public function updatedAudioFillParagraph()
+    {
+        $this->adjustAudioFillAnswerKeysToBlankCount();
+        $this->validateOnly('audio_fill_paragraph');
+    }
+
+    public function updatedAudioFillAnswerKey()
+    {
+        $this->validateOnly('audio_fill_answer_key');
+    }
+
+    public function updatedAudioFillAudioFile()
+    {
+        $this->validateOnly('audio_fill_audio_file');
+    }
+
+    private function updatePictureFillBlank()
+    {
+        $paragraph = trim($this->picture_fill_paragraph);
+        $answerKeys = array_filter($this->picture_fill_answer_key, fn($v) => trim($v) !== '');
+        if (empty($paragraph)) {
+            Notification::make()
+                ->title('Validation Error')
+                ->body('Please provide the paragraph with blanks marked as ___ (three underscores).')
+                ->danger()
+                ->send();
+            return;
+        }
+        $blankCount = substr_count($paragraph, '___');
+        if ($blankCount === 0) {
+            Notification::make()
+                ->title('Validation Error')
+                ->body('Paragraph must contain at least one blank marked as ___ (three underscores).')
+                ->danger()
+                ->send();
+            return;
+        }
+        if (count($answerKeys) !== $blankCount) {
+            Notification::make()
+                ->title('Validation Error')
+                ->body("Please provide exactly {$blankCount} answer key(s) to match the number of blanks in the paragraph.")
+                ->danger()
+                ->send();
+            return;
+        }
+        $explanationFilePath = $this->explanation;
+        if ($this->explanation_file) {
+            $explanationFilePath = $this->explanation_file->store('explanations', 'public');
+        }
+        // Handle image file - keep existing if no new one uploaded
+        $existingImageFile = null;
+        if ($this->record->question_data) {
+            $questionData = json_decode($this->record->question_data, true);
+            $existingImageFile = $questionData['image_file'] ?? null;
+        }
+        $imageFilePath = $existingImageFile;
+        if ($this->picture_fill_image) {
+            $imageFilePath = $this->picture_fill_image->store('question-images', 'public');
+        }
+        $questionType = QuestionType::firstOrCreate(['name' => 'picture_fill_blank']);
+        $this->record->update([
+            'day_id' => $this->day_id,
+            'course_id' => $this->course_id,
+            'subject_id' => $this->subject_id,
+            'question_type_id' => $questionType->id,
+            'instruction' => $this->instruction,
+            'explanation' => $explanationFilePath,
+            'points' => $this->points ?: 1,
+            'is_active' => $this->is_active,
+            'question_data' => json_encode([
+                'main_instruction' => $this->instruction,
+                'paragraph' => $paragraph,
+                'image_file' => $imageFilePath,
+                'blank_count' => $blankCount
+            ]),
+            'answer_data' => json_encode([
+                'answer_keys' => array_values($answerKeys),
+                'blank_count' => $blankCount
+            ]),
+            'left_options' => null,
+            'right_options' => null,
+            'correct_pairs' => null,
+        ]);
+        $this->showSuccessAndRedirect('picture fill in the blank question');
+    }
+    public function addPictureFillAnswerKey()
+    {
+        $this->picture_fill_answer_key[] = '';
+    }
+    public function removePictureFillAnswerKey($index)
+    {
+        if (count($this->picture_fill_answer_key) > 1) {
+            unset($this->picture_fill_answer_key[$index]);
+            $this->picture_fill_answer_key = array_values($this->picture_fill_answer_key);
+        }
+    }
+    public function adjustPictureFillAnswerKeysToBlankCount()
+    {
+        if (!empty($this->picture_fill_paragraph)) {
+            $blankCount = substr_count($this->picture_fill_paragraph, '___');
+            $currentAnswerKeyCount = count($this->picture_fill_answer_key);
+            if ($blankCount > $currentAnswerKeyCount) {
+                for ($i = $currentAnswerKeyCount; $i < $blankCount; $i++) {
+                    $this->picture_fill_answer_key[] = '';
+                }
+            } elseif ($blankCount < $currentAnswerKeyCount && $blankCount > 0) {
+                $this->picture_fill_answer_key = array_slice($this->picture_fill_answer_key, 0, $blankCount);
+            }
+            if (empty($this->picture_fill_answer_key) || $blankCount === 0) {
+                $this->picture_fill_answer_key = [''];
+            }
+        }
+    }
+    public function updatedPictureFillParagraph()
+    {
+        $this->adjustPictureFillAnswerKeysToBlankCount();
+        $this->validateOnly('picture_fill_paragraph');
+    }
+    public function updatedPictureFillAnswerKey()
+    {
+        $this->validateOnly('picture_fill_answer_key');
+    }
+    public function updatedPictureFillImage()
+    {
+        $this->validateOnly('picture_fill_image');
+    }
+
+    private function updateVideoFillBlank()
+    {
+        $paragraph = trim($this->video_fill_paragraph);
+        $answerKeys = array_filter($this->video_fill_answer_key, fn($v) => trim($v) !== '');
+        if (empty($paragraph)) {
+            Notification::make()
+                ->title('Validation Error')
+                ->body('Please provide the paragraph with blanks marked as ___ (three underscores).')
+                ->danger()
+                ->send();
+            return;
+        }
+        $blankCount = substr_count($paragraph, '___');
+        if ($blankCount === 0) {
+            Notification::make()
+                ->title('Validation Error')
+                ->body('Paragraph must contain at least one blank marked as ___ (three underscores).')
+                ->danger()
+                ->send();
+            return;
+        }
+        if (count($answerKeys) !== $blankCount) {
+            Notification::make()
+                ->title('Validation Error')
+                ->body("Please provide exactly {$blankCount} answer key(s) to match the number of blanks in the paragraph.")
+                ->danger()
+                ->send();
+            return;
+        }
+        $explanationFilePath = $this->explanation;
+        if ($this->explanation_file) {
+            $explanationFilePath = $this->explanation_file->store('explanations', 'public');
+        }
+        // Handle video file - keep existing if no new one uploaded
+        $existingVideoFile = null;
+        if ($this->record->question_data) {
+            $questionData = json_decode($this->record->question_data, true);
+            $existingVideoFile = $questionData['video_file'] ?? null;
+        }
+        $videoFilePath = $existingVideoFile;
+        if ($this->video_fill_video) {
+            $videoFilePath = $this->video_fill_video->store('question-videos', 'public');
+        }
+        $questionType = QuestionType::firstOrCreate(['name' => 'video_fill_blank']);
+        $this->record->update([
+            'day_id' => $this->day_id,
+            'course_id' => $this->course_id,
+            'subject_id' => $this->subject_id,
+            'question_type_id' => $questionType->id,
+            'instruction' => $this->instruction,
+            'explanation' => $explanationFilePath,
+            'points' => $this->points ?: 1,
+            'is_active' => $this->is_active,
+            'question_data' => json_encode([
+                'main_instruction' => $this->instruction,
+                'paragraph' => $paragraph,
+                'video_file' => $videoFilePath,
+                'blank_count' => $blankCount
+            ]),
+            'answer_data' => json_encode([
+                'answer_keys' => array_values($answerKeys),
+                'blank_count' => $blankCount
+            ]),
+            'left_options' => null,
+            'right_options' => null,
+            'correct_pairs' => null,
+        ]);
+        $this->showSuccessAndRedirect('video fill in the blank question');
+    }
+    public function addVideoFillAnswerKey()
+    {
+        $this->video_fill_answer_key[] = '';
+    }
+    public function removeVideoFillAnswerKey($index)
+    {
+        if (count($this->video_fill_answer_key) > 1) {
+            unset($this->video_fill_answer_key[$index]);
+            $this->video_fill_answer_key = array_values($this->video_fill_answer_key);
+        }
+    }
+    public function adjustVideoFillAnswerKeysToBlankCount()
+    {
+        if (!empty($this->video_fill_paragraph)) {
+            $blankCount = substr_count($this->video_fill_paragraph, '___');
+            $currentAnswerKeyCount = count($this->video_fill_answer_key);
+            if ($blankCount > $currentAnswerKeyCount) {
+                for ($i = $currentAnswerKeyCount; $i < $blankCount; $i++) {
+                    $this->video_fill_answer_key[] = '';
+                }
+            } elseif ($blankCount < $currentAnswerKeyCount && $blankCount > 0) {
+                $this->video_fill_answer_key = array_slice($this->video_fill_answer_key, 0, $blankCount);
+            }
+            if (empty($this->video_fill_answer_key) || $blankCount === 0) {
+                $this->video_fill_answer_key = [''];
+            }
+        }
+    }
+    public function updatedVideoFillParagraph()
+    {
+        $this->adjustVideoFillAnswerKeysToBlankCount();
+        $this->validateOnly('video_fill_paragraph');
+    }
+    public function updatedVideoFillAnswerKey()
+    {
+        $this->validateOnly('video_fill_answer_key');
+    }
+    public function updatedVideoFillVideo()
+    {
+        $this->validateOnly('video_fill_video');
+    }
+
+    public function addAudioPictureAudio()
+    {
+        $this->audio_picture_audios[] = null;
+    }
+
+    public function removeAudioPictureAudio($index)
+    {
+        if (count($this->audio_picture_audios) > 1) {
+            array_splice($this->audio_picture_audios, $index, 1);
+            // Update pairs to remove references to deleted audio
+            foreach ($this->audio_picture_pairs as $key => $pair) {
+                if ($pair['left'] == $index) {
+                    $this->audio_picture_pairs[$key]['left'] = '';
+                } elseif ($pair['left'] > $index) {
+                    $this->audio_picture_pairs[$key]['left'] = $pair['left'] - 1;
+                }
+            }
+        }
+    }
+
+    public function addAudioPictureImage()
+    {
+        $this->audio_picture_images[] = null;
+    }
+
+    public function removeAudioPictureImage($index)
+    {
+        if (count($this->audio_picture_images) > 1) {
+            array_splice($this->audio_picture_images, $index, 1);
+            // Update pairs to remove references to deleted image
+            foreach ($this->audio_picture_pairs as $key => $pair) {
+                if ($pair['right'] == $index) {
+                    $this->audio_picture_pairs[$key]['right'] = '';
+                } elseif ($pair['right'] > $index) {
+                    $this->audio_picture_pairs[$key]['right'] = $pair['right'] - 1;
+                }
+            }
+        }
+    }
+
+    public function addAudioPicturePair()
+    {
+        $this->audio_picture_pairs[] = ['left' => '', 'right' => ''];
+    }
+
+    public function removeAudioPicturePair($index)
+    {
+        if (count($this->audio_picture_pairs) > 1) {
+            array_splice($this->audio_picture_pairs, $index, 1);
+        }
+    }
+
+    public function clearAllAudioPicturePairs()
+    {
+        $this->audio_picture_pairs = [['left' => '', 'right' => '']];
+    }
+
+    private function updateAudioPictureMatch()
+    {
+        // Count both new uploads and existing files
+        $audioFiles = array_filter($this->audio_picture_audios, function($a) {
+            return ($a instanceof \Illuminate\Http\UploadedFile) || (!empty($a) && is_string($a));
+        });
+        $imageFiles = array_filter($this->audio_picture_images, function($i) {
+            return ($i instanceof \Illuminate\Http\UploadedFile) || (!empty($i) && is_string($i));
+        });
+        $pairs = array_filter($this->audio_picture_pairs, function($pair) {
+            return isset($pair['left'], $pair['right']) && 
+                   $pair['left'] !== '' && $pair['right'] !== '' && 
+                   $pair['left'] !== null && $pair['right'] !== null;
+        });
+
+        if (count($audioFiles) < 2 || count($imageFiles) < 2) {
+            Notification::make()
+                ->title('Validation Error')
+                ->body('Please add at least 2 audio files and 2 image files for audio-picture matching.')
+                ->danger()
+                ->send();
+            return;
+        }
+
+        // Store audio files
+        $audioPaths = [];
+        foreach ($this->audio_picture_audios as $idx => $audioFile) {
+            if ($audioFile instanceof \Illuminate\Http\UploadedFile) {
+                $audioPaths[$idx] = $audioFile->store('question-audio', 'public');
+            } else {
+                $audioPaths[$idx] = $audioFile;
+            }
+        }
+
+        // Store image files
+        $imagePaths = [];
+        foreach ($this->audio_picture_images as $idx => $imageFile) {
+            if ($imageFile instanceof \Illuminate\Http\UploadedFile) {
+                $imagePaths[$idx] = $imageFile->store('question-images', 'public');
+            } else {
+                $imagePaths[$idx] = $imageFile;
+            }
+        }
+
+        // Validate that all pairs reference valid indices
+        $audioCount = count($audioPaths);
+        $imageCount = count($imagePaths);
+        foreach ($pairs as $index => $pair) {
+            if ($pair['left'] >= $audioCount) {
+                Notification::make()
+                    ->title('Validation Error')
+                    ->body("Pair " . ($index + 1) . ": Audio index {$pair['left']} is out of bounds (max: " . ($audioCount - 1) . ")")
+                    ->danger()
+                    ->send();
+                return;
+            }
+            if ($pair['right'] >= $imageCount) {
+                Notification::make()
+                    ->title('Validation Error')
+                    ->body("Pair " . ($index + 1) . ": Image index {$pair['right']} is out of bounds (max: " . ($imageCount - 1) . ")")
+                    ->danger()
+                    ->send();
+                return;
+            }
+        }
+
+        if (count($pairs) < 1) {
+            Notification::make()
+                ->title('Validation Error')
+                ->body('Please select at least 1 correct pair for audio-picture matching.')
+                ->danger()
+                ->send();
+            return;
+        }
+
+        $explanationFilePath = $this->explanation;
+        if ($this->explanation_file) {
+            $explanationFilePath = $this->explanation_file->store('explanations', 'public');
+        }
+
+        $questionType = QuestionType::firstOrCreate(['name' => 'audio_picture_match']);
+        $this->record->update([
+            'day_id' => $this->day_id,
+            'course_id' => $this->course_id,
+            'subject_id' => $this->subject_id,
+            'question_type_id' => $questionType->id,
+            'instruction' => $this->instruction,
+            'explanation' => $explanationFilePath,
+            'points' => $this->points ?: 1,
+            'is_active' => $this->is_active,
+            'question_data' => json_encode([
+                'main_instruction' => $this->instruction,
+                'audios' => array_values($audioPaths),
+                'images' => array_values($imagePaths)
+            ]),
+            'answer_data' => json_encode([
+                'correct_pairs' => array_values($pairs)
+            ])
+        ]);
+
+        $this->showSuccessAndRedirect('audio picture matching question');
     }
 }

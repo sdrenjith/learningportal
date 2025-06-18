@@ -122,6 +122,7 @@
         </ul>
 
         {{-- Dynamic Available Courses menu --}}
+        @if (!auth()->check() || !auth()->user()->isDataManager())
         @php
             $courses = \App\Models\Course::with(['days.questions'])->get();
         @endphp
@@ -161,6 +162,7 @@
                 @endforeach
             </ul>
         </div>
+        @endif
         {{-- End Dynamic Available Courses menu --}}
 
         @if (filament()->hasTenancy() && filament()->hasTenantMenu())

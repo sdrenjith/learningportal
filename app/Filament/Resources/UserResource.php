@@ -89,4 +89,10 @@ class UserResource extends Resource
     {
         return 6;
     }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        // Hide for datamanager
+        return !(auth()->check() && auth()->user()->isDataManager());
+    }
 }

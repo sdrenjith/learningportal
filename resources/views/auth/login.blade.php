@@ -1,42 +1,102 @@
 @extends('layouts.app')
-
 @section('content')
-<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-    <div class="w-full max-w-md p-8 bg-white rounded-2xl shadow-lg">
-        <div class="mb-6 text-center">
-            <h1 class="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h1>
-            <p class="text-gray-500">Sign in to your account</p>
+<div class="login-container">
+    <div class="login-background">
+        <!-- Animated background elements -->
+        <div class="bg-shape shape-1"></div>
+        <div class="bg-shape shape-2"></div>
+        <div class="bg-shape shape-3"></div>
+    </div>
+    
+    <div class="login-card">
+        <div class="login-header">
+            <div class="login-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                </svg>
+            </div>
+            <h1 class="login-title">Welcome Back</h1>
+            <p class="login-subtitle">Sign in to continue your journey</p>
         </div>
+
         @if(session('status'))
-            <div class="mb-4 text-green-700 bg-green-100 border border-green-200 rounded px-4 py-2">
-                {{ session('status') }}
-            </div>
+        <div class="alert alert-success">
+            {{ session('status') }}
+        </div>
         @endif
+
         @if($errors->any())
-            <div class="mb-4 text-red-700 bg-red-100 border border-red-200 rounded px-4 py-2">
-                <ul class="list-disc pl-5">
-                    @foreach($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
+        <div class="alert alert-error">
+            <ul>
+                @foreach($errors->all() as $error)
+                <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
         @endif
-        <form method="POST" action="{{ route('login') }}" class="space-y-6">
+
+        <form method="POST" action="{{ route('login') }}" class="login-form">
             @csrf
-            <div>
-                <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
-                <input id="email" type="email" name="email" required autofocus class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" />
+            
+            <div class="form-group">
+                <label for="email" class="form-label">Email Address</label>
+                <div class="input-wrapper">
+                    <div class="input-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 4H8a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V6a2 2 0 00-2-2zm0 0l-4 4-4-4" />
+                        </svg>
+                    </div>
+                    <input 
+                        id="email" 
+                        type="email" 
+                        name="email" 
+                        required 
+                        autofocus 
+                        class="form-input"
+                        placeholder="Enter your email"
+                    />
+                </div>
             </div>
-            <div>
-                <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
-                <input id="password" type="password" name="password" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" />
+
+            <div class="form-group">
+                <label for="password" class="form-label">Password</label>
+                <div class="input-wrapper">
+                    <div class="input-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                    </div>
+                    <input 
+                        id="password" 
+                        type="password" 
+                        name="password" 
+                        required 
+                        class="form-input"
+                        placeholder="Enter your password"
+                    />
+                </div>
             </div>
-            <div>
-                <button type="submit" class="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-md text-sm font-medium bg-white text-black hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                    Sign In
-                </button>
+
+            <div class="form-options">
+                <label class="checkbox-wrapper">
+                    <input type="checkbox" name="remember">
+                    <span class="checkbox-custom"></span>
+                    <span class="checkbox-label">Remember me</span>
+                </label>
+                <a href="#" class="forgot-link">Forgot password?</a>
             </div>
+
+            <button type="submit" class="login-btn">
+                <span>Sign In</span>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+            </button>
         </form>
+
+        <div class="login-footer">
+            <p>Don't have an account? <a href="#" class="signup-link">Sign up here</a></p>
+        </div>
     </div>
 </div>
 @endsection

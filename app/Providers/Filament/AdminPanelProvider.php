@@ -32,7 +32,7 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->login()
             ->colors([
-                'primary' => Color::Blue,
+                'primary' => Color::Amber,
             ])
             ->darkMode(false)
             ->viteTheme('resources/css/filament/admin/theme.css')
@@ -63,11 +63,35 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
+            ])
+            ->navigationItems([
+                NavigationItem::make('Dashboard')
+                    ->icon('heroicon-o-home')
+                    ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.pages.dashboard'))
+                    ->url(fn (): string => route('filament.admin.pages.dashboard'))
+                    ->visible(fn (): bool => auth()->check()),
+                NavigationItem::make('Videos')
+                    ->icon('heroicon-o-video-camera')
+                    ->group('Content Management')
+                    ->visible(fn (): bool => auth()->check() && (auth()->user()->isAdmin() || auth()->user()->isDataManager())),
+                NavigationItem::make('Notes')
+                    ->icon('heroicon-o-document')
+                    ->group('Content Management')
+                    ->visible(fn (): bool => auth()->check() && (auth()->user()->isAdmin() || auth()->user()->isDataManager()))
+                    ->url(fn (): string => route('filament.admin.resources.notes.index')),
+            ])
+            ->navigationGroups([
+                NavigationGroup::make()
+                    ->label('Content Management'),
             ]);
     }
 
     public function registerNavigationItems(): void
     {
+        // Only show for non-datamanager users
+        if (auth()->check() && auth()->user()->isDataManager()) {
+            return;
+        }
         $courses = \App\Models\Course::with(['days.questions'])->get();
         $items = [];
         // TEST ITEM

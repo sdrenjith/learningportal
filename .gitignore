@@ -22,3 +22,4 @@
 /.vscode
 /.zed
 *.tar
+node_modules/

@@ -12,8 +12,8 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label class="modern-label">Day Number *</label>
-                                <input type="number" wire:model="day_number_input" min="1" placeholder="1" class="modern-input">
-                                @error('day_number_input') <p class="error-text">{{ $message }}</p> @enderror
+                                <input type="number" wire:model="number_input" min="1" placeholder="1" class="modern-input">
+                                @error('number_input') <p class="error-text">{{ $message }}</p> @enderror
                             </div>
 
                             <div>
@@ -42,15 +42,22 @@
                                 <label class="modern-label">Question Type *</label>
                                 <select wire:model="question_type_id" class="modern-select" id="question_type_id">
                                     <option value="">Select type</option>
-                                    @foreach($questionTypes as $type)
-                                        @if(!in_array($type->name, ['audio_mcq_single', 'audio_image_text_single', 'audio_image_text_multiple', 'picture_mcq']))
-                                            <option value="{{ $type->name }}">{{ ucfirst(str_replace('_', ' ', $type->name)) }}</option>
-                                        @endif
-                                    @endforeach
-                                    <option value="audio_mcq_single">Audio MCQ - Single Audio, Multiple Questions</option>
-                                    <option value="audio_image_text_single">Audio Image Text - Single Audio with Image Matching</option>
-                                    <option value="audio_image_text_multiple">Multiple Audio, Multiple Images & Texts</option>
-                                    <option value="picture_mcq">Picture MCQ (Images to Text Matching)</option>
+                                    <option value="mcq_single">MCQ single answer</option>
+                                    <option value="mcq_multiple">MCQ multiple answer</option>
+                                    <option value="reorder">Rearrange options</option>
+                                    <option value="opinion">Essay/para writing</option>
+                                    <option value="statement_match">Match the following</option>
+                                    <option value="true_false">True or false- single question</option>
+                                    <option value="true_false_multiple">True or false multiple questions</option>
+                                    <option value="form_fill">Fill in the blanks</option>
+                                    <option value="audio_mcq_single">Audio with MCQ</option>
+                                    <option value="audio_image_text_single">Audio with image matching</option>
+                                    <option value="audio_image_text_multiple">Multiple audio text matching</option>
+                                    <option value="picture_mcq">Image to text matching</option>
+                                    <option value="audio_fill_blank">Audio fill in the blanks</option>
+                                    <option value="picture_fill_blank">Picture fill in the blanks</option>
+                                    <option value="video_fill_blank">Video fill in the blanks</option>
+                                    <option value="audio_picture_match">Audio + image matching</option>
                                 </select>
                                 @error('question_type_id') <p class="error-text">{{ $message }}</p> @enderror
                             </div>
@@ -210,22 +217,30 @@
                             <div class="mt-6">
                                 <div class="flex items-center justify-between mb-4">
                                     <h4 class="sub-question-title">Correct Answer Pairs</h4>
-                                    <button type="button" wire:click="$set('audio_image_text_correct_pairs', [['left' => '', 'right' => ''], ['left' => '', 'right' => '']])" class="clear-all-btn">
-                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                        </svg>
-                                        Clear All Pairs
-                                    </button>
+                                    <div class="flex space-x-2">
+                                        <button type="button" wire:click="addAudioImageTextPair" class="add-btn">
+                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                            </svg>
+                                            Add Pair
+                                        </button>
+                                        <button type="button" wire:click="clearAllAudioImageTextPairs" class="clear-all-btn">
+                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                            </svg>
+                                            Clear All Pairs
+                                        </button>
+                                    </div>
                                 </div>
                                 <div class="info-banner-small">
-                                    <span class="text-sm">Select exactly 2 pairs. Image indices: 0 = first image, 1 = second image, etc. Text indices: 0 = first text option, 1 = second text option, etc.</span>
+                                    <span class="text-sm">Image indices: 0 = first image, 1 = second image, etc. Text indices: 0 = first text option, 1 = second text option, etc.</span>
                                 </div>
                                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4" wire:key="audio-image-text-correct-pairs-section">
-                                    @foreach([0,1] as $pairIdx)
+                                    @foreach($audio_image_text_correct_pairs as $pairIdx => $pair)
                                         <div class="option-item" wire:key="audio-image-text-pair-{{ $pairIdx }}">
                                             <div class="flex items-center justify-between mb-3">
                                                 <div class="font-semibold" style="color: #000 !important;">Correct Pair {{ $pairIdx+1 }}</div>
-                                                <button type="button" wire:click="$set('audio_image_text_correct_pairs.{{ $pairIdx }}.left', ''); $set('audio_image_text_correct_pairs.{{ $pairIdx }}.right', '')" class="clear-pair-btn" title="Clear this pair">
+                                                <button type="button" wire:click="removeAudioImageTextPair({{ $pairIdx }})" class="clear-pair-btn" title="Remove this pair">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                                                     </svg>
@@ -240,8 +255,8 @@
                                                             @php
                                                                 $alreadySelected = false;
                                                                 $pairs = $audio_image_text_correct_pairs ?? [];
-                                                                foreach ($pairs as $otherIdx => $pair) {
-                                                                    if ($otherIdx !== $pairIdx && isset($pair['left']) && $pair['left'] !== '' && $pair['left'] == $idx) {
+                                                                foreach ($pairs as $otherIdx => $otherPair) {
+                                                                    if ($otherIdx !== $pairIdx && isset($otherPair['left']) && $otherPair['left'] !== '' && $otherPair['left'] == $idx) {
                                                                         $alreadySelected = true;
                                                                         break;
                                                                     }
@@ -261,8 +276,8 @@
                                                             @php
                                                                 $alreadySelected = false;
                                                                 $pairs = $audio_image_text_correct_pairs ?? [];
-                                                                foreach ($pairs as $otherIdx => $pair) {
-                                                                    if ($otherIdx !== $pairIdx && isset($pair['right']) && $pair['right'] !== '' && $pair['right'] == $idx) {
+                                                                foreach ($pairs as $otherIdx => $otherPair) {
+                                                                    if ($otherIdx !== $pairIdx && isset($otherPair['right']) && $otherPair['right'] !== '' && $otherPair['right'] == $idx) {
                                                                         $alreadySelected = true;
                                                                         break;
                                                                     }
@@ -372,91 +387,94 @@
                                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                 </svg>
-                                Create multiple image+audio pairs on the left side and text options on the right. Students will see images, listen to their corresponding audio files, and match them to the correct text descriptions.
+                                Create multiple audio pairs (optionally with images) on the left side and text options on the right. Students will listen to audio files (with optional images) and match them to the correct text descriptions. Images are optional - you can upload just audio files.
                             </div>
                             
                             <div class="grid grid-cols-2 gap-6">
-                                <!-- Left Side - Image + Audio Pairs -->
+                                <!-- Left Side - Audio + Optional Image Pairs -->
                                 <div>
-                                    <h5 class="font-semibold mb-4 text-lg">🎭 Image + Audio Pairs</h5>
+                                    <h5 class="font-semibold mb-4 text-lg">🎭 Audio + Optional Image Pairs</h5>
                                     <div id="audio-image-text-multiple-pairs-container">
-                                        @if(is_array($audio_image_text_multiple_pairs ?? []) && count($audio_image_text_multiple_pairs) > 0)
-                                            @foreach($audio_image_text_multiple_pairs as $idx => $pair)
-                                                <div class="audio-image-pair-item flex flex-col mb-6 p-4 border-2 border-dashed border-indigo-300 rounded-lg bg-gradient-to-br from-indigo-50 to-purple-50" wire:key="audio_image_text_multiple_pair_{{ $idx }}">
-                                                    <div class="flex items-center justify-between mb-3">
-                                                        <span class="font-bold text-indigo-700">📱 Pair {{ $idx + 1 }}</span>
-                                                        @if($idx > 0)
-                                                            <button type="button" wire:click="removeAudioImageTextMultiplePair({{ $idx }})" class="remove-btn-small">
-                                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                                                            </button>
-                                                        @endif
-                                                    </div>
-                                                    
-                                                    <!-- Image Upload -->
-                                                    <div class="mb-3">
-                                                        <label class="modern-label text-sm">🖼️ Image File *</label>
-                                                        <input type="file" wire:model="audio_image_text_multiple_pairs.{{ $idx }}.image" class="modern-input" accept="image/*" placeholder="Upload image">
-                                                        @error("audio_image_text_multiple_pairs.{$idx}.image") <p class="error-text">{{ $message }}</p> @enderror
-                                                        
-                                                        @if(isset($audio_image_text_multiple_pairs[$idx]['image']) && $audio_image_text_multiple_pairs[$idx]['image'])
-                                                            <div class="mt-2">
-                                                                <img src="{{ $audio_image_text_multiple_pairs[$idx]['image']->temporaryUrl() }}" alt="Preview" class="w-20 h-20 object-cover rounded border-2 border-indigo-200">
-                                                            </div>
-                                                        @endif
-                                                    </div>
-                                                    
-                                                    <!-- Audio Upload -->
-                                                    <div class="mb-2">
-                                                        <label class="modern-label text-sm">🎵 Audio File *</label>
-                                                        <input type="file" wire:model="audio_image_text_multiple_pairs.{{ $idx }}.audio" class="modern-input" accept="audio/*" placeholder="Upload audio">
-                                                        @error("audio_image_text_multiple_pairs.{$idx}.audio") <p class="error-text">{{ $message }}</p> @enderror
-                                                        
-                                                        @if(isset($audio_image_text_multiple_pairs[$idx]['audio']) && $audio_image_text_multiple_pairs[$idx]['audio'])
-                                                            <div class="mt-2 p-2 bg-green-50 border border-green-200 rounded">
-                                                                <div class="flex items-center space-x-2">
-                                                                    <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path>
-                                                                    </svg>
-                                                                    <span class="text-sm font-medium text-green-700">{{ $audio_image_text_multiple_pairs[$idx]['audio']->getClientOriginalName() }}</span>
-                                                                </div>
-                                                            </div>
-                                                        @endif
-                                                    </div>
-                                                    
-                                                    <div class="text-xs text-gray-500 mt-1">
-                                                        Both image and audio files are required for each pair.
-                                                    </div>
-                                                </div>
-                                            @endforeach
-                                        @else
-                                            <div class="audio-image-pair-item flex flex-col mb-6 p-4 border-2 border-dashed border-indigo-300 rounded-lg bg-gradient-to-br from-indigo-50 to-purple-50">
+                                        @php
+                                            $maxPairs = max(count($audio_files ?? []), count($image_files ?? []), 1);
+                                        @endphp
+                                        
+                                        @for($idx = 0; $idx < $maxPairs; $idx++)
+                                            <div class="audio-image-pair-item flex flex-col mb-6 p-4 border-2 border-dashed border-indigo-300 rounded-lg bg-gradient-to-br from-indigo-50 to-purple-50" wire:key="audio_image_pair_{{ $idx }}">
                                                 <div class="flex items-center justify-between mb-3">
-                                                    <span class="font-bold text-indigo-700">📱 Pair 1</span>
+                                                    <span class="font-bold text-indigo-700">📱 Pair {{ $idx + 1 }}</span>
+                                                    @if($idx > 0)
+                                                        <button type="button" wire:click="removeAudioImageTextMultiplePair({{ $idx }})" class="remove-btn-small">
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                                        </button>
+                                                    @endif
                                                 </div>
                                                 
+                                                <!-- Audio Upload (Simplified with separate arrays) -->
                                                 <div class="mb-3">
-                                                    <label class="modern-label text-sm">🖼️ Image File *</label>
-                                                    <input type="file" wire:model="audio_image_text_multiple_pairs.0.image" class="modern-input" accept="image/*" placeholder="Upload image">
-                                                    @error("audio_image_text_multiple_pairs.0.image") <p class="error-text">{{ $message }}</p> @enderror
+                                                    <label class="modern-label text-sm">🎵 Audio File *</label>
+                                                    <input type="file" 
+                                                           wire:model.defer="audio_files.{{ $idx }}" 
+                                                           class="modern-input" 
+                                                           accept="audio/*">
+                                                    
+                                                    @if(isset($audio_files[$idx]) && $audio_files[$idx])
+                                                        <div class="mt-2 p-2 bg-green-50 border border-green-200 rounded">
+                                                            <div class="flex items-center space-x-2">
+                                                                <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path>
+                                                                </svg>
+                                                                <span class="text-sm font-medium text-green-700">
+                                                                    @if(is_string($audio_files[$idx]))
+                                                                        Audio uploaded
+                                                                    @else
+                                                                        {{ $audio_files[$idx]->getClientOriginalName() }}
+                                                                    @endif
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    @endif
+                                                    
+                                                    @error("audio_files.{$idx}") 
+                                                        <p class="error-text">{{ $message }}</p> 
+                                                    @enderror
                                                 </div>
                                                 
+                                                <!-- Image Upload (Simplified with separate arrays) -->
                                                 <div class="mb-2">
-                                                    <label class="modern-label text-sm">🎵 Audio File *</label>
-                                                    <input type="file" wire:model="audio_image_text_multiple_pairs.0.audio" class="modern-input" accept="audio/*" placeholder="Upload audio">
-                                                    @error("audio_image_text_multiple_pairs.0.audio") <p class="error-text">{{ $message }}</p> @enderror
+                                                    <label class="modern-label text-sm">🖼️ Image File (Optional)</label>
+                                                    <input type="file" 
+                                                           wire:model.defer="image_files.{{ $idx }}" 
+                                                           class="modern-input" 
+                                                           accept="image/*">
+                                                    
+                                                    @if(isset($image_files[$idx]) && $image_files[$idx])
+                                                        <div class="mt-2">
+                                                            @if(is_string($image_files[$idx]))
+                                                                <p class="text-sm text-green-600">Image uploaded</p>
+                                                            @else
+                                                                <img src="{{ $image_files[$idx]->temporaryUrl() }}" alt="Preview" class="w-20 h-20 object-cover rounded border-2 border-indigo-200">
+                                                            @endif
+                                                        </div>
+                                                    @endif
+                                                    
+                                                    @error("image_files.{$idx}") 
+                                                        <p class="error-text">{{ $message }}</p> 
+                                                    @enderror
                                                 </div>
                                                 
                                                 <div class="text-xs text-gray-500 mt-1">
-                                                    Both image and audio files are required for each pair.
+                                                    Audio: MP3, WAV, OGG, M4A, AAC (Max: 25MB)<br>
+                                                    Image: JPG, PNG, GIF (Max: 2MB, Optional)
                                                 </div>
                                             </div>
-                                        @endif
+                                        @endfor
                                     </div>
                                     <button type="button" wire:click="addAudioImageTextMultiplePair" class="add-btn mt-2">
                                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                                         </svg>
-                                        Add Image+Audio Pair
+                                        Add Audio+Image Pair
                                     </button>
                                 </div>
                                 
@@ -497,22 +515,30 @@
                             <div class="mt-6">
                                 <div class="flex items-center justify-between mb-4">
                                     <h4 class="sub-question-title">Correct Answer Pairs</h4>
-                                    <button type="button" wire:click="$set('audio_image_text_multiple_correct_pairs', [['left' => '', 'right' => ''], ['left' => '', 'right' => '']])" class="clear-all-btn">
-                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                        </svg>
-                                        Clear All Pairs
-                                    </button>
+                                    <div class="flex space-x-2">
+                                        <button type="button" wire:click="addAudioImageTextMultiplePair_Answer" class="add-btn">
+                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                            </svg>
+                                            Add Pair
+                                        </button>
+                                        <button type="button" wire:click="clearAllAudioImageTextMultiplePairs" class="clear-all-btn">
+                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                            </svg>
+                                            Clear All Pairs
+                                        </button>
+                                    </div>
                                 </div>
                                 <div class="info-banner-small">
-                                    <span class="text-sm">Select exactly 2 pairs. Pair indices: 0 = first image+audio pair, 1 = second pair, etc. Text indices: 0 = first text option, 1 = second text option, etc.</span>
+                                    <span class="text-sm">Pair indices: 0 = first audio+image pair, 1 = second pair, etc. Text indices: 0 = first text option, 1 = second text option, etc.</span>
                                 </div>
                                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4" wire:key="audio-image-text-multiple-correct-pairs-section">
-                                    @foreach([0,1] as $pairIdx)
+                                    @foreach($audio_image_text_multiple_correct_pairs as $pairIdx => $pair)
                                         <div class="option-item" wire:key="audio-image-text-multiple-pair-{{ $pairIdx }}">
                                             <div class="flex items-center justify-between mb-3">
                                                 <div class="font-semibold" style="color: #000 !important;">Correct Pair {{ $pairIdx+1 }}</div>
-                                                <button type="button" wire:click="$set('audio_image_text_multiple_correct_pairs.{{ $pairIdx }}.left', ''); $set('audio_image_text_multiple_correct_pairs.{{ $pairIdx }}.right', '')" class="clear-pair-btn" title="Clear this pair">
+                                                <button type="button" wire:click="removeAudioImageTextMultiplePair_Answer({{ $pairIdx }})" class="clear-pair-btn" title="Remove this pair">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                                                     </svg>
@@ -520,7 +546,7 @@
                                             </div>
                                             <div class="flex gap-4">
                                                 <div class="flex-1">
-                                                    <label class="modern-label">Image+Audio Pair</label>
+                                                    <label class="modern-label">Audio+Image Pair</label>
                                                     <select class="option-input" wire:model.live="audio_image_text_multiple_correct_pairs.{{ $pairIdx }}.left" wire:key="audio-image-text-multiple-left-select-{{ $pairIdx }}-{{ count($audio_image_text_multiple_pairs ?? []) }}">
                                                         <option value="">Select Pair</option>
                                                         @foreach($this->getFilteredAudioImageTextMultiplePairs() as $idx => $pair)
@@ -568,7 +594,7 @@
                             </div>
 
                             <!-- Preview Section for Audio Image Text Multiple -->
-                            <div class="mb-6" wire:key="audio-image-text-multiple-preview-{{ count($audio_image_text_multiple_pairs) }}-{{ count($audio_image_text_multiple_right_options) }}">
+                            <div class="mb-6" wire:key="audio-image-text-multiple-preview-{{ count($audio_files ?? []) }}-{{ count($audio_image_text_multiple_right_options ?? []) }}">
                                 <h4 class="sub-question-title mb-4">Preview</h4>
                                 <div class="preview-section">
                                     @php
@@ -577,40 +603,42 @@
                                                    $pair['left'] !== '' && $pair['right'] !== '' &&
                                                    $pair['left'] !== null && $pair['right'] !== null;
                                         });
-                                        $multiplePairs = $audio_image_text_multiple_pairs ?? [];
+                                        $audioFiles = $audio_files ?? [];
+                                        $imageFiles = $image_files ?? [];
                                         $multipleRightOptions = $audio_image_text_multiple_right_options ?? [];
                                     @endphp
                                     
                                     @if(count($validPairs) > 0)
-                                        <p class="preview-label mb-4">💡 Image+Audio to Text Matching Preview:</p>
+                                        <p class="preview-label mb-4">💡 Audio+Image to Text Matching Preview:</p>
                                         <div class="space-y-6">
                                             @foreach($validPairs as $index => $pair)
                                                 @php
                                                     $pairIndex = (int)$pair['left'];
                                                     $textIndex = (int)$pair['right'];
-                                                    $imagePair = $multiplePairs[$pairIndex] ?? null;
+                                                    $audioFile = $audioFiles[$pairIndex] ?? null;
+                                                    $imageFile = $imageFiles[$pairIndex] ?? null;
                                                     $textOption = $multipleRightOptions[$textIndex] ?? '';
                                                 @endphp
                                                 
-                                                @if($imagePair && isset($imagePair['image']) && isset($imagePair['audio']) && trim($textOption) !== '')
+                                                @if($audioFile && trim($textOption) !== '')
                                                     <div class="audio-image-multiple-match-item">
                                                         <div class="flex items-center justify-center space-x-8 p-6 bg-white border-2 border-green-200 rounded-xl">
-                                                            <!-- Image + Audio Section -->
+                                                            <!-- Audio + Optional Image Section -->
                                                             <div class="flex flex-col items-center space-y-3">
-                                                                <div class="image-container">
-                                                                    @if($imagePair['image'])
-                                                                        <img src="{{ $imagePair['image']->temporaryUrl() }}" 
+                                                                @if($imageFile)
+                                                                    <div class="image-container">
+                                                                        <img src="{{ $imageFile->temporaryUrl() }}" 
                                                                              alt="Image {{ $pairIndex + 1 }}" 
                                                                              class="preview-image object-cover rounded-lg border-2 border-indigo-300">
-                                                                    @endif
-                                                                </div>
-                                                                @if($imagePair['audio'])
+                                                                    </div>
+                                                                @endif
+                                                                @if($audioFile)
                                                                     <div class="audio-indicator bg-indigo-100 border-2 border-indigo-300 px-3 py-2 rounded-lg">
                                                                         <div class="flex items-center space-x-2">
                                                                             <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path>
                                                                             </svg>
-                                                                            <span class="text-sm font-medium text-indigo-700">🎵 {{ $imagePair['audio']->getClientOriginalName() }}</span>
+                                                                            <span class="text-sm font-medium text-indigo-700">🎵 {{ $audioFile->getClientOriginalName() }}</span>
                                                                         </div>
                                                                     </div>
                                                                 @endif
@@ -643,7 +671,7 @@
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                                                 </svg>
                                             </div>
-                                            <p class="text-gray-500 font-medium">Upload image+audio pairs, add text options, and set answer pairs to see preview</p>
+                                            <p class="text-gray-500 font-medium">Upload audio files (with optional images), add text options, and set answer pairs to see preview</p>
                                         </div>
                                     @endif
                                 </div>
@@ -796,7 +824,7 @@
                                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                 </svg>
-                                Upload images on the left side and create text options on the right side. Students will match each image with the correct text option. Select exactly 2 pairs for the answer key.
+                                Upload images on the left side and create text options on the right side. Students will match each image with the correct text option.
                             </div>
                             
                             <div class="grid grid-cols-2 gap-6">
@@ -860,22 +888,30 @@
                             <div class="mt-6">
                                 <div class="flex items-center justify-between mb-4">
                                     <h4 class="sub-question-title">Correct Answer Pairs</h4>
-                                    <button type="button" wire:click="$set('picture_mcq_correct_pairs', [['left' => '', 'right' => ''], ['left' => '', 'right' => '']])" class="clear-all-btn">
-                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                        </svg>
-                                        Clear All Pairs
-                                    </button>
+                                    <div class="flex space-x-2">
+                                        <button type="button" wire:click="addPictureMcqPair" class="add-btn">
+                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                            </svg>
+                                            Add Pair
+                                        </button>
+                                        <button type="button" wire:click="clearAllPictureMcqPairs" class="clear-all-btn">
+                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                            </svg>
+                                            Clear All Pairs
+                                        </button>
+                                    </div>
                                 </div>
                                 <div class="info-banner-small">
-                                    <span class="text-sm">Select exactly 2 pairs. Image indices: 0 = first image, 1 = second image, etc. Text indices: 0 = first text option, 1 = second text option, etc.</span>
+                                    <span class="text-sm">Image indices: 0 = first image, 1 = second image, etc. Text indices: 0 = first text option, 1 = second text option, etc.</span>
                                 </div>
                                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4" wire:key="picture-mcq-correct-pairs-section">
-                                    @foreach([0,1] as $pairIdx)
+                                    @foreach($picture_mcq_correct_pairs as $pairIdx => $pair)
                                         <div class="option-item" wire:key="picture-mcq-pair-{{ $pairIdx }}">
                                             <div class="flex items-center justify-between mb-3">
                                                 <div class="font-semibold" style="color: #000 !important;">Correct Pair {{ $pairIdx+1 }}</div>
-                                                <button type="button" wire:click="$set('picture_mcq_correct_pairs.{{ $pairIdx }}.left', ''); $set('picture_mcq_correct_pairs.{{ $pairIdx }}.right', '')" class="clear-pair-btn" title="Clear this pair">
+                                                <button type="button" wire:click="removePictureMcqPair({{ $pairIdx }})" class="clear-pair-btn" title="Remove this pair">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                                                     </svg>
@@ -889,8 +925,8 @@
                                                         @foreach($this->getFilteredPictureMcqImages() as $idx => $image)
                                                             @php
                                                                 $alreadySelected = false;
-                                                                foreach ($picture_mcq_correct_pairs as $otherIdx => $pair) {
-                                                                    if ($otherIdx !== $pairIdx && isset($pair['left']) && $pair['left'] !== '' && $pair['left'] == $idx) {
+                                                                foreach ($picture_mcq_correct_pairs as $otherIdx => $otherPair) {
+                                                                    if ($otherIdx !== $pairIdx && isset($otherPair['left']) && $otherPair['left'] !== '' && $otherPair['left'] == $idx) {
                                                                         $alreadySelected = true;
                                                                         break;
                                                                     }
@@ -909,8 +945,8 @@
                                                         @foreach($this->getFilteredPictureMcqRightOptions() as $idx => $option)
                                                             @php
                                                                 $alreadySelected = false;
-                                                                foreach ($picture_mcq_correct_pairs as $otherIdx => $pair) {
-                                                                    if ($otherIdx !== $pairIdx && isset($pair['right']) && $pair['right'] !== '' && $pair['right'] == $idx) {
+                                                                foreach ($picture_mcq_correct_pairs as $otherIdx => $otherPair) {
+                                                                    if ($otherIdx !== $pairIdx && isset($otherPair['right']) && $otherPair['right'] !== '' && $otherPair['right'] == $idx) {
                                                                         $alreadySelected = true;
                                                                         break;
                                                                     }
@@ -1060,7 +1096,7 @@
                                 <h4 class="sub-question-title mb-4">Paragraph with Blanks</h4>
                                 <div class="form-fill-paragraph-section">
                                     <label class="modern-label">Paragraph Text (use ___ for blanks) *</label>
-                                    <textarea wire:model.live.debounce.100ms="form_fill_paragraph" rows="6" 
+                                    <textarea wire:model.lazy="form_fill_paragraph" rows="6" 
                                               placeholder="Enter your paragraph here. Use ___ (three underscores) to mark blanks where students should fill in answers. For example: The capital of France is ___. It is located in the ___ of the country."
                                               class="modern-textarea"></textarea>
                                     @error('form_fill_paragraph') <p class="error-text">{{ $message }}</p> @enderror
@@ -1085,7 +1121,7 @@
                                             <div class="flex items-center space-x-3">
                                                 <div class="option-number">{{ $index + 1 }}</div>
                                                 <div class="flex-1">
-                                                    <input type="text" wire:model.defer="form_fill_options.{{ $index }}" 
+                                                <input type="text" wire:model.live="form_fill_options.{{ $index }}" 
                                                            placeholder="Enter answer option..." class="option-input">
                                                     @error("form_fill_options.{$index}") <p class="error-text">{{ $message }}</p> @enderror
                                                 </div>
@@ -1128,7 +1164,7 @@
                                                 <div class="flex items-center space-x-3">
                                                     <div class="answer-number">Blank {{ $index + 1 }}</div>
                                                     <div class="flex-1">
-                                                        <input type="text" wire:model.defer="form_fill_answer_key.{{ $index }}" 
+                                                    <input type="text" wire:model.live="form_fill_answer_key.{{ $index }}" 
                                                                placeholder="Enter the correct answer for blank {{ $index + 1 }}..." class="option-input">
                                                         @error("form_fill_answer_key.{$index}") <p class="error-text">{{ $message }}</p> @enderror
                                                     </div>
@@ -1279,7 +1315,7 @@
                                 <h4 class="sub-question-title mb-4">Answer Key</h4>
                                 <div class="answer-key-section">
                                     <label class="modern-label">Correct Sentence (Answer Key) *</label>
-                                    <textarea wire:model.live.debounce.500ms="reorder_answer_key" rows="3" 
+                                    <textarea wire:model.lazy="reorder_answer_key" rows="3"
                                               placeholder="Enter the complete correct sentence that should be formed when fragments are arranged properly..."
                                               class="modern-textarea"></textarea>
                                     @error('reorder_answer_key') <p class="error-text">{{ $message }}</p> @enderror
@@ -1515,7 +1551,7 @@
                         </div>
 
                         <!-- Question Options Section (for regular MCQ) -->
-                        <div class="section-block" id="question-options-section" x-show="type !== 'statement_match' && type !== 'opinion' && type !== 'mcq_multiple' && type !== 'true_false_multiple' && type !== 'true_false' && type !== 'reorder' && type !== 'form_fill' && type !== 'picture_mcq' && type !== 'audio_mcq_single' && type !== 'audio_image_text_single' && type !== 'audio_image_text_multiple'">
+                        <div class="section-block" id="question-options-section" x-show="type !== 'statement_match' && type !== 'opinion' && type !== 'mcq_multiple' && type !== 'true_false_multiple' && type !== 'true_false' && type !== 'reorder' && type !== 'form_fill' && type !== 'picture_mcq' && type !== 'audio_mcq_single' && type !== 'audio_image_text_single' && type !== 'audio_image_text_multiple' && type !== 'audio_fill_blank' && type !== 'picture_fill_blank' && type !== 'video_fill_blank' && type !== 'audio_picture_match'">
                             <h3 class="section-title">Question Options</h3>
                             <div class="options-wrapper">
                                 <div id="options-container" class="space-y-4">
@@ -1609,12 +1645,36 @@
                                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                 </svg>
-                                Select exactly 2 pairs. Use indices starting from 0. Left side: 0 = first option, 1 = second option, etc. Right side: 0 = first option, 1 = second option, etc.
+                                Use indices starting from 0. Left side: 0 = first option, 1 = second option, etc. Right side: 0 = first option, 1 = second option, etc.
                             </div>
-                            <div class="grid grid-cols-2 gap-6 mt-4" wire:key="correct-pairs-section">
-                                @foreach([0,1] as $pairIdx)
+                            <div class="flex items-center justify-between mb-4">
+                                <h4 class="sub-question-title">Answer Pairs</h4>
+                                <div class="flex space-x-2">
+                                    <button type="button" wire:click="addStatementMatchPair" class="add-btn">
+                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                        </svg>
+                                        Add Pair
+                                    </button>
+                                    <button type="button" wire:click="clearAllStatementMatchPairs" class="clear-all-btn">
+                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                        </svg>
+                                        Clear All Pairs
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4" wire:key="correct-pairs-section">
+                                @foreach($correct_pairs as $pairIdx => $pair)
                                     <div class="option-item" wire:key="pair-{{ $pairIdx }}">
-                                        <div class="mb-2 font-semibold" style="color: #000 !important;">Correct Pair {{ $pairIdx+1 }}</div>
+                                        <div class="flex items-center justify-between mb-3">
+                                            <div class="font-semibold" style="color: #000 !important;">Correct Pair {{ $pairIdx+1 }}</div>
+                                            <button type="button" wire:click="removeStatementMatchPair({{ $pairIdx }})" class="clear-pair-btn" title="Remove this pair">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                                </svg>
+                                            </button>
+                                        </div>
                                         <div class="flex gap-4">
                                             <div class="flex-1">
                                                 <label class="modern-label">Left Option</label>
@@ -1623,8 +1683,8 @@
                                                     @foreach($this->getFilteredLeftOptions() as $idx => $option)
                                                         @php
                                                             $alreadySelected = false;
-                                                            foreach ($correct_pairs as $otherIdx => $pair) {
-                                                                if ($otherIdx !== $pairIdx && isset($pair['left']) && $pair['left'] !== '' && $pair['left'] == $idx) {
+                                                            foreach ($correct_pairs as $otherIdx => $otherPair) {
+                                                                if ($otherIdx !== $pairIdx && isset($otherPair['left']) && $otherPair['left'] !== '' && $otherPair['left'] == $idx) {
                                                                     $alreadySelected = true;
                                                                     break;
                                                                 }
@@ -1643,8 +1703,8 @@
                                                     @foreach($this->getFilteredRightOptions() as $idx => $option)
                                                         @php
                                                             $alreadySelected = false;
-                                                            foreach ($correct_pairs as $otherIdx => $pair) {
-                                                                if ($otherIdx !== $pairIdx && isset($pair['right']) && $pair['right'] !== '' && $pair['right'] == $idx) {
+                                                            foreach ($correct_pairs as $otherIdx => $otherPair) {
+                                                                if ($otherIdx !== $pairIdx && isset($otherPair['right']) && $otherPair['right'] !== '' && $otherPair['right'] == $idx) {
                                                                     $alreadySelected = true;
                                                                     break;
                                                                 }
@@ -1662,8 +1722,8 @@
                             </div>
                         </div>
                         
-                        <!-- Show for other types (NOT statement_match, NOT opinion, NOT mcq_multiple, NOT true_false_multiple, NOT true_false, NOT reorder, NOT form_fill, NOT picture_mcq, NOT audio_mcq_single, NOT audio_image_text_single, NOT audio_image_text_multiple) -->
-                        <div class="section-block" x-show="type !== 'statement_match' && type !== 'opinion' && type !== 'mcq_multiple' && type !== 'true_false_multiple' && type !== 'true_false' && type !== 'reorder' && type !== 'form_fill' && type !== 'picture_mcq' && type !== 'audio_mcq_single' && type !== 'audio_image_text_single' && type !== 'audio_image_text_multiple'">
+                        <!-- Show for other types (NOT statement_match, NOT opinion, NOT mcq_multiple, NOT true_false_multiple, NOT true_false, NOT reorder, NOT form_fill, NOT picture_mcq, NOT audio_mcq_single, NOT audio_image_text_single, NOT audio_image_text_multiple, NOT audio_fill_blank, NOT picture_fill_blank, NOT video_fill_blank, NOT audio_picture_match) -->
+                        <div class="section-block" x-show="type !== 'statement_match' && type !== 'opinion' && type !== 'mcq_multiple' && type !== 'true_false_multiple' && type !== 'true_false' && type !== 'reorder' && type !== 'form_fill' && type !== 'picture_mcq' && type !== 'audio_mcq_single' && type !== 'audio_image_text_single' && type !== 'audio_image_text_multiple' && type !== 'audio_fill_blank' && type !== 'picture_fill_blank' && type !== 'video_fill_blank' && type !== 'audio_picture_match'">
                             <h3 class="section-title">Correct Answer Indices</h3>
                             <div class="info-banner">
                                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1698,6 +1758,518 @@
                                             <input type="number" wire:model="answer_indices.{{ $index }}" min="0" placeholder="0" class="index-input">
                                         </div>
                                     @endforeach
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Audio Fill in the Blanks Section -->
+                        <div class="section-block" x-show="type === 'audio_fill_blank'">
+                            <h3 class="section-title">Audio Fill in the Blanks</h3>
+                            <!-- Audio File Upload -->
+                            <div class="mb-6">
+                                <label class="modern-label">Audio File *</label>
+                                <input type="file" wire:model="audio_file" accept="audio/*" class="modern-input">
+                                @error('audio_file') <p class="error-text">{{ $message }}</p> @enderror
+                            </div>
+                            <!-- Paragraph with Blanks -->
+                            <div class="mb-6">
+                                <h4 class="sub-question-title mb-4">Paragraph with Blanks</h4>
+                                <div class="form-fill-paragraph-section">
+                                    <label class="modern-label">Paragraph Text (use ___ for blanks) *</label>
+                                    <textarea wire:model.lazy="audio_fill_paragraph" rows="6"
+                                              placeholder="Enter your paragraph here. Use ___ (three underscores) to mark blanks where students should fill in answers. For example: The capital of France is ___. It is located in the ___ of the country."
+                                              class="modern-textarea"></textarea>
+                                    @error('audio_fill_paragraph') <p class="error-text">{{ $message }}</p> @enderror
+                                    @if(trim($audio_fill_paragraph ?? ''))
+                                        <div class="paragraph-info">
+                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                            </svg>
+                                            <span>Detected {{ substr_count($audio_fill_paragraph, '___') }} blank(s) in the paragraph.</span>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                            <!-- Answer Keys -->
+                            <div class="mb-6">
+                                <h4 class="sub-question-title mb-4">Answer Keys</h4>
+                                <div class="answer-key-section">
+                                    <div class="answer-key-info mb-4">
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                        <span>Provide the correct answer for each blank in order. The answer must match the intended answer for each blank.</span>
+                                    </div>
+                                    <div class="space-y-4">
+                                        @foreach($audio_fill_answer_key as $index => $answerKey)
+                                            <div class="answer-key-item" wire:key="audio-fill-answer-{{ $index }}">
+                                                <div class="flex items-center space-x-3">
+                                                    <div class="answer-number">Blank {{ $index + 1 }}</div>
+                                                    <div class="flex-1">
+                                                        <input type="text" wire:model.live="audio_fill_answer_key.{{ $index }}"
+                                                               placeholder="Enter the correct answer for blank {{ $index + 1 }}..." class="option-input">
+                                                        @error("audio_fill_answer_key.{$index}") <p class="error-text">{{ $message }}</p> @enderror
+                                                    </div>
+                                                    <div class="flex items-center space-x-2">
+                                                        @if($index === 0)
+                                                            <button type="button" wire:click="addAudioFillAnswerKey" class="add-btn-small">
+                                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                                                </svg>
+                                                            </button>
+                                                        @else
+                                                            <button type="button" wire:click="removeAudioFillAnswerKey({{ $index }})" class="remove-btn-small">
+                                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                                                </svg>
+                                                            </button>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Preview Section -->
+                            <div class="mb-6" wire:key="audio-fill-preview-{{ count($audio_fill_answer_key) }}">
+                                <h4 class="sub-question-title mb-4">Preview</h4>
+                                <div class="preview-section">
+                                    @php
+                                        $filteredAnswerKeys = array_filter($audio_fill_answer_key, fn($a) => trim($a ?? '') !== '');
+                                        $previewParagraph = trim($audio_fill_paragraph ?? '');
+                                        $hasValidPreview = $previewParagraph && count($filteredAnswerKeys) > 0;
+                                        if ($hasValidPreview) {
+                                            $answerIndex = 0;
+                                            $filledParagraph = preg_replace_callback('/___/', function($matches) use ($filteredAnswerKeys, &$answerIndex) {
+                                                if ($answerIndex < count($filteredAnswerKeys)) {
+                                                    $answer = trim($filteredAnswerKeys[$answerIndex]);
+                                                    $answerIndex++;
+                                                    if (!empty($answer)) {
+                                                        return '<span class="filled-answer">' . $answer . '</span>';
+                                                    }
+                                                }
+                                                return '<span class="empty-blank">___</span>';
+                                            }, $previewParagraph);
+                                        }
+                                    @endphp
+                                    @if($hasValidPreview)
+                                        <div class="preview-filled-main" wire:key="audio-fill-main-preview-{{ md5($previewParagraph . implode('', $filteredAnswerKeys)) }}">
+                                            <p class="preview-label-main">✅ Final Sentence with Answers:</p>
+                                            <div class="filled-paragraph-main">{!! $filledParagraph !!}</div>
+                                        </div>
+                                    @endif
+                                    @if(trim($audio_fill_paragraph ?? ''))
+                                        <div class="preview-paragraph" wire:key="audio-fill-paragraph-preview-{{ md5($audio_fill_paragraph) }}">
+                                            <p class="preview-label">Original paragraph with blanks:</p>
+                                            <div class="paragraph-preview">{{ trim($audio_fill_paragraph) }}</div>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Picture Fill in the Blanks Section -->
+                        <div class="section-block" x-show="type === 'picture_fill_blank'">
+                            <h3 class="section-title">Picture Fill in the Blanks</h3>
+                            <!-- Image Upload -->
+                            <div class="mb-6">
+                                <label class="modern-label">Image File *</label>
+                                <input type="file" wire:model="picture_fill_image" accept="image/*" class="modern-input">
+                                @error('picture_fill_image') <p class="error-text">{{ $message }}</p> @enderror
+                            </div>
+                            <!-- Paragraph with Blanks -->
+                            <div class="mb-6">
+                                <h4 class="sub-question-title mb-4">Paragraph with Blanks</h4>
+                                <div class="form-fill-paragraph-section">
+                                    <label class="modern-label">Paragraph Text (use ___ for blanks) *</label>
+                                    <textarea wire:model.lazy="picture_fill_paragraph" rows="6"
+                                              placeholder="Enter your paragraph here. Use ___ (three underscores) to mark blanks where students should fill in answers."
+                                              class="modern-textarea"></textarea>
+                                    @error('picture_fill_paragraph') <p class="error-text">{{ $message }}</p> @enderror
+                                    @if(trim($picture_fill_paragraph ?? ''))
+                                        <div class="paragraph-info">
+                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                            </svg>
+                                            <span>Detected {{ substr_count($picture_fill_paragraph, '___') }} blank(s) in the paragraph.</span>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                            <!-- Answer Keys -->
+                            <div class="mb-6">
+                                <h4 class="sub-question-title mb-4">Answer Keys</h4>
+                                <div class="answer-key-section">
+                                    <div class="space-y-4">
+                                        @foreach($picture_fill_answer_key as $index => $answerKey)
+                                            <div class="answer-key-item" wire:key="picture-fill-answer-{{ $index }}">
+                                                <div class="flex items-center space-x-3">
+                                                    <div class="answer-number">Blank {{ $index + 1 }}</div>
+                                                    <div class="flex-1">
+                                                        <input type="text" wire:model.live="picture_fill_answer_key.{{ $index }}"
+                                                               placeholder="Enter the correct answer for blank {{ $index + 1 }}..." class="option-input">
+                                                        @error("picture_fill_answer_key.{$index}") <p class="error-text">{{ $message }}</p> @enderror
+                                                    </div>
+                                                    <div class="flex items-center space-x-2">
+                                                        @if($index === 0)
+                                                            <button type="button" wire:click="addPictureFillAnswerKey" class="add-btn-small">
+                                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                                                </svg>
+                                                            </button>
+                                                        @else
+                                                            <button type="button" wire:click="removePictureFillAnswerKey({{ $index }})" class="remove-btn-small">
+                                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                                                </svg>
+                                                            </button>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Preview Section -->
+                            <div class="mb-6" wire:key="picture-fill-preview-{{ count($picture_fill_answer_key) }}">
+                                <h4 class="sub-question-title mb-4">Preview</h4>
+                                <div class="preview-section">
+                                    @if($picture_fill_image)
+                                        <div class="mb-4">
+                                            <img src="{{ $picture_fill_image instanceof Illuminate\Http\UploadedFile ? $picture_fill_image->temporaryUrl() : Storage::url($picture_fill_image) }}" alt="Uploaded Image" class="preview-image object-cover rounded border-2 border-blue-300" style="max-width: 300px; max-height: 200px;">
+                                        </div>
+                                    @endif
+                                    @php
+                                        $filteredAnswerKeys = array_filter($picture_fill_answer_key, fn($a) => trim($a ?? '') !== '');
+                                        $previewParagraph = trim($picture_fill_paragraph ?? '');
+                                        $hasValidPreview = $previewParagraph && count($filteredAnswerKeys) > 0;
+                                        if ($hasValidPreview) {
+                                            $answerIndex = 0;
+                                            $filledParagraph = preg_replace_callback('/___/', function($matches) use ($filteredAnswerKeys, &$answerIndex) {
+                                                if ($answerIndex < count($filteredAnswerKeys)) {
+                                                    $answer = trim($filteredAnswerKeys[$answerIndex]);
+                                                    $answerIndex++;
+                                                    if (!empty($answer)) {
+                                                        return '<span class="filled-answer">' . $answer . '</span>';
+                                                    }
+                                                }
+                                                return '<span class="empty-blank">___</span>';
+                                            }, $previewParagraph);
+                                        }
+                                    @endphp
+                                    @if($hasValidPreview)
+                                        <div class="preview-filled-main" wire:key="picture-fill-main-preview-{{ md5($previewParagraph . implode('', $filteredAnswerKeys)) }}">
+                                            <p class="preview-label-main">✅ Final Sentence with Answers:</p>
+                                            <div class="filled-paragraph-main">{!! $filledParagraph !!}</div>
+                                        </div>
+                                    @endif
+                                    @if(trim($picture_fill_paragraph ?? ''))
+                                        <div class="preview-paragraph" wire:key="picture-fill-paragraph-preview-{{ md5($picture_fill_paragraph) }}">
+                                            <p class="preview-label">Original paragraph with blanks:</p>
+                                            <div class="paragraph-preview">{{ trim($picture_fill_paragraph) }}</div>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Video Fill in the Blanks Section -->
+                        <div class="section-block" x-show="type === 'video_fill_blank'">
+                            <h3 class="section-title">Video Fill in the Blanks</h3>
+                            <!-- Video Upload -->
+                            <div class="mb-6">
+                                <label class="modern-label">Video File *</label>
+                                <input type="file" wire:model="video_fill_video" accept="video/*" class="modern-input">
+                                @error('video_fill_video') <p class="error-text">{{ $message }}</p> @enderror
+                            </div>
+                            <!-- Paragraph with Blanks -->
+                            <div class="mb-6">
+                                <h4 class="sub-question-title mb-4">Paragraph with Blanks</h4>
+                                <div class="form-fill-paragraph-section">
+                                    <label class="modern-label">Paragraph Text (use ___ for blanks) *</label>
+                                    <textarea wire:model.lazy="video_fill_paragraph" rows="6"
+                                              placeholder="Enter your paragraph here. Use ___ (three underscores) to mark blanks where students should fill in answers."
+                                              class="modern-textarea"></textarea>
+                                    @error('video_fill_paragraph') <p class="error-text">{{ $message }}</p> @enderror
+                                    @if(trim($video_fill_paragraph ?? ''))
+                                        <div class="paragraph-info">
+                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                            </svg>
+                                            <span>Detected {{ substr_count($video_fill_paragraph, '___') }} blank(s) in the paragraph.</span>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                            <!-- Answer Keys -->
+                            <div class="mb-6">
+                                <h4 class="sub-question-title mb-4">Answer Keys</h4>
+                                <div class="answer-key-section">
+                                    <div class="space-y-4">
+                                        @foreach($video_fill_answer_key as $index => $answerKey)
+                                            <div class="answer-key-item" wire:key="video-fill-answer-{{ $index }}">
+                                                <div class="flex items-center space-x-3">
+                                                    <div class="answer-number">Blank {{ $index + 1 }}</div>
+                                                    <div class="flex-1">
+                                                        <input type="text" wire:model.live="video_fill_answer_key.{{ $index }}"
+                                                               placeholder="Enter the correct answer for blank {{ $index + 1 }}..." class="option-input">
+                                                        @error("video_fill_answer_key.{$index}") <p class="error-text">{{ $message }}</p> @enderror
+                                                    </div>
+                                                    <div class="flex items-center space-x-2">
+                                                        @if($index === 0)
+                                                            <button type="button" wire:click="addVideoFillAnswerKey" class="add-btn-small">
+                                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                                                </svg>
+                                                            </button>
+                                                        @else
+                                                            <button type="button" wire:click="removeVideoFillAnswerKey({{ $index }})" class="remove-btn-small">
+                                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                                                </svg>
+                                                            </button>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Preview Section -->
+                            <div class="mb-6" wire:key="video-fill-preview-{{ count($video_fill_answer_key) }}">
+                                <h4 class="sub-question-title mb-4">Preview</h4>
+                                <div class="preview-section">
+                                    @if($video_fill_video)
+                                        <div class="mb-4">
+                                            <video controls class="rounded border-2 border-blue-300" style="max-width: 400px; max-height: 250px;">
+                                                <source src="{{ $video_fill_video instanceof Illuminate\Http\UploadedFile ? $video_fill_video->temporaryUrl() : Storage::url($video_fill_video) }}" type="video/mp4">
+                                                Your browser does not support the video tag.
+                                            </video>
+                                        </div>
+                                    @endif
+                                    @php
+                                        $filteredAnswerKeys = array_filter($video_fill_answer_key, fn($a) => trim($a ?? '') !== '');
+                                        $previewParagraph = trim($video_fill_paragraph ?? '');
+                                        $hasValidPreview = $previewParagraph && count($filteredAnswerKeys) > 0;
+                                        if ($hasValidPreview) {
+                                            $answerIndex = 0;
+                                            $filledParagraph = preg_replace_callback('/___/', function($matches) use ($filteredAnswerKeys, &$answerIndex) {
+                                                if ($answerIndex < count($filteredAnswerKeys)) {
+                                                    $answer = trim($filteredAnswerKeys[$answerIndex]);
+                                                    $answerIndex++;
+                                                    if (!empty($answer)) {
+                                                        return '<span class="filled-answer">' . $answer . '</span>';
+                                                    }
+                                                }
+                                                return '<span class="empty-blank">___</span>';
+                                            }, $previewParagraph);
+                                        }
+                                    @endphp
+                                    @if($hasValidPreview)
+                                        <div class="preview-filled-main" wire:key="video-fill-main-preview-{{ md5($previewParagraph . implode('', $filteredAnswerKeys)) }}">
+                                            <p class="preview-label-main">✅ Final Sentence with Answers:</p>
+                                            <div class="filled-paragraph-main">{!! $filledParagraph !!}</div>
+                                        </div>
+                                    @endif
+                                    @if(trim($video_fill_paragraph ?? ''))
+                                        <div class="preview-paragraph" wire:key="video-fill-paragraph-preview-{{ md5($video_fill_paragraph) }}">
+                                            <p class="preview-label">Original paragraph with blanks:</p>
+                                            <div class="paragraph-preview">{{ trim($video_fill_paragraph) }}</div>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Audio + Picture Matching Section -->
+                        <div class="section-block" x-show="type === 'audio_picture_match'">
+                            <h3 class="section-title">Audio + Picture Matching</h3>
+                            <div class="info-banner">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                Upload audio files on the left and image files on the right. Students will match each audio to the correct image.
+                            </div>
+                            <div class="grid grid-cols-2 gap-6">
+                                <!-- Left Side - Audio Files -->
+                                <div>
+                                    <h5 class="font-semibold mb-4 text-lg">🎵 Audio Files</h5>
+                                    <div id="audio-picture-match-audios-container">
+                                        @foreach($audio_picture_audios as $idx => $audioUpload)
+                                            <div class="audio-picture-audio-item flex flex-col mb-4 p-4 border-2 border-dashed border-blue-300 rounded-lg" wire:key="audio_picture_audio_{{ $idx }}">
+                                                <div class="flex items-center justify-between mb-2">
+                                                    <span class="font-medium text-gray-700">Audio {{ $idx + 1 }}</span>
+                                                    @if($idx > 0)
+                                                        <button type="button" wire:click="removeAudioPictureAudio({{ $idx }})" class="remove-btn-small">
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                                        </button>
+                                                    @endif
+                                                </div>
+                                                <input type="file" wire:model="audio_picture_audios.{{ $idx }}" class="modern-input" accept="audio/*" placeholder="Upload audio file">
+                                                @error("audio_picture_audios.{$idx}") <p class="error-text">{{ $message }}</p> @enderror
+                                                @if(isset($audio_picture_audios[$idx]) && $audio_picture_audios[$idx])
+                                                    <div class="mt-2">
+                                                        <audio controls class="w-full">
+                                                            <source src="{{ $audio_picture_audios[$idx]->temporaryUrl() }}" type="audio/mpeg">
+                                                            Your browser does not support the audio element.
+                                                        </audio>
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                    <button type="button" wire:click="addAudioPictureAudio" class="add-btn mt-2">
+                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                        </svg>
+                                        Add Audio
+                                    </button>
+                                </div>
+                                <!-- Right Side - Image Files -->
+                                <div>
+                                    <h5 class="font-semibold mb-4 text-lg">🖼️ Image Files</h5>
+                                    <div id="audio-picture-match-images-container">
+                                        @foreach($audio_picture_images as $idx => $imageUpload)
+                                            <div class="audio-picture-image-item flex flex-col mb-4 p-4 border-2 border-dashed border-purple-300 rounded-lg" wire:key="audio_picture_image_{{ $idx }}">
+                                                <div class="flex items-center justify-between mb-2">
+                                                    <span class="font-medium text-gray-700">Image {{ $idx + 1 }}</span>
+                                                    @if($idx > 0)
+                                                        <button type="button" wire:click="removeAudioPictureImage({{ $idx }})" class="remove-btn-small">
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                                        </button>
+                                                    @endif
+                                                </div>
+                                                <input type="file" wire:model="audio_picture_images.{{ $idx }}" class="modern-input" accept="image/*" placeholder="Upload image file">
+                                                @error("audio_picture_images.{$idx}") <p class="error-text">{{ $message }}</p> @enderror
+                                                @if(isset($audio_picture_images[$idx]) && $audio_picture_images[$idx])
+                                                    <div class="mt-2">
+                                                        <img src="{{ $audio_picture_images[$idx]->temporaryUrl() }}" alt="Preview" class="preview-image object-cover rounded border" style="width: 120px; height: 120px; max-width: 100%; max-height: 100%;">
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                    <button type="button" wire:click="addAudioPictureImage" class="add-btn mt-2">
+                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                        </svg>
+                                        Add Image
+                                    </button>
+                                </div>
+                            </div>
+                            <!-- Matching Pairs Section -->
+                            <div class="mt-6">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h4 class="sub-question-title">Correct Answer Pairs</h4>
+                                    <div class="flex space-x-2">
+                                        <button type="button" wire:click="addAudioPicturePair" class="add-btn">
+                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                            </svg>
+                                            Add Pair
+                                        </button>
+                                        <button type="button" wire:click="clearAllAudioPicturePairs" class="clear-all-btn">
+                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                            </svg>
+                                            Clear All Pairs
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="info-banner-small">
+                                    <span class="text-sm">Audio indices: 0 = first audio, 1 = second audio, etc. Image indices: 0 = first image, 1 = second image, etc.</span>
+                                </div>
+                                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4" wire:key="audio-picture-correct-pairs-section">
+                                    @foreach($audio_picture_pairs as $pairIdx => $pair)
+                                        <div class="option-item" wire:key="audio-picture-pair-{{ $pairIdx }}">
+                                            <div class="flex items-center justify-between mb-3">
+                                                <div class="font-semibold" style="color: #000 !important;">Correct Pair {{ $pairIdx+1 }}</div>
+                                                <button type="button" wire:click="removeAudioPicturePair({{ $pairIdx }})" class="clear-pair-btn" title="Remove this pair">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                            <div class="flex gap-4">
+                                                <div class="flex-1">
+                                                    <label class="modern-label">Audio</label>
+                                                    <select class="option-input" wire:model.live="audio_picture_pairs.{{ $pairIdx }}.left" wire:key="audio-picture-left-select-{{ $pairIdx }}-{{ count($audio_picture_audios ?? []) }}">
+                                                        <option value="">Select Audio</option>
+                                                        @foreach($audio_picture_audios as $idx => $audio)
+                                                            <option value="{{ $idx }}">{{ $idx }}. Audio {{ $idx + 1 }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                                <div class="flex-1">
+                                                    <label class="modern-label">Image</label>
+                                                    <select class="option-input" wire:model.live="audio_picture_pairs.{{ $pairIdx }}.right" wire:key="audio-picture-right-select-{{ $pairIdx }}-{{ count($audio_picture_images ?? []) }}">
+                                                        <option value="">Select Image</option>
+                                                        @foreach($audio_picture_images as $idx => $image)
+                                                            <option value="{{ $idx }}">{{ $idx }}. Image {{ $idx + 1 }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                            <!-- Preview Section -->
+                            <div class="mb-6" wire:key="audio-picture-preview-{{ count($audio_picture_audios) }}-{{ count($audio_picture_images) }}-{{ count($audio_picture_pairs) }}">
+                                <h4 class="sub-question-title mb-4">Preview</h4>
+                                <div class="preview-section">
+                                    @php
+                                        $validPairs = array_filter($audio_picture_pairs ?? [], function($pair) {
+                                            return isset($pair['left'], $pair['right']) && $pair['left'] !== '' && $pair['right'] !== '' && $pair['left'] !== null && $pair['right'] !== null;
+                                        });
+                                    @endphp
+                                    @if(count($validPairs) > 0)
+                                        <p class="preview-label mb-4">💡 Audio to Picture Matching Preview:</p>
+                                        <div class="space-y-6">
+                                            @foreach($validPairs as $index => $pair)
+                                                @php
+                                                    $audioIndex = (int)$pair['left'];
+                                                    $imageIndex = (int)$pair['right'];
+                                                    $audioUpload = $audio_picture_audios[$audioIndex] ?? null;
+                                                    $imageUpload = $audio_picture_images[$imageIndex] ?? null;
+                                                @endphp
+                                                @if($audioUpload && $imageUpload)
+                                                    <div class="audio-picture-match-item">
+                                                        <div class="flex items-center justify-center space-x-8 p-6 bg-white border-2 border-green-200 rounded-xl">
+                                                            <!-- Audio Section -->
+                                                            <div class="flex flex-col items-center space-y-2">
+                                                                <audio controls class="w-40">
+                                                                    <source src="{{ $audioUpload->temporaryUrl() }}" type="audio/mpeg">
+                                                                    Your browser does not support the audio element.
+                                                                </audio>
+                                                                <span class="text-sm font-medium text-gray-700 bg-gray-100 px-2 py-1 rounded">Audio {{ $audioIndex + 1 }}</span>
+                                                            </div>
+                                                            <!-- Arrow -->
+                                                            <div class="flex items-center px-4">
+                                                                <svg class="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                                                                </svg>
+                                                            </div>
+                                                            <!-- Image Section -->
+                                                            <div class="flex flex-col items-center space-y-2">
+                                                                <img src="{{ $imageUpload->temporaryUrl() }}" alt="Image {{ $imageIndex + 1 }}" class="preview-image object-cover rounded-lg border-2 border-blue-300">
+                                                                <span class="text-sm font-medium text-gray-700 bg-gray-100 px-2 py-1 rounded">Image {{ $imageIndex + 1 }}</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                @endif
+                                            @endforeach
+                                        </div>
+                                    @else
+                                        <div class="text-center py-8">
+                                            <div class="text-gray-500 mb-2">
+                                                <svg class="w-16 h-16 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                                </svg>
+                                            </div>
+                                            <p class="text-gray-500 font-medium">Upload audio and image files, then set answer pairs to see preview</p>
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -2954,6 +3526,355 @@
     .option-item, .index-item, .sub-question-item, .true-false-item, .reorder-fragment-item, .form-fill-option-item, .answer-key-item, .picture-mcq-image-item, .audio-image-pair-item {
         animation: slideInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     }
+
+    /* Additional Button Group Styling for Better Alignment */
+    .flex.space-x-2 .add-btn,
+    .flex.space-x-2 .clear-all-btn {
+        display: inline-flex !important;
+        align-items: center !important;
+        white-space: nowrap !important;
+    }
+
+    /* Enhanced Pair Management Buttons */
+    .add-btn svg, .clear-all-btn svg, .clear-pair-btn svg {
+        flex-shrink: 0 !important;
+    }
+
+    /* Mobile Responsive Button Groups */
+    @media (max-width: 640px) {
+        .flex.space-x-2 {
+            flex-direction: column !important;
+            space-x: 0 !important;
+            gap: 0.5rem !important;
+        }
+        
+        .flex.space-x-2 > * {
+            margin-left: 0 !important;
+        }
+    }
+
+    /* Enhanced Hover Effects for Interactive Elements */
+    .modern-card .section-block:hover {
+        background: rgba(59, 130, 246, 0.02);
+        border-radius: 16px;
+        transition: background 0.3s ease;
+    }
+
+    /* Focus States for Better Accessibility */
+    .add-btn:focus, .remove-btn:focus, .clear-pair-btn:focus, .clear-all-btn:focus {
+        outline: 2px solid #3b82f6 !important;
+        outline-offset: 2px !important;
+    }
+
+    /* Loading State Styles */
+    .option-item.loading, .index-item.loading {
+        opacity: 0.7;
+        pointer-events: none;
+    }
+
+    /* Success State Styles */
+    .option-item.success {
+        border-color: #10b981 !important;
+        background: linear-gradient(145deg, #f0fdf4 0%, #dcfce7 100%) !important;
+    }
+
+    /* Error State Styles */
+    .option-item.error {
+        border-color: #ef4444 !important;
+        background: linear-gradient(145deg, #fef2f2 0%, #fee2e2 100%) !important;
+    }
+
+    /* Improved Button Spacing in Grid Layouts */
+    .grid .button-group {
+        justify-content: flex-end;
+        margin-top: 0.5rem;
+    }
+
+    /* Enhanced Typography for Better Readability */
+    .section-title, .sub-question-title {
+        letter-spacing: 0.025em;
+        line-height: 1.2;
+    }
+
+    /* Improved Form Validation Styling */
+    .modern-input.error, .modern-select.error, .modern-textarea.error {
+        border-color: #ef4444 !important;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
+    }
+
+    .modern-input.success, .modern-select.success, .modern-textarea.success {
+        border-color: #10b981 !important;
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1) !important;
+    }
+
+    /* Smooth Transitions for Dynamic Content */
+    .section-block {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Enhanced Container Styling */
+    .modern-question-form {
+        position: relative;
+    }
+
+    .modern-question-form::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        z-index: -1;
+        opacity: 0.5;
+    }
+
+    /* Print Styles */
+    @media print {
+        .modern-card {
+            box-shadow: none !important;
+            border: 1px solid #000 !important;
+        }
+        
+        .button-group {
+            display: none !important;
+        }
+        
+        .submit-btn, .cancel-btn {
+            display: none !important;
+        }
+    }
+    </style>
+    @endpush
+
+    @push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Auto-save functionality
+            const inputs = document.querySelectorAll('.modern-input, .modern-textarea, .modern-select');
+            inputs.forEach(input => {
+                input.addEventListener('input', function() {
+                    // Add visual feedback for unsaved changes
+                    this.classList.add('modified');
+                    
+                    // Remove modified class after a delay
+                    setTimeout(() => {
+                        this.classList.remove('modified');
+                    }, 2000);
+                });
+            });
+
+            // Enhanced form validation
+            const form = document.querySelector('form');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    const requiredFields = form.querySelectorAll('[required]');
+                    let hasErrors = false;
+                    
+                    requiredFields.forEach(field => {
+                        if (!field.value.trim()) {
+                            field.classList.add('error');
+                            hasErrors = true;
+                        } else {
+                            field.classList.remove('error');
+                            field.classList.add('success');
+                        }
+                    });
+                    
+                    if (hasErrors) {
+                        e.preventDefault();
+                        // Scroll to first error
+                        const firstError = form.querySelector('.error');
+                        if (firstError) {
+                            firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            firstError.focus();
+                        }
+                    }
+                });
+            }
+
+            // Dynamic preview updates
+            const previewElements = document.querySelectorAll('[wire\\:model]');
+            previewElements.forEach(element => {
+                element.addEventListener('input', function() {
+                    // Add loading state
+                    const section = this.closest('.section-block');
+                    if (section) {
+                        section.classList.add('loading');
+                        setTimeout(() => {
+                            section.classList.remove('loading');
+                        }, 500);
+                    }
+                });
+            });
+
+            // Smooth scrolling for section navigation
+            const sectionTitles = document.querySelectorAll('.section-title');
+            sectionTitles.forEach(title => {
+                title.style.cursor = 'pointer';
+                title.addEventListener('click', function() {
+                    this.closest('.section-block').scrollIntoView({ 
+                        behavior: 'smooth', 
+                        block: 'start' 
+                    });
+                });
+            });
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                // Ctrl+S to save (prevent default and submit form)
+                if (e.ctrlKey && e.key === 's') {
+                    e.preventDefault();
+                    const submitBtn = document.querySelector('.submit-btn');
+                    if (submitBtn) {
+                        submitBtn.click();
+                    }
+                }
+                
+                // Escape to cancel
+                if (e.key === 'Escape') {
+                    const cancelBtn = document.querySelector('.cancel-btn');
+                    if (cancelBtn) {
+                        cancelBtn.click();
+                    }
+                }
+            });
+
+            // Add visual feedback for button interactions
+            const buttons = document.querySelectorAll('.add-btn, .remove-btn, .clear-pair-btn, .clear-all-btn');
+            buttons.forEach(button => {
+                button.addEventListener('click', function() {
+                    this.style.transform = 'scale(0.95)';
+                    setTimeout(() => {
+                        this.style.transform = '';
+                    }, 150);
+                });
+            });
+
+            // Auto-resize textareas
+            const textareas = document.querySelectorAll('.modern-textarea');
+            textareas.forEach(textarea => {
+                textarea.addEventListener('input', function() {
+                    this.style.height = 'auto';
+                    this.style.height = this.scrollHeight + 'px';
+                });
+            });
+
+            // Enhanced error handling
+            window.addEventListener('livewire:load', function() {
+                Livewire.on('validationError', function(message) {
+                    // Show toast notification for validation errors
+                    console.log('Validation Error:', message);
+                });
+                
+                Livewire.on('questionCreated', function() {
+                    // Show success animation
+                    const card = document.querySelector('.modern-card');
+                    if (card) {
+                        card.style.transform = 'scale(1.02)';
+                        card.style.borderColor = '#10b981';
+                        setTimeout(() => {
+                            card.style.transform = '';
+                            card.style.borderColor = '';
+                        }, 1000);
+                    }
+                });
+            });
+
+            // File upload progress indication
+            const fileInputs = document.querySelectorAll('input[type="file"]');
+            fileInputs.forEach(input => {
+                input.addEventListener('change', function() {
+                    const fileName = this.files[0]?.name;
+                    if (fileName) {
+                        // Create progress indicator
+                        const progressDiv = document.createElement('div');
+                        progressDiv.className = 'upload-progress';
+                        progressDiv.innerHTML = `<div class="progress-bar"></div><span>${fileName}</span>`;
+                        
+                        // Insert after the input
+                        this.parentNode.insertBefore(progressDiv, this.nextSibling);
+                        
+                        // Simulate upload progress
+                        const progressBar = progressDiv.querySelector('.progress-bar');
+                        let width = 0;
+                        const interval = setInterval(() => {
+                            width += 10;
+                            progressBar.style.width = width + '%';
+                            if (width >= 100) {
+                                clearInterval(interval);
+                                setTimeout(() => {
+                                    progressDiv.remove();
+                                }, 1000);
+                            }
+                        }, 100);
+                    }
+                });
+            });
+        });
+    </script>
+    @endpush
+
+    @push('styles')
+    <style>
+        /* Upload Progress Styling */
+        .upload-progress {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background: #f8fafc;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .progress-bar {
+            height: 4px;
+            background: linear-gradient(90deg, #3b82f6, #10b981);
+            border-radius: 2px;
+            transition: width 0.3s ease;
+            margin-bottom: 0.25rem;
+        }
+
+        .upload-progress span {
+            font-size: 0.75rem;
+            color: #6b7280;
+            font-weight: 500;
+        }
+
+        /* Modified State Styling */
+        .modern-input.modified, .modern-textarea.modified, .modern-select.modified {
+            border-color: #f59e0b !important;
+            box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2) !important;
+        }
+
+        /* Enhanced Accessibility */
+        .add-btn:focus-visible, .remove-btn:focus-visible, .clear-pair-btn:focus-visible, .clear-all-btn:focus-visible {
+            outline: 2px solid #3b82f6 !important;
+            outline-offset: 2px !important;
+        }
+
+        /* High Contrast Mode Support */
+        @media (prefers-contrast: high) {
+            .modern-card {
+                border: 2px solid #000 !important;
+            }
+            
+            .section-title::before {
+                background: #000 !important;
+            }
+            
+            .add-btn, .remove-btn {
+                border: 1px solid #000 !important;
+            }
+        }
+
+        /* Reduced Motion Support */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
     </style>
     @endpush
 </x-filament-panels::page>

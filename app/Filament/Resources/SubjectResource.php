@@ -81,7 +81,8 @@ class SubjectResource extends Resource
 
     public static function shouldRegisterNavigation(): bool
     {
-        return true;
+        // Hide for datamanager
+        return !(auth()->check() && auth()->user()->isDataManager());
     }
 
     public static function canCreate(): bool

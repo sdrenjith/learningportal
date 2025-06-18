@@ -70,4 +70,10 @@ class CourseResource extends Resource
     {
         return 2;
     }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        // Hide for datamanager
+        return !(auth()->check() && auth()->user()->isDataManager());
+    }
 }

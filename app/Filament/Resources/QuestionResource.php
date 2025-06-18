@@ -218,14 +218,11 @@ class QuestionResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('instruction')
                     ->label('Question')
-                    ->limit(50)
                     ->searchable()
-                    ->extraAttributes(['style' => 'max-width: 250px; white-space: normal; word-break: break-word;']),
+                    ->extraAttributes(['style' => 'max-width: 600px; min-width: 350px; white-space: normal; word-break: break-word; font-size: 1rem;']),
 
                 Tables\Columns\TextColumn::make('day.title')
-                    ->label('Day')
-                    ->badge()
-                    ->color('primary'),
+                    ->label('Day'),
 
                 Tables\Columns\TextColumn::make('day.course.name')
                     ->label('Course')
@@ -233,18 +230,10 @@ class QuestionResource extends Resource
                     ->color('secondary'),
 
                 Tables\Columns\TextColumn::make('subject.name')
-                    ->label('Subject')
-                    ->badge()
-                    ->color('info'),
+                    ->label('Subject'),
 
                 Tables\Columns\TextColumn::make('questionType.name')
-                    ->label('Type')
-                    ->badge()
-                    ->color('warning'),
-
-                Tables\Columns\IconColumn::make('is_active')
-                    ->label('Active')
-                    ->boolean(),
+                    ->label('Type'),
 
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Created')
