@@ -23,3 +23,6 @@
 /.zed
 *.tar
 node_modules/
+
+# temp
+public_html_latestwith_audioissue/
