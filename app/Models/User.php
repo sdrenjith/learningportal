@@ -3,11 +3,13 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-class User extends Authenticatable
+class User extends Authenticatable implements FilamentUser
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
@@ -22,6 +24,18 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'father_name',
+        'mother_name',
+        'dob',
+        'course_fee',
+        'phone',
+        'gender',
+        'nationality',
+        'category',
+        'batch_id',
+        'username',
+        'attachments',
+        'profile_picture',
     ];
 
     /**
@@ -44,6 +58,8 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'attachments' => 'array',
+            'dob' => 'date',
         ];
     }
 
@@ -61,5 +77,23 @@ class User extends Authenticatable
     public function isDataManager(): bool
     {
         return $this->role === 'datamanager';
+    }
+
+    public function batch()
+    {
+        return $this->belongsTo(Batch::class);
+    }
+
+    public function canAccessPanel(Panel $panel): bool
+    {
+        if ($panel->getId() === 'admin') {
+            return $this->isAdmin();
+        }
+
+        if ($panel->getId() === 'student') {
+            return $this->role === 'student';
+        }
+
+        return false;
     }
 }

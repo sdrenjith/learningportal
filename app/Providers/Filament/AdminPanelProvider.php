@@ -20,14 +20,21 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Filament\Navigation\NavigationGroup;
 use Filament\Navigation\NavigationItem;
 use App\Models\Course;
+use Filament\Support\Assets\Css;
+use Filament\Support\Assets\Js;
 use Illuminate\Support\Str;
+use Filament\Support\Facades\FilamentAsset;
+use Filament\Support\Facades\FilamentView;
+use Illuminate\Support\Facades\Vite;
+use App\Http\Middleware\AdminMiddleware;
+use App\Http\Middleware\StudentMiddleware;
+use Filament\Facades\Filament;
 
 class AdminPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
         return $panel
-            ->default()
             ->id('admin')
             ->path('admin')
             ->login()
@@ -41,9 +48,21 @@ class AdminPanelProvider extends PanelProvider
             ->favicon(asset('images/favicon.ico'))
             ->spa()
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
-            ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
-                Pages\Dashboard::class,
+                \App\Filament\Pages\Dashboard::class,
+            ])
+            ->resources([
+                \App\Filament\Resources\CourseResource::class,
+                \App\Filament\Resources\BatchResource::class,
+                \App\Filament\Resources\StudentResource::class,
+                \App\Filament\Resources\NoteResource::class,
+                \App\Filament\Resources\VideoResource::class,
+                \App\Filament\Resources\UserResource::class,
+                \App\Filament\Resources\SubjectResource::class,
+                \App\Filament\Resources\QuestionResource::class,
+                \App\Filament\Resources\QuestionMediaResource::class,
+                \App\Filament\Resources\OptionResource::class,
+                \App\Filament\Resources\DayResource::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
@@ -63,6 +82,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
+                AdminMiddleware::class,
             ])
             ->navigationItems([
                 NavigationItem::make('Dashboard')
@@ -79,10 +99,22 @@ class AdminPanelProvider extends PanelProvider
                     ->group('Content Management')
                     ->visible(fn (): bool => auth()->check() && (auth()->user()->isAdmin() || auth()->user()->isDataManager()))
                     ->url(fn (): string => route('filament.admin.resources.notes.index')),
+                NavigationItem::make('Register Student')
+                    ->icon('heroicon-o-user-plus')
+                    ->group('Students')
+                    ->url(fn (): string => route('filament.admin.resources.students.create'))
+                    ->visible(fn (): bool => auth()->user()->isAdmin()),
+                NavigationItem::make('All Students')
+                    ->icon('heroicon-o-users')
+                    ->group('Students')
+                    ->url(fn (): string => route('filament.admin.resources.students.index'))
+                    ->visible(fn (): bool => auth()->user()->isAdmin()),
             ])
             ->navigationGroups([
                 NavigationGroup::make()
                     ->label('Content Management'),
+                NavigationGroup::make()
+                    ->label('Students'),
             ]);
     }
 

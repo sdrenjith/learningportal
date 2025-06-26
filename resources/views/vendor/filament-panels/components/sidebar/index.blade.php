@@ -57,10 +57,10 @@
             >
                 @if ($homeUrl = filament()->getHomeUrl())
                     <a {{ \Filament\Support\generate_href_html($homeUrl) }}>
-                        <img src="/storage/study-logo.jpeg" alt="Study Logo" class="max-w-full h-auto p-2" style="width:170px; height:60px;" />
+                        <img src="/logo.jpeg" alt="Study Logo" class="max-w-full h-auto p-2" style="width:170px; height:60px;" />
                     </a>
                 @else
-                    <img src="/storage/study-logo.jpeg" alt="Study Logo" class="max-w-full h-auto p-2" style="width:250px; height:60px;" />
+                    <img src="/logo.jpeg" alt="Study Logo" class="max-w-full h-auto p-2" style="width:250px; height:60px;" />
                 @endif
             </div>
 

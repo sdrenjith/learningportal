@@ -1,6 +1,5 @@
 import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
-
 export default defineConfig({
     plugins: [
         laravel({
@@ -9,6 +8,7 @@ export default defineConfig({
                 'resources/js/app.js',
                 'resources/css/filament/admin/theme.css',
                 'resources/css/modern-form.css',
+                'resources/css/custom-datepicker.css',
             ],
             refresh: true,
         }),

@@ -10,10 +10,8 @@
     
     <div class="login-card">
         <div class="login-header">
-            <div class="login-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                </svg>
+            <div class="login-icon" style="width: 150px; height: 80px; margin: 0 auto 1rem;padding:10px;">
+                <img src="{{ asset('/logo.jpeg') }}" alt="Study Logo" style="width: 100%; height: 100%; object-fit: contain;">
             </div>
             <h1 class="login-title">Welcome Back</h1>
             <p class="login-subtitle">Sign in to continue your journey</p>

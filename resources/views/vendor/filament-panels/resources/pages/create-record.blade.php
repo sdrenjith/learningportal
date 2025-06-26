@@ -25,13 +25,14 @@
 @push('styles')
 <style>
 .modern-create-form-container {
-    width: 100%;
+    width: 95%;
     margin: 0 auto;
     background: #fff;
     border-radius: 1.25rem;
     box-shadow: 0 2px 12px 0 #0001;
     padding: 2rem 2.5rem;
     margin-top: 2rem;
+    margin-left: 3%;
 }
 </style>
 @endpush

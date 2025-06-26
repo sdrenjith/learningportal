@@ -1,0 +1,66 @@
+@import 'flatpickr/dist/themes/light.css';
+
+.flatpickr-calendar {
+    z-index: 10000 !important;
+    background: #fff !important;
+    border: 1px solid #ddd !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+    border-radius: 8px !important;
+}
+
+.flatpickr-month,
+.flatpickr-current-month .flatpickr-monthDropdown-months,
+.flatpickr-current-month input.cur-year {
+    background-color: #fff !important;
+    color: #333 !important;
+    fill: #333 !important;
+    font-weight: 600 !important;
+}
+
+.flatpickr-current-month .flatpickr-monthDropdown-months .flatpickr-month,
+.flatpickr-monthDropdown-month {
+    background-color: #fff !important;
+    color: #333 !important;
+}
+
+.flatpickr-monthDropdown-month:hover {
+    background: #f0f0f0 !important;
+}
+
+span.flatpickr-weekday,
+.flatpickr-weekdaycontainer {
+  background: #f8f9fa !important;
+  color: #333 !important;
+}
+
+.numInputWrapper span.arrowUp,
+.numInputWrapper span.arrowDown {
+    border-bottom-color: #333 !important;
+    border-top-color: #333 !important;
+}
+
+.flatpickr-day.selected {
+    background: #007bff !important;
+    border-color: #007bff !important;
+}
+
+.flatpickr-day:hover {
+    background: #e9ecef !important;
+}
+
+/* Style the datepicker input to match other form fields */
+input.flatpickr-input {
+    background: #fff !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 0.5rem !important;
+    padding: 0.75rem 0.75rem !important;
+    color: #1a202c !important;
+    font-size: 1rem !important;
+    width: 100% !important;
+    transition: all 0.2s ease-in-out;
+}
+
+input.flatpickr-input:focus {
+    border-color: #2563eb !important;
+    box-shadow: 0 0 0 1px #2563eb !important;
+} 

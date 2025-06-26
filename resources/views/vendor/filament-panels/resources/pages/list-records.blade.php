@@ -30,6 +30,8 @@
     box-shadow: 0 2px 12px 0 #0001;
     padding: 2rem 2.5rem;
     position: relative;
+    width: 95%;
+    margin-left: 3%;
 }
 .modern-list-header {
     display: flex;

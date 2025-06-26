@@ -1,3 +1,5 @@
+@import 'flatpickr/dist/flatpickr.min.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -954,4 +956,34 @@ button.fi-pagination-item-button.group.fi-active span.fi-pagination-item-label {
 .custom-tooltip-wrapper:hover .custom-tooltip-text {
   visibility: visible;
   opacity: 1;
+}
+
+/* New styles for a minimal select dropdown */
+.student-registration-select .fi-select-input {
+    background-color: #fff !important;
+    border: 1px solid #d1d5db !important;
+    color: #111827 !important;
+}
+
+.fi-select-input:focus {
+    --tw-ring-color: #2563eb !important;
+}
+
+.fi-select-dropdown {
+    background-color: #fff !important;
+    border: 1px solid #d1d5db !important;
+    color: #111827 !important;
+}
+
+.fi-select-dropdown .fi-select-option {
+    padding: 0.5rem 0.75rem !important;
+}
+
+.fi-select-dropdown .fi-select-option:hover {
+    background-color: #f3f4f6 !important;
+}
+
+.fi-select-dropdown .fi-select-option.fi-selected {
+    background-color: #2563eb !important;
+    color: #fff !important;
 }
