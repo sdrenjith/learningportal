@@ -33,7 +33,7 @@
                 'flex' => filament()->hasTopNavigation() || (! filament()->hasNavigation()),
             ])
         >
-            @if (filament()->hasTopbar())
+            @if (filament()->hasTopbar() && filament()->getCurrentPanel()?->getId() !== 'student')
                 {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::TOPBAR_BEFORE, scopes: $livewire->getRenderHookScopes()) }}
 
                 <x-filament-panels::topbar :navigation="$navigation" />

@@ -23,6 +23,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::get('/student/courses', [\App\Http\Controllers\StudentCourseController::class, 'index'])->name('filament.student.pages.courses');
+    Route::get('/student/questions/{question}/answer', [\App\Http\Controllers\StudentQuestionController::class, 'answer'])->name('student.questions.answer');
+    Route::post('/student/questions/{question}/answer', [\App\Http\Controllers\StudentQuestionController::class, 'submitAnswer'])->name('student.questions.answer.submit');
 });
 
 Route::post('/admin/set-locale', function (\Illuminate\Http\Request $request) {

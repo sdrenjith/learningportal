@@ -1,0 +1,59 @@
+/* Student Dashboard Custom Styles */
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.scrollbar-hide {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+}
+
+/* Custom hover effects */
+.hover-scale:hover {
+    transform: scale(1.02);
+    transition: transform 0.2s ease-in-out;
+}
+
+/* Custom button styles */
+.btn-complete-profile {
+    background-color: white;
+    color: #f97316;
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    display: inline-block;
+    text-decoration: none;
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-complete-profile:hover {
+    background-color: #f3f4f6;
+    transform: translateY(-1px);
+}
+
+/* Progress bar custom colors */
+.progress-bar-custom {
+    background-color: #FFCE00;
+}
+
+/* Custom card shadows */
+.card-shadow {
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+    .profile-container {
+        flex-direction: column;
+    }
+    
+    .profile-left {
+        width: 100%;
+    }
+    
+    .profile-right {
+        width: 100%;
+    }
+} 

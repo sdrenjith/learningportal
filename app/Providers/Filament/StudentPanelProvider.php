@@ -38,8 +38,8 @@ class StudentPanelProvider extends PanelProvider
                 'primary' => Color::Blue,
             ])
             ->darkMode(false)
-            ->brandName('Student Dashboard')
-            ->brandLogo(asset('images/logo.png'))
+            ->brandName('Rosy\'s German School')
+            ->brandLogo(asset('images/student-logo.png'))
             ->favicon(asset('images/favicon.ico'))
             ->discoverResources(in: app_path('Filament/Student/Resources'), for: 'App\\Filament\\Student\\Resources')
             ->discoverPages(in: app_path('Filament/Student/Pages'), for: 'App\\Filament\\Student\\Pages')
@@ -67,13 +67,7 @@ class StudentPanelProvider extends PanelProvider
                 StudentMiddleware::class,
             ])
             ->navigationItems([
-                NavigationItem::make('My Profile')
-                    ->icon('heroicon-o-user')
-                    ->url(fn (): string => Profile::getUrl())
-                    ->isActiveWhen(fn (): bool => request()->routeIs(Profile::getRouteName())),
-                NavigationItem::make('My Courses')
-                    ->icon('heroicon-o-academic-cap')
-                    ->url('#'),
+                // Custom navigation is handled in the dashboard template
             ]);
     }
 

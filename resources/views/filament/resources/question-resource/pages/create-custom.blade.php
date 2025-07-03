@@ -1558,7 +1558,7 @@
                                     @foreach($options as $index => $option)
                                         <div class="option-item">
                                             <div class="flex items-center justify-between mb-3">
-                                                <label class="option-label">Option {{ $index + 1 }}</label>
+                                                <label class="option-label">Option {{ $index }}</label>
                                                 <div class="button-group">
                                                     @if($index === 0)
                                                         <button type="button" wire:click="addOption" class="add-btn">
@@ -1736,7 +1736,7 @@
                                     @foreach($answer_indices as $index => $answer_index)
                                         <div class="index-item">
                                             <div class="flex items-center justify-between mb-3">
-                                                <label class="option-label">Answer Index {{ $index + 1 }}</label>
+                                                <label class="option-label">Answer Index {{ $index }}</label>
                                                 <div class="button-group">
                                                     @if($index === 0)
                                                         <button type="button" wire:click="addAnswerIndex" class="add-index-btn">

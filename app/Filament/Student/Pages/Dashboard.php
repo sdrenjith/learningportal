@@ -3,9 +3,6 @@
 namespace App\Filament\Student\Pages;
 
 use Filament\Pages\Dashboard as BaseDashboard;
-use App\Filament\Student\Widgets\StudentProfileWidget;
-use Filament\Widgets\AccountWidget;
-use Filament\Widgets\FilamentInfoWidget;
 
 class Dashboard extends BaseDashboard
 {
@@ -22,12 +19,9 @@ class Dashboard extends BaseDashboard
         return 'filament.student.pages.dashboard';
     }
 
+    // No widgets needed for custom dashboard
     public function getWidgets(): array
     {
-        return [
-            StudentProfileWidget::class,
-            AccountWidget::class,
-            FilamentInfoWidget::class,
-        ];
+        return [];
     }
 } 
