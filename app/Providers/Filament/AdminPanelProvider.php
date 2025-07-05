@@ -37,7 +37,6 @@ class AdminPanelProvider extends PanelProvider
         return $panel
             ->id('admin')
             ->path('admin')
-            ->login()
             ->colors([
                 'primary' => Color::Amber,
             ])
@@ -81,10 +80,9 @@ class AdminPanelProvider extends PanelProvider
                 DispatchServingFilamentEvent::class,
             ])
             ->authMiddleware([
-                Authenticate::class,
                 AdminMiddleware::class,
             ])
-            ->navigationItems([
+            ->navigationItems(array_merge([
                 NavigationItem::make('Dashboard')
                     ->icon('heroicon-o-home')
                     ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.pages.dashboard'))
@@ -93,11 +91,11 @@ class AdminPanelProvider extends PanelProvider
                 NavigationItem::make('Videos')
                     ->icon('heroicon-o-video-camera')
                     ->group('Content Management')
-                    ->visible(fn (): bool => auth()->check() && (auth()->user()->isAdmin() || auth()->user()->isDataManager())),
+                    ->visible(fn (): bool => auth()->check() && (auth()->user()->isAdmin() || auth()->user()->isDataManager() || auth()->user()->isTeacher())),
                 NavigationItem::make('Notes')
                     ->icon('heroicon-o-document')
                     ->group('Content Management')
-                    ->visible(fn (): bool => auth()->check() && (auth()->user()->isAdmin() || auth()->user()->isDataManager()))
+                    ->visible(fn (): bool => auth()->check() && (auth()->user()->isAdmin() || auth()->user()->isDataManager() || auth()->user()->isTeacher()))
                     ->url(fn (): string => route('filament.admin.resources.notes.index')),
                 NavigationItem::make('Register Student')
                     ->icon('heroicon-o-user-plus')
@@ -109,48 +107,106 @@ class AdminPanelProvider extends PanelProvider
                     ->group('Students')
                     ->url(fn (): string => route('filament.admin.resources.students.index'))
                     ->visible(fn (): bool => auth()->user()->isAdmin()),
-            ])
+            ], $this->getCourseNavigationItems()))
             ->navigationGroups([
                 NavigationGroup::make()
                     ->label('Content Management'),
                 NavigationGroup::make()
                     ->label('Students'),
+                NavigationGroup::make()
+                    ->label('A1 Course')
+                    ->collapsible(),
+                NavigationGroup::make()
+                    ->label('A2 Course')
+                    ->collapsible(),
+                NavigationGroup::make()
+                    ->label('B1 Course')
+                    ->collapsible(),
+                NavigationGroup::make()
+                    ->label('B2 Course')
+                    ->collapsible(),
             ]);
     }
 
-    public function registerNavigationItems(): void
+    protected function getCourseNavigationItems(): array
     {
         // Only show for non-datamanager users
         if (auth()->check() && auth()->user()->isDataManager()) {
-            return;
+            return [];
         }
-        $courses = \App\Models\Course::with(['days.questions'])->get();
-        $items = [];
-        // TEST ITEM
-        $items[] = \Filament\Navigation\NavigationItem::make('TEST ITEM (should be visible)')
-            ->group('Available Courses')
-            ->icon('heroicon-o-star')
-            ->url('#');
-        foreach ($courses as $course) {
-            $items[] = \Filament\Navigation\NavigationItem::make($course->name)
-                ->group('Available Courses')
-                ->icon('heroicon-o-academic-cap')
-                ->url(route('filament.admin.resources.courses.edit', ['record' => $course->id]), true);
-            foreach ($course->days as $day) {
-                $items[] = \Filament\Navigation\NavigationItem::make('— ' . $day->title)
-                    ->group('Available Courses')
-                    ->icon('heroicon-o-calendar')
-                    ->url(route('filament.admin.resources.days.edit', ['record' => $day->id]), true);
-                foreach ($day->questions as $question) {
-                    $items[] = \Filament\Navigation\NavigationItem::make('—— ' . \Illuminate\Support\Str::limit($question->question_text, 25))
-                        ->group('Available Courses')
-                        ->icon('heroicon-o-light-bulb')
-                        ->url(route('filament.admin.resources.questions.edit', ['record' => $question->id]), true);
+        
+        try {
+            $courses = \App\Models\Course::all();
+            // Filter subjects based on user role
+            if (auth()->check() && auth()->user()->isTeacher()) {
+                $subjects = auth()->user()->subjects;
+            } else {
+                $subjects = \App\Models\Subject::all();
+            }
+            $questions = \App\Models\Question::all()->groupBy(function($q) {
+                return $q->course_id . '-' . $q->subject_id . '-' . $q->day_id;
+            });
+            $days = \App\Models\Day::all()->keyBy('id');
+            
+            $items = [];
+            
+            foreach ($courses as $course) {
+                $courseGroupName = $course->name . ' Course';
+                
+                // Add all subjects under each course
+                foreach ($subjects as $subject) {
+                    // Check if this subject has any questions for this course
+                    $hasQuestions = false;
+                    $subjectDays = collect();
+                    
+                    foreach ($questions as $key => $questionGroup) {
+                        list($courseId, $subjectId, $dayId) = explode('-', $key);
+                        if ($courseId == $course->id && $subjectId == $subject->id && isset($days[$dayId])) {
+                            $hasQuestions = true;
+                            $subjectDays->put($dayId, $days[$dayId]);
+                        }
+                    }
+                    
+                    if ($hasQuestions) {
+                        $items[] = \Filament\Navigation\NavigationItem::make($subject->name)
+                            ->group($courseGroupName)
+                            ->icon('heroicon-o-rectangle-stack')
+                            ->url('#')
+                            ->isActiveWhen(fn () => false)
+                            ->badge(function() use ($course, $subject, $questions) {
+                                $count = 0;
+                                foreach ($questions as $key => $questionGroup) {
+                                    list($courseId, $subjectId, $dayId) = explode('-', $key);
+                                    if ($courseId == $course->id && $subjectId == $subject->id) {
+                                        $count += $questionGroup->count();
+                                    }
+                                }
+                                return $count;
+                            })
+                            ->badgeColor('success')
+                            ->sort($subject->id);
+                        
+                        // Add days under subject
+                        foreach ($subjectDays as $day) {
+                            $dayQuestions = $questions->get($course->id . '-' . $subject->id . '-' . $day->id, collect());
+                            
+                            $items[] = \Filament\Navigation\NavigationItem::make('→ ' . $day->title)
+                                ->group($courseGroupName)
+                                ->icon('heroicon-o-calendar')
+                                ->url('#')
+                                ->isActiveWhen(fn () => false)
+                                ->badge($dayQuestions->count())
+                                ->badgeColor('warning')
+                                ->sort(100 + $subject->id * 10 + $day->id);
+                        }
+                    }
                 }
             }
-        }
-        foreach ($items as $item) {
-            \Filament\Facades\Filament::registerNavigationItem($item);
+            
+            return $items;
+        } catch (\Exception $e) {
+            // Return empty array if there's any error
+            return [];
         }
     }
 }

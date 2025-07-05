@@ -1,0 +1,1 @@
+<a href="{{ route('filament.student.pages.doubt-clearance') }}" class="text-base font-medium {{ (isset($active) && $active === 'doubt-clearance') ? 'text-cyan-600 border-b-2 border-cyan-500' : 'text-gray-500 hover:text-gray-700 hover:border-gray-300' }} px-2 pb-1 transition-colors duration-200">Doubt clearance</a> 

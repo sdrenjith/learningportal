@@ -12,8 +12,13 @@ class ListBatches extends ListRecords
 
     protected function getHeaderActions(): array
     {
-        return [
-            Actions\CreateAction::make(),
-        ];
+        $actions = [];
+        
+        // Only show create button for admins
+        if (auth()->user()->isAdmin()) {
+            $actions[] = Actions\CreateAction::make();
+        }
+        
+        return $actions;
     }
 }

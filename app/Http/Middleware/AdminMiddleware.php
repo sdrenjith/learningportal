@@ -16,15 +16,19 @@ class AdminMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         if (auth()->check()) {
-            if (auth()->user()->role === 'admin') {
+            if (auth()->user()->role === 'admin' || auth()->user()->role === 'teacher') {
                 return $next($request);
             }
 
             if (auth()->user()->role === 'student') {
                 return redirect()->route('filament.student.pages.dashboard');
             }
+            
+            // User is authenticated but doesn't have admin role
+            abort(403, 'Unauthorized');
         }
 
-        abort(403, 'Unauthorized');
+        // User is not authenticated, redirect to main login page
+        return redirect()->route('login');
     }
 }

@@ -1,11 +1,12 @@
 @php
     $isDataManager = auth()->check() && auth()->user()->isDataManager();
+    $isTeacher = auth()->check() && auth()->user()->isTeacher();
 @endphp
 <x-filament-panels::page class="fi-dashboard-page">
     <div class="px-4 min-h-screen bg-white text-gray-900">
         <div class="w-full grid grid-cols-1 md:grid-cols-2 gap-6 dashboard-card-container">
             <!-- Courses Card -->
-            @if($isDataManager)
+            @if($isDataManager || $isTeacher)
                 <div class="group db-card relative overflow-hidden rounded-2xl bg-gray-900 border border-gray-800 p-8 shadow-2xl transition-all duration-300 text-white block cursor-not-allowed opacity-80 hover:opacity-60">
                     <div class="absolute top-4 right-4 text-5xl text-white opacity-10">
                         <svg class="w-14 h-14" fill="currentColor" viewBox="0 0 20 20">
@@ -32,7 +33,7 @@
             @endif
 
             <!-- Subjects Card -->
-            @if($isDataManager)
+            @if($isDataManager || $isTeacher)
                 <div class="group db-card relative overflow-hidden rounded-2xl bg-gray-900 border border-gray-800 p-8 shadow-2xl transition-all duration-300 text-white block cursor-not-allowed opacity-80 hover:opacity-60">
                     <div class="absolute top-4 right-4 text-5xl text-white opacity-10">
                         <svg class="w-14 h-14" fill="currentColor" viewBox="0 0 20 20">
@@ -72,7 +73,7 @@
             </a>
 
             <!-- Users Card -->
-            @if($isDataManager)
+            @if($isDataManager || $isTeacher)
                 <div class="group db-card relative overflow-hidden rounded-2xl bg-gray-900 border border-gray-800 p-8 shadow-2xl transition-all duration-300 text-white block cursor-not-allowed opacity-80 hover:opacity-60">
                     <div class="absolute top-4 right-4 text-5xl text-white opacity-10">
                         <svg class="w-14 h-14" fill="currentColor" viewBox="0 0 20 20">

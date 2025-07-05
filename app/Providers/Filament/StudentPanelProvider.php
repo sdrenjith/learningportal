@@ -46,6 +46,9 @@ class StudentPanelProvider extends PanelProvider
             ->pages([
                 \App\Filament\Student\Pages\Dashboard::class,
                 Profile::class,
+                \App\Filament\Student\Pages\StudyMaterials::class,
+                \App\Filament\Student\Pages\DailyWorks::class,
+                \App\Filament\Student\Pages\SpeakingSessions::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Student/Widgets'), for: 'App\\Filament\\Student\\Widgets')
             ->widgets([

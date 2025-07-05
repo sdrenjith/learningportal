@@ -24,8 +24,26 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::get('/student/courses', [\App\Http\Controllers\StudentCourseController::class, 'index'])->name('filament.student.pages.courses');
+
+    Route::get('/student/questions', [\App\Http\Controllers\StudentCourseController::class, 'questions'])->name('filament.student.pages.questions');
     Route::get('/student/questions/{question}/answer', [\App\Http\Controllers\StudentQuestionController::class, 'answer'])->name('student.questions.answer');
     Route::post('/student/questions/{question}/answer', [\App\Http\Controllers\StudentQuestionController::class, 'submitAnswer'])->name('student.questions.answer.submit');
+    Route::get('/student/doubt-clearance', function () {
+        $doubts = \App\Models\Doubt::where('user_id', auth()->id())->orderBy('created_at')->get();
+        return view('filament.student.pages.doubt-clearance', compact('doubts'));
+    })->name('filament.student.pages.doubt-clearance');
+    Route::post('/student/doubt-clearance', function (\Illuminate\Http\Request $request) {
+        $request->validate(['message' => 'required|string|max:1000']);
+        \App\Models\Doubt::create([
+            'user_id' => auth()->id(),
+            'message' => $request->message,
+        ]);
+        return redirect()->back()->with('success', 'Your doubt has been submitted!');
+    })->name('student.doubt.submit');
+    
+    // Secure file preview routes
+    Route::get('/secure-preview/{type}/{id}', [\App\Http\Controllers\SecureFilePreviewController::class, 'previewFile'])->name('secure-file-preview');
+    Route::get('/secure-modal/{type}/{id}', [\App\Http\Controllers\SecureFilePreviewController::class, 'previewModal'])->name('secure-file-modal');
 });
 
 Route::post('/admin/set-locale', function (\Illuminate\Http\Request $request) {

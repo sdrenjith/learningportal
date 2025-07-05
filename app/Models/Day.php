@@ -18,6 +18,11 @@ class Day extends Model
         return $this->hasMany(Question::class);
     }
 
+    public function batches()
+    {
+        return $this->belongsToMany(Batch::class, 'batch_day');
+    }
+
     public function courses()
     {
         // For compatibility with views expecting a collection
@@ -31,5 +36,10 @@ class Day extends Model
                 $day->title = 'Day ' . $day->day_number;
             }
         });
+    }
+
+    public function getTitleWithCourseAttribute()
+    {
+        return $this->course ? "{$this->course->name} - {$this->title}" : $this->title;
     }
 }

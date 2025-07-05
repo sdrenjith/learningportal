@@ -23,19 +23,19 @@ class SubjectResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('name')
-                    ->label('Subject Name')
-                    ->required()
-                    ->maxLength(255),
-                Forms\Components\Select::make('type')
-                    ->label('Type')
-                    ->options([
-                        'listening' => 'Listening',
-                        'reading' => 'Reading',
-                        'writing' => 'Writing',
-                        'speaking' => 'Speaking',
+                Forms\Components\Card::make()
+                    ->schema([
+                        Forms\Components\TextInput::make('name')
+                            ->label('Subject Name')
+                            ->required()
+                            ->maxLength(255),
+                        Forms\Components\Select::make('teacher_id')
+                            ->label('Assigned Teacher')
+                            ->options(fn () => \App\Models\User::where('role', 'teacher')->pluck('name', 'id')->toArray())
+                            ->placeholder('Select a teacher')
+                            ->helperText('Choose a teacher to assign to this subject')
+                            ->columnSpanFull(),
                     ])
-                    ->required(),
             ]);
     }
 
@@ -44,10 +44,19 @@ class SubjectResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('name')->label('Subject Name')->sortable()->searchable(),
-                Tables\Columns\TextColumn::make('type')->label('Type')->sortable()->searchable(),
+                Tables\Columns\TextColumn::make('teacher.name')
+                    ->label('Assigned Teacher')
+                    ->sortable()
+                    ->searchable()
+                    ->placeholder('No teacher assigned')
+                    ->badge()
+                    ->color(fn ($state) => $state ? 'success' : 'gray'),
             ])
             ->filters([
-                //
+                Tables\Filters\SelectFilter::make('teacher_id')
+                    ->label('Filter by Teacher')
+                    ->relationship('teacher', 'name', fn (Builder $query) => $query->where('role', 'teacher'))
+                    ->placeholder('All teachers'),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
@@ -71,6 +80,8 @@ class SubjectResource extends Resource
     {
         return [
             'index' => Pages\ListSubjects::route('/'),
+            'create' => Pages\CreateSubject::route('/create'),
+            'edit' => Pages\EditSubject::route('/{record}/edit'),
         ];
     }
 
@@ -81,22 +92,22 @@ class SubjectResource extends Resource
 
     public static function shouldRegisterNavigation(): bool
     {
-        // Hide for datamanager
-        return !(auth()->check() && auth()->user()->isDataManager());
+        // Show for admin only
+        return auth()->check() && auth()->user()->isAdmin();
     }
 
     public static function canCreate(): bool
     {
-        return false;
+        return auth()->check() && auth()->user()->isAdmin();
     }
 
     public static function canEdit(\Illuminate\Database\Eloquent\Model $record): bool
     {
-        return false;
+        return auth()->check() && auth()->user()->isAdmin();
     }
 
     public static function canDelete(\Illuminate\Database\Eloquent\Model $record): bool
     {
-        return false;
+        return auth()->check() && auth()->user()->isAdmin();
     }
 }

@@ -88,8 +88,6 @@ class NoteResource extends Resource
                     ->relationship('course', 'name'),
                 Tables\Filters\SelectFilter::make('subject')
                     ->relationship('subject', 'name'),
-                Tables\Filters\SelectFilter::make('day')
-                    ->relationship('day', 'name'),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

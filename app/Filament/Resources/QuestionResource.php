@@ -263,6 +263,19 @@ class QuestionResource extends Resource
             ->recordUrl(fn ($record) => static::getUrl('view', ['record' => $record]));
     }
 
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        $query = parent::getEloquentQuery();
+        
+        // If user is a teacher, filter questions by their assigned subjects
+        if (auth()->user()->isTeacher()) {
+            $teacherSubjectIds = auth()->user()->subjects()->pluck('id');
+            $query->whereIn('subject_id', $teacherSubjectIds);
+        }
+        
+        return $query;
+    }
+
     public static function getPages(): array
     {
         return [

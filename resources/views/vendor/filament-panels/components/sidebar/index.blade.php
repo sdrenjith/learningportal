@@ -125,10 +125,20 @@
             @endforeach
         </ul>
 
-        {{-- Dynamic Available Courses menu --}}
+        {{-- Dynamic Available Courses menu with Subjects --}}
         @if (!auth()->check() || !auth()->user()->isDataManager())
         @php
-            $courses = \App\Models\Course::with(['days.questions'])->get();
+            $courses = \App\Models\Course::all();
+            // Filter subjects based on user role
+            if (auth()->check() && auth()->user()->isTeacher()) {
+                $subjects = auth()->user()->subjects;
+            } else {
+                $subjects = \App\Models\Subject::all();
+            }
+            $questions = \App\Models\Question::all()->groupBy(function($q) {
+                return $q->course_id . '-' . $q->subject_id . '-' . $q->day_id;
+            });
+            $days = \App\Models\Day::all()->keyBy('id');
         @endphp
         <div class="fi-sidebar-group mb-6">
             <div class="fi-sidebar-group-label px-2 py-2 text-xs font-bold tracking-wider text-gray-500 uppercase">Available Courses</div>
@@ -140,26 +150,52 @@
                             <span class="ml-1 text-primary-600 hover:underline">{{ $course->name }}</span>
                             <svg :class="{'rotate-90': open}" class="w-4 h-4 ml-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 20 20"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 8l4 4 4-4" /></svg>
                         </div>
-                        <a href="{{ route('filament.admin.resources.courses.edit', ['record' => $course->id]) }}" class="sr-only">Edit {{ $course->name }}</a>
                         <ul x-show="open" x-transition class="pl-2">
-                            @foreach($course->days->filter(fn($day) => $day->questions->count() > 0) as $day)
-                                <li class="pl-4 py-1" x-data="{ open: false }">
-                                    <div @click="open = !open" class="cursor-pointer flex items-center">
-                                        <x-heroicon-o-calendar class="w-4 h-4 inline" />
-                                        <span class="ml-1 text-yellow-600 hover:underline">{{ $day->title }}</span>
-                                        <svg :class="{'rotate-90': open}" class="w-4 h-4 ml-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 20 20"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 8l4 4 4-4" /></svg>
-                                    </div>
-                                    <a href="{{ route('filament.admin.resources.days.edit', ['record' => $day->id]) }}" class="sr-only">Edit {{ $day->title }}</a>
-                                    <ul x-show="open" x-transition>
-                                        @foreach($day->questions as $question)
-                                            <li class="pl-6 py-1">
-                                                <a href="{{ route('filament.admin.resources.questions.view', ['record' => $question->id]) }}" class="text-blue-600 hover:underline">
-                                                    <x-heroicon-o-light-bulb class="w-4 h-4 inline" /> {{ \Illuminate\Support\Str::limit($question->instruction, 40) }}
-                                                </a>
-                                            </li>
-                                        @endforeach
-                                    </ul>
-                                </li>
+                            @foreach($subjects as $subject)
+                                @php
+                                    $hasQuestions = false;
+                                    $subjectDays = collect();
+                                    foreach ($questions as $key => $questionGroup) {
+                                        list($courseId, $subjectId, $dayId) = explode('-', $key);
+                                        if ($courseId == $course->id && $subjectId == $subject->id && isset($days[$dayId])) {
+                                            $hasQuestions = true;
+                                            $subjectDays->put($dayId, $days[$dayId]);
+                                        }
+                                    }
+                                @endphp
+                                @if($hasQuestions)
+                                    <li class="pl-4 py-1" x-data="{ open: false }">
+                                        <div @click="open = !open" class="cursor-pointer flex items-center">
+                                            <x-heroicon-o-rectangle-stack class="w-4 h-4 inline" />
+                                            <span class="ml-1 text-green-600 hover:underline">{{ $subject->name }}</span>
+                                            <svg :class="{'rotate-90': open}" class="w-4 h-4 ml-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 20 20"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 8l4 4 4-4" /></svg>
+                                        </div>
+                                        <ul x-show="open" x-transition class="pl-2">
+                                            @foreach($subjectDays as $day)
+                                                @php
+                                                    $dayQuestions = $questions->get($course->id . '-' . $subject->id . '-' . $day->id, collect());
+                                                @endphp
+                                                <li class="pl-6 py-1" x-data="{ open: false }">
+                                                    <div @click="open = !open" class="cursor-pointer flex items-center">
+                                                        <x-heroicon-o-calendar class="w-4 h-4 inline" />
+                                                        <span class="ml-1 text-yellow-600 hover:underline">{{ $day->title }}</span>
+                                                        <span class="ml-1 text-xs text-gray-500">({{ $dayQuestions->count() }})</span>
+                                                        <svg :class="{'rotate-90': open}" class="w-4 h-4 ml-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 20 20"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 8l4 4 4-4" /></svg>
+                                                    </div>
+                                                    <ul x-show="open" x-transition>
+                                                        @foreach($dayQuestions as $question)
+                                                            <li class="pl-8 py-1">
+                                                                <a href="#" class="text-blue-600 hover:underline text-sm">
+                                                                    <x-heroicon-o-light-bulb class="w-4 h-4 inline" /> {{ \Illuminate\Support\Str::limit($question->question_text ?? $question->instruction ?? 'Question', 35) }}
+                                                                </a>
+                                                            </li>
+                                                        @endforeach
+                                                    </ul>
+                                                </li>
+                                            @endforeach
+                                        </ul>
+                                    </li>
+                                @endif
                             @endforeach
                         </ul>
                     </li>

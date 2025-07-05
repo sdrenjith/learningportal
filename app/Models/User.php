@@ -79,9 +79,42 @@ class User extends Authenticatable implements FilamentUser
         return $this->role === 'datamanager';
     }
 
+    /**
+     * Check if the user is a teacher.
+     */
+    public function isTeacher(): bool
+    {
+        return $this->role === 'teacher';
+    }
+
     public function batch()
     {
         return $this->belongsTo(Batch::class);
+    }
+
+    public function assignedCourses()
+    {
+        return $this->batch ? $this->batch->courses : collect();
+    }
+
+    public function assignedDays()
+    {
+        return $this->batch ? $this->batch->days : collect();
+    }
+
+    public function studentAnswers()
+    {
+        return $this->hasMany(StudentAnswer::class);
+    }
+
+    public function subjects()
+    {
+        return $this->hasMany(Subject::class, 'teacher_id');
+    }
+
+    public function batches()
+    {
+        return $this->hasMany(Batch::class, 'teacher_id');
     }
 
     public function canAccessPanel(Panel $panel): bool

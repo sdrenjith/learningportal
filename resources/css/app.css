@@ -987,3 +987,14 @@ button.fi-pagination-item-button.group.fi-active span.fi-pagination-item-label {
     background-color: #2563eb !important;
     color: #fff !important;
 }
+
+.custom-green-toggle[aria-checked="true"],
+.custom-green-toggle:checked {
+    background-color: #22c55e !important; /* Tailwind green-500 */
+    border-color: #22c55e !important;
+}
+
+.fi-fo-toggle[aria-checked="true"] {
+    background-color: #22c55e !important; /* Tailwind green-500 */
+    border-color: #22c55e !important;
+}

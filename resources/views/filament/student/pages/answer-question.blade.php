@@ -3,18 +3,107 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Answer Question</title>
+    <title>Answer Question - Rocys German Academy</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
 @php
+    $user = auth()->user();
     $type = $question->question_type_id ? ($question->questionType->name ?? null) : null;
     $qdata = is_array($question->question_data) ? $question->question_data : (json_decode($question->question_data, true) ?? []);
-    $answer = (isset($studentAnswer) && $studentAnswer && $studentAnswer->answer_data) ? json_decode($studentAnswer->answer_data, true) : null;
-    $isReadOnly = $studentAnswer && !$editMode;
+    $answer = null; // Always start fresh - no previous answers loaded
+    $isReadOnly = false; // Always allow editing
 @endphp
 
 <div class="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+    <!-- Navigation Header -->
+    <nav class="bg-white shadow-lg border-b border-gray-200 sticky top-0 z-50">
+        <div class="w-full px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo and Back Button -->
+                <div class="flex items-center">
+                    <button onclick="history.back()" class="mr-4 p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors duration-200">
+                        <i class="fas fa-arrow-left text-xl"></i>
+                    </button>
+                    <div class="flex items-center">
+                        <i class="fas fa-graduation-cap text-2xl text-blue-600 mr-2"></i>
+                        <span class="text-xl font-bold text-gray-900">Rocys German Academy</span>
+                    </div>
+                </div>
+
+                <!-- Question Info -->
+                <div class="hidden md:flex items-center space-x-4">
+                    <div class="text-sm text-gray-600">
+                        <span class="font-medium">Question Type:</span>
+                        <span class="ml-1 px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
+                            {{ ucfirst(str_replace('_', ' ', $type ?? 'Question')) }}
+                        </span>
+                    </div>
+                    @if($question->points)
+                        <div class="text-sm text-gray-600">
+                            <span class="font-medium">Points:</span>
+                            <span class="ml-1 px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
+                                {{ $question->points }}
+                            </span>
+                        </div>
+                    @endif
+                </div>
+
+                <!-- User Info -->
+                <div class="flex items-center">
+                    <div class="hidden md:block mr-4">
+                        <span class="text-sm text-gray-600">{{ $user->name }}</span>
+                    </div>
+                    <img src="{{ $user->profile_picture ? asset('storage/' . $user->profile_picture) : 'https://ui-avatars.com/api/?name=' . urlencode($user->name) }}" 
+                         alt="{{ $user->name }}" 
+                         class="h-8 w-8 rounded-full border-2 border-gray-200" />
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Question Info -->
+        <div class="md:hidden px-4 py-2 bg-gray-50 border-t border-gray-200">
+            <div class="flex justify-between items-center text-sm">
+                <span class="text-gray-600">
+                    <span class="font-medium">Type:</span>
+                    <span class="ml-1 px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
+                        {{ ucfirst(str_replace('_', ' ', $type ?? 'Question')) }}
+                    </span>
+                </span>
+                @if($question->points)
+                    <span class="text-gray-600">
+                        <span class="font-medium">Points:</span>
+                        <span class="ml-1 px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
+                            {{ $question->points }}
+                        </span>
+                    </span>
+                @endif
+            </div>
+        </div>
+    </nav>
+
+    <!-- Breadcrumb Navigation -->
+    <div class="bg-white border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+            <nav class="flex items-center space-x-2 text-sm">
+                <a href="{{ route('filament.student.pages.dashboard') }}" class="text-blue-600 hover:text-blue-800 transition-colors duration-200">
+                    <i class="fas fa-home mr-1"></i>Dashboard
+                </a>
+                <i class="fas fa-chevron-right text-gray-400"></i>
+                <a href="{{ route('filament.student.pages.courses') }}" class="text-blue-600 hover:text-blue-800 transition-colors duration-200">
+                    Courses
+                </a>
+                <i class="fas fa-chevron-right text-gray-400"></i>
+                <a href="{{ route('filament.student.pages.questions') }}" class="text-blue-600 hover:text-blue-800 transition-colors duration-200">
+                    Questions
+                </a>
+                <i class="fas fa-chevron-right text-gray-400"></i>
+                <span class="text-gray-600 font-medium">Answer Question</span>
+            </nav>
+        </div>
+    </div>
+
     @if(session('success'))
         <div id="successModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
             <div class="max-w-md mx-auto bg-white rounded-2xl shadow-2xl p-8 text-center animate-fade-in flex flex-col items-center">
@@ -29,6 +118,24 @@
         <!-- Modern Answer Card -->
         <div class="modern-answer-card">
             <div class="card-content">
+                <!-- Quick Actions Bar -->
+                <div class="flex items-center justify-between mb-6 p-4 bg-gray-50 rounded-lg">
+                    <div class="flex items-center space-x-3">
+                        <button onclick="history.back()" class="flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors duration-200">
+                            <i class="fas fa-arrow-left mr-2"></i>
+                            Go Back
+                        </button>
+                        <a href="{{ route('filament.student.pages.questions') }}" class="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200">
+                            <i class="fas fa-list mr-2"></i>
+                            All Questions
+                        </a>
+                    </div>
+                    <div class="flex items-center space-x-2 text-sm text-gray-600">
+                        <i class="fas fa-clock"></i>
+                        <span>Take your time</span>
+                    </div>
+                </div>
+
                 <!-- Question Header Section -->
                 <div class="question-header-section">
                     <div class="question-meta">
@@ -67,9 +174,7 @@
                             <div class="mcq-options-grid">
                                 @foreach(($qdata['options'] ?? []) as $i => $option)
                                     <label class="mcq-option-item">
-                                        <input type="radio" name="answer" value="{{ $i }}" class="mcq-radio"
-                                            @if(isset($answer) && $answer == $i) checked @endif
-                                            @if($isReadOnly) disabled @endif>
+                                        <input type="radio" name="answer" value="{{ $i }}" class="mcq-radio">
                                         <div class="option-card">
                                             <div class="option-indicator">{{ chr(65 + $i) }}</div>
                                             <span class="option-text">{{ $option }}</span>
@@ -102,9 +207,7 @@
                                     <div class="checkbox-options-grid">
                                         @foreach(($sub['options'] ?? []) as $optIdx => $opt)
                                             <label class="checkbox-option-item">
-                                                <input type="checkbox" name="answer[{{ $subIdx }}][]" value="{{ $optIdx }}" class="checkbox-input"
-                                                    @if(isset($answer[$subIdx]) && is_array($answer[$subIdx]) && in_array((string)$optIdx, $answer[$subIdx])) checked @endif
-                                                    @if($isReadOnly) disabled @endif>
+                                                <input type="checkbox" name="answer[{{ $subIdx }}][]" value="{{ $optIdx }}" class="checkbox-input">
                                                 <div class="checkbox-card">
                                                     <div class="checkbox-indicator">
                                                         <svg class="w-3 h-3 checkmark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -127,9 +230,7 @@
                             <h3 class="section-title">True or False</h3>
                             <div class="true-false-grid">
                                 <label class="tf-option-item true-option">
-                                    <input type="radio" name="answer" value="true" class="tf-radio"
-                                        @if(isset($studentAnswer) && $studentAnswer->answer_data && json_decode($studentAnswer->answer_data, true) === 'true') checked @endif
-                                        @if($studentAnswer) disabled @endif>
+                                    <input type="radio" name="answer" value="true" class="tf-radio">
                                     <div class="tf-card">
                                         <div class="tf-indicator">
                                             <svg class="w-4 h-4 checkmark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -141,9 +242,7 @@
                                 </label>
                                 
                                 <label class="tf-option-item false-option">
-                                    <input type="radio" name="answer" value="false" class="tf-radio"
-                                        @if(isset($studentAnswer) && $studentAnswer->answer_data && json_decode($studentAnswer->answer_data, true) === 'false') checked @endif
-                                        @if($studentAnswer) disabled @endif>
+                                    <input type="radio" name="answer" value="false" class="tf-radio">
                                     <div class="tf-card">
                                         <div class="tf-indicator">
                                             <svg class="w-4 h-4 checkmark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -221,9 +320,7 @@
                                     @for($i=0; $i<$blanks; $i++)
                                         <div class="blank-input-item">
                                             <label class="blank-label">Blank {{ $i+1 }}</label>
-                                            <input type="text" name="answer[{{ $i }}]" class="blank-input" placeholder="Your answer..."
-                                                @if(isset($answer[$i])) value="{{ $answer[$i] }}" @endif
-                                                @if($isReadOnly) disabled @endif>
+                                            <input type="text" name="answer[{{ $i }}]" class="blank-input" placeholder="Your answer...">
                                         </div>
                                     @endfor
                                 </div>
@@ -266,9 +363,7 @@
                             </div>
                             <div class="reorder-input-item">
                                 <label class="reorder-label">Enter the correct order:</label>
-                                <input type="text" name="answer" class="reorder-input" placeholder="e.g., 2,1,3,4"
-                                    @if(isset($answer) && is_string($answer)) value="{{ $answer }}" @endif
-                                    @if($isReadOnly) disabled @endif>
+                                <input type="text" name="answer" class="reorder-input" placeholder="e.g., 2,1,3,4">
                                 <div class="input-hint">Separate numbers with commas</div>
                             </div>
                         </div>
@@ -300,9 +395,7 @@
                                         @foreach($left as $i => $l)
                                             <div class="match-input-item">
                                                 <label class="match-label">Item {{ $i + 1 }} matches with:</label>
-                                                <input type="number" name="answer[{{ $i }}]" min="1" max="{{ count($right) }}" class="match-input" placeholder="Enter number"
-                                                    @if(isset($answer[$i])) value="{{ $answer[$i] }}" @endif
-                                                    @if($isReadOnly) disabled @endif>
+                                                <input type="number" name="answer[{{ $i }}]" min="1" max="{{ count($right) }}" class="match-input" placeholder="Enter number">
                                             </div>
                                         @endforeach
                                     </div>
@@ -617,17 +710,10 @@
 
                     <!-- Submit Button -->
                     <div class="submit-section">
-                        @if($isReadOnly)
-                            <button type="button" onclick="window.location.href='{{ route('filament.student.pages.courses') }}'" class="submit-btn mx-auto" style="max-width:300px;">
-                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-                                Go Back
-                            </button>
-                        @else
-                            <button type="submit" class="submit-btn mx-auto" style="max-width:300px;">
-                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                                {{ $editMode ? 'Update Answer' : 'Submit Answer' }}
-                            </button>
-                        @endif
+                        <button type="submit" class="submit-btn mx-auto" style="max-width:300px;">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                            Submit Answer
+                        </button>
                     </div>
                 </form>
             </div>
@@ -1940,5 +2026,9 @@ document.head.appendChild(style);
 @keyframes fade-in { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
 .animate-fade-in { animation: fade-in 0.3s ease; }
 </script>
+
+<!-- Security Watermark -->
+@include('components.student-watermark')
+
 </body>
 </html>

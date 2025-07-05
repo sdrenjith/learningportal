@@ -17,4 +17,14 @@ class Course extends Model
     {
         return $this->hasMany(Question::class);
     }
+
+    public function subjects()
+    {
+        return \App\Models\Subject::all();
+    }
+
+    public function batches()
+    {
+        return $this->belongsToMany(Batch::class, 'batch_course');
+    }
 }

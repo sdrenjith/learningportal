@@ -16,7 +16,6 @@ class Video extends Model
         'video_path',
         'course_id',
         'subject_id',
-        'day_id',
         'day_number',
     ];
 
@@ -30,8 +29,5 @@ class Video extends Model
         return $this->belongsTo(Subject::class);
     }
 
-    public function day(): BelongsTo
-    {
-        return $this->belongsTo(Day::class);
-    }
+
 } 

@@ -15,7 +15,7 @@ class DataManagerMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (auth()->check() && auth()->user()->role === 'datamanager') {
+        if (auth()->check() && (auth()->user()->role === 'datamanager' || auth()->user()->role === 'teacher')) {
             return $next($request);
         }
         abort(403, 'Unauthorized');

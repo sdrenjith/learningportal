@@ -16,7 +16,6 @@ class Note extends Model
         'pdf_path',
         'course_id',
         'subject_id',
-        'day_id',
         'day_number',
     ];
 
@@ -30,8 +29,5 @@ class Note extends Model
         return $this->belongsTo(Subject::class);
     }
 
-    public function day(): BelongsTo
-    {
-        return $this->belongsTo(Day::class);
-    }
+
 } 

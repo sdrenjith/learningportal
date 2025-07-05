@@ -73,7 +73,7 @@ class CourseResource extends Resource
 
     public static function shouldRegisterNavigation(): bool
     {
-        // Hide for datamanager
-        return !(auth()->check() && auth()->user()->isDataManager());
+        // Hide for datamanager and teacher
+        return !(auth()->check() && (auth()->user()->isDataManager() || auth()->user()->isTeacher()));
     }
 }
