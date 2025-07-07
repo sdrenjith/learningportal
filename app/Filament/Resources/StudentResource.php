@@ -41,14 +41,9 @@ class StudentResource extends Resource
     {
         return $form
             ->schema([
-                Section::make('Course Details')
+                Section::make('Profile Details')
                     ->schema([
-                        Grid::make(2)->schema([
-                            TextInput::make('course_fee')
-                                ->label('Course Fee')
-                                ->numeric()
-                                ->prefix('₹')
-                                ->required(),
+                        Grid::make(1)->schema([
                             FileUpload::make('profile_picture')
                                 ->label('Profile Picture')
                                 ->image()
@@ -77,16 +72,24 @@ class StudentResource extends Resource
                                 ->afterStateUpdated(function (Set $set, $state) {
                                     if ($state) {
                                         $set('age', Carbon::parse($state)->age);
-                                    } else {
-                                        $set('age', null);
                                     }
                                 }),
                             TextInput::make('age')
                                 ->label('Age')
                                 ->numeric()
-                                ->readOnly()
-                                ->required(),
+                                ->required()
+                                ->minValue(1)
+                                ->maxValue(120)
+                                ->helperText('Age will be auto-calculated from Date of Birth, but you can manually override it here'),
                             TextInput::make('phone')
+                                ->tel()
+                                ->required(),
+                            TextInput::make('father_whatsapp')
+                                ->label("Father's WhatsApp")
+                                ->tel()
+                                ->required(),
+                            TextInput::make('mother_whatsapp')
+                                ->label("Mother's WhatsApp")
                                 ->tel()
                                 ->required(),
                             \Filament\Forms\Components\ViewField::make('gender')
@@ -96,9 +99,48 @@ class StudentResource extends Resource
                                 ->default('Indian'),
                             \Filament\Forms\Components\ViewField::make('category')
                                 ->view('forms.components.category-select'),
+                            \Filament\Forms\Components\ViewField::make('qualification')
+                                ->view('forms.components.qualification-select'),
+                            TextInput::make('experience_months')
+                                ->label('Experience in Months')
+                                ->numeric()
+                                ->minValue(0)
+                                ->required(),
+                            TextInput::make('passport_number')
+                                ->label('Passport Number')
+                                ->required(),
                             \Filament\Forms\Components\ViewField::make('batch_id')
                                 ->label('Batch')
                                 ->view('forms.components.batch-select'),
+                        ])
+                    ]),
+                Section::make('Address Information')
+                    ->schema([
+                        Grid::make(1)->schema([
+                            \Filament\Forms\Components\Textarea::make('address')
+                                ->label('Address')
+                                ->required()
+                                ->rows(3),
+                        ])
+                    ]),
+                Section::make('Financial Information')
+                    ->schema([
+                        Grid::make(3)->schema([
+                            TextInput::make('course_fee')
+                                ->label('Course Fee')
+                                ->numeric()
+                                ->prefix('₹')
+                                ->required(),
+                            TextInput::make('fees_paid')
+                                ->label('Fees Paid')
+                                ->numeric()
+                                ->prefix('₹')
+                                ->required(),
+                            TextInput::make('balance_fees_due')
+                                ->label('Balance Fees Due')
+                                ->numeric()
+                                ->prefix('₹')
+                                ->required(),
                         ])
                     ]),
                 Section::make('Login Credentials')
@@ -151,7 +193,21 @@ class StudentResource extends Resource
                 Tables\Columns\TextColumn::make('phone')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('batch.name')
-                    ->numeric()
+                    ->label('Batch')
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('qualification')
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('course_fee')
+                    ->label('Course Fee')
+                    ->money('INR')
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('fees_paid')
+                    ->label('Fees Paid')
+                    ->money('INR')
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('balance_fees_due')
+                    ->label('Balance Due')
+                    ->money('INR')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()

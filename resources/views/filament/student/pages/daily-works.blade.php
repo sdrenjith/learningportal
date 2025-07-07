@@ -160,6 +160,57 @@
                                     return in_array($q->id, $answeredQuestionIds);
                                 })->count();
                                 $subjectProgress = $subjectQuestions->count() > 0 ? ($subjectAnsweredCount / $subjectQuestions->count()) * 100 : 0;
+                                
+                                // Check if all subject questions are completed
+                                $allSubjectQuestionsCompleted = $subjectQuestions->count() > 0 && $subjectAnsweredCount === $subjectQuestions->count();
+                                
+                                // Calculate results if completed
+                                $subjectResults = null;
+                                if ($allSubjectQuestionsCompleted) {
+                                    $totalQuestions = $subjectQuestions->count();
+                                    $correctAnswers = 0;
+                                    $totalPoints = 0;
+                                    $earnedPoints = 0;
+                                    
+                                    $studentAnswers = \DB::table('student_answers')
+                                        ->where('user_id', $user->id)
+                                        ->whereIn('question_id', $subjectQuestions->pluck('id'))
+                                        ->get()
+                                        ->keyBy('question_id');
+                                    
+                                    foreach ($subjectQuestions as $question) {
+                                        $totalPoints += $question->points ?? 1;
+                                        
+                                        if (isset($studentAnswers[$question->id])) {
+                                            $isCorrect = $studentAnswers[$question->id]->is_correct ?? false;
+                                            if ($isCorrect) {
+                                                $correctAnswers++;
+                                                $earnedPoints += $question->points ?? 1;
+                                            }
+                                        }
+                                    }
+                                    
+                                    $percentage = $totalQuestions > 0 ? round(($correctAnswers / $totalQuestions) * 100, 2) : 0;
+                                    
+                                    $grade = '';
+                                    if ($percentage >= 90) $grade = 'A+';
+                                    elseif ($percentage >= 80) $grade = 'A';
+                                    elseif ($percentage >= 70) $grade = 'B+';
+                                    elseif ($percentage >= 60) $grade = 'B';
+                                    elseif ($percentage >= 50) $grade = 'C';
+                                    elseif ($percentage >= 40) $grade = 'D';
+                                    else $grade = 'F';
+                                    
+                                    $subjectResults = [
+                                        'total_questions' => $totalQuestions,
+                                        'correct_answers' => $correctAnswers,
+                                        'wrong_answers' => $totalQuestions - $correctAnswers,
+                                        'total_points' => $totalPoints,
+                                        'earned_points' => $earnedPoints,
+                                        'percentage' => $percentage,
+                                        'grade' => $grade
+                                    ];
+                                }
                             @endphp
                             
                             <div class="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200">
@@ -173,12 +224,24 @@
                                     
                                     <div class="mb-4">
                                         <div class="flex items-center justify-between text-sm text-gray-600 mb-1">
-                                            <span>Progress</span>
-                                            <span>{{ round($subjectProgress) }}%</span>
+                                            @if($allSubjectQuestionsCompleted && $subjectResults)
+                                                <span class="font-semibold text-{{ $subjectResults['grade'] === 'F' ? 'red' : ($subjectResults['percentage'] >= 80 ? 'green' : 'yellow') }}-600">
+                                                    Mark: {{ $subjectResults['earned_points'] }}/{{ $subjectResults['total_points'] }} ({{ $subjectResults['percentage'] }}% - Grade {{ $subjectResults['grade'] }})
+                                                </span>
+                                            @else
+                                                <span>Progress</span>
+                                                <span>{{ round($subjectProgress) }}%</span>
+                                            @endif
                                         </div>
-                                        <div class="w-full bg-gray-200 rounded-full h-2">
-                                            <div class="bg-blue-500 h-2 rounded-full transition-all duration-300" style="width: {{ $subjectProgress }}%"></div>
-                                        </div>
+                                        @if(!$allSubjectQuestionsCompleted || !$subjectResults)
+                                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                                <div class="bg-blue-500 h-2 rounded-full transition-all duration-300" style="width: {{ $subjectProgress }}%"></div>
+                                            </div>
+                                        @else
+                                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                                <div class="bg-gradient-to-r from-{{ $subjectResults['grade'] === 'F' ? 'red' : ($subjectResults['percentage'] >= 80 ? 'green' : 'yellow') }}-400 to-{{ $subjectResults['grade'] === 'F' ? 'red' : ($subjectResults['percentage'] >= 80 ? 'green' : 'yellow') }}-500 h-2 rounded-full transition-all duration-300" style="width: {{ $subjectResults['percentage'] }}%"></div>
+                                            </div>
+                                        @endif
                                     </div>
                                     
                                     <div class="space-y-2">
@@ -208,10 +271,26 @@
                                                             Completed
                                                         </span>
                                                     @endif
-                                                    <a href="{{ route('student.questions.answer', $question->id) }}" 
-                                                       class="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md text-white {{ $isAnswered ? 'bg-orange-500 hover:bg-orange-600' : 'bg-blue-600 hover:bg-blue-700' }} transition-colors duration-200">
-                                                        {{ $isAnswered ? 'Re-attempt' : 'Start' }}
-                                                    </a>
+                                                    @php
+                                                        $allSubjectQuestionsCompleted = $subjectQuestions->filter(function($q) use ($answeredQuestionIds) {
+                                                            return in_array($q->id, $answeredQuestionIds);
+                                                        })->count() === $subjectQuestions->count();
+                                                    @endphp
+                                                    @if($isAnswered && !$allSubjectQuestionsCompleted)
+                                                        <span class="inline-flex items-center px-3 py-1 text-xs font-medium text-gray-500 bg-gray-200 rounded-md">
+                                                            Complete all {{ $subject->name }} first
+                                                        </span>
+                                                    @elseif($isAnswered && $allSubjectQuestionsCompleted)
+                                                        <a href="{{ route('student.questions.answer', $question->id) }}" 
+                                                           class="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md text-white bg-orange-500 hover:bg-orange-600 transition-colors duration-200">
+                                                            Re-attempt
+                                                        </a>
+                                                    @else
+                                                        <a href="{{ route('student.questions.answer', $question->id) }}" 
+                                                           class="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors duration-200">
+                                                            Start
+                                                        </a>
+                                                    @endif
                                                 </div>
                                             </div>
                                         @endforeach
@@ -220,6 +299,130 @@
                             </div>
                         @endforeach
                     </div>
+
+                    @php
+                        // Group completed subjects for the active day
+                        $completedSubjects = [];
+                        foreach($activeDayQuestions->groupBy('subject_id') as $subjectId => $subjectQuestions) {
+                            $subject = $subjectQuestions->first()->subject;
+                            $subjectAnsweredCount = $subjectQuestions->filter(function($q) use ($answeredQuestionIds) {
+                                return in_array($q->id, $answeredQuestionIds);
+                            })->count();
+                            
+                            if ($subjectQuestions->count() > 0 && $subjectAnsweredCount === $subjectQuestions->count()) {
+                                $completedSubjects[$subjectId] = [
+                                    'subject' => $subject,
+                                    'questions' => $subjectQuestions
+                                ];
+                            }
+                        }
+                    @endphp
+
+                    @foreach($completedSubjects as $subjectId => $completedSubject)
+                        @php
+                            // Calculate results for this specific subject
+                            $subject = $completedSubject['subject'];
+                            $subjectQuestions = $completedSubject['questions'];
+                            $totalQuestions = $subjectQuestions->count();
+                            $correctAnswers = 0;
+                            $totalPoints = 0;
+                            $earnedPoints = 0;
+                            
+                            $studentAnswers = \DB::table('student_answers')
+                                ->where('user_id', $user->id)
+                                ->whereIn('question_id', $subjectQuestions->pluck('id'))
+                                ->get()
+                                ->keyBy('question_id');
+                            
+                            foreach ($subjectQuestions as $question) {
+                                $totalPoints += $question->points ?? 1;
+                                
+                                if (isset($studentAnswers[$question->id])) {
+                                    $isCorrect = $studentAnswers[$question->id]->is_correct ?? false;
+                                    if ($isCorrect) {
+                                        $correctAnswers++;
+                                        $earnedPoints += $question->points ?? 1;
+                                    }
+                                }
+                            }
+                            
+                            $percentage = $totalQuestions > 0 ? round(($correctAnswers / $totalQuestions) * 100, 2) : 0;
+                            
+                            $grade = '';
+                            if ($percentage >= 90) $grade = 'A+';
+                            elseif ($percentage >= 80) $grade = 'A';
+                            elseif ($percentage >= 70) $grade = 'B+';
+                            elseif ($percentage >= 60) $grade = 'B';
+                            elseif ($percentage >= 50) $grade = 'C';
+                            elseif ($percentage >= 40) $grade = 'D';
+                            else $grade = 'F';
+                        @endphp
+
+                        <!-- Subject Results Summary -->
+                        <div class="mt-6 bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-xl p-6 shadow-lg">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-bold text-gray-900 flex items-center">
+                                    <svg class="w-6 h-6 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
+                                    </svg>
+                                    🎉 {{ $subject->name }} - {{ $activeDay->title }} Completed!
+                                </h3>
+                                <div class="text-right">
+                                    <div class="text-2xl font-bold text-{{ $grade === 'F' ? 'red' : ($percentage >= 80 ? 'green' : 'yellow') }}-600">
+                                        {{ $grade }}
+                                    </div>
+                                    <div class="text-sm text-gray-600">{{ $percentage }}%</div>
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                                <div class="text-center p-3 bg-white rounded-lg border">
+                                    <div class="text-lg font-bold text-blue-600">{{ $totalQuestions }}</div>
+                                    <div class="text-xs text-gray-600">Total Questions</div>
+                                </div>
+                                <div class="text-center p-3 bg-white rounded-lg border">
+                                    <div class="text-lg font-bold text-green-600">{{ $correctAnswers }}</div>
+                                    <div class="text-xs text-gray-600">Correct</div>
+                                </div>
+                                <div class="text-center p-3 bg-white rounded-lg border">
+                                    <div class="text-lg font-bold text-red-600">{{ $totalQuestions - $correctAnswers }}</div>
+                                    <div class="text-xs text-gray-600">Wrong</div>
+                                </div>
+                                <div class="text-center p-3 bg-white rounded-lg border">
+                                    <div class="text-lg font-bold text-purple-600">{{ $earnedPoints }}/{{ $totalPoints }}</div>
+                                    <div class="text-xs text-gray-600">Points</div>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-white rounded-lg p-4 border">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-sm font-medium text-gray-700">{{ $subject->name }} Performance</span>
+                                    <span class="text-sm text-gray-600">{{ $percentage }}%</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-3">
+                                    <div class="bg-gradient-to-r from-purple-400 to-pink-500 h-3 rounded-full transition-all duration-300" 
+                                         style="width: {{ $percentage }}%"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4 text-center">
+                                <p class="text-sm text-gray-600 mb-2">
+                                    @if($percentage >= 90)
+                                        🎊 Exceptional work! You've mastered {{ $subject->name }}!
+                                    @elseif($percentage >= 80)
+                                        ⭐ Great job! You have excellent {{ $subject->name }} understanding!
+                                    @elseif($percentage >= 70)
+                                        👏 Well done! You're making good {{ $subject->name }} progress!
+                                    @elseif($percentage >= 60)
+                                        📖 Good effort! Keep practicing {{ $subject->name }} to improve further!
+                                    @else
+                                        🔄 Practice makes perfect! Try {{ $subject->name }} again to boost your score!
+                                    @endif
+                                </p>
+                                <p class="text-xs text-gray-500">You can now re-attempt any {{ $subject->name }} question to improve your results!</p>
+                            </div>
+                        </div>
+                    @endforeach
                 @else
                     <div class="text-center py-12">
                         <div class="mx-auto h-12 w-12 text-gray-400">

@@ -71,16 +71,16 @@
         
         .marquee-content {
             display: inline-block;
-            animation: marqueeScroll 10s linear infinite;
+            animation: marqueeScroll 15s linear infinite;
             white-space: nowrap;
         }
         
         .watermark-text {
             display: inline-block;
-            font-size: clamp(1.8rem, 3.5vw, 3.5rem);
+            font-size: clamp(1.4rem, 3vw, 2.8rem);
             font-weight: 700;
             color: #9CA3AF;
-            opacity: 0.12;
+            opacity: 0.08;
             text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
             margin-right: 150px;
             pointer-events: none;
@@ -102,7 +102,7 @@
         /* Responsive text sizing */
         @media (max-width: 768px) {
             .watermark-text {
-                font-size: clamp(1.2rem, 2.5vw, 2rem);
+                font-size: clamp(1rem, 2vw, 1.6rem);
                 margin-right: 100px;
             }
         }

@@ -133,7 +133,13 @@
                             </div>
                         </div>
                         <div class="text-sm text-gray-500">
-                            Progress: {{ $questions->count() > 0 ? round((count(array_intersect($questions->pluck('id')->toArray(), $answeredQuestionIds)) / $questions->count()) * 100) : 0 }}%
+                            @if($allSubjectQuestionsCompleted && $subjectResults)
+                                <span class="font-semibold text-{{ $subjectResults['grade'] === 'F' ? 'red' : ($subjectResults['percentage'] >= 80 ? 'green' : 'yellow') }}-600">
+                                    Mark: {{ $subjectResults['earned_points'] }}/{{ $subjectResults['total_points'] }} ({{ $subjectResults['percentage'] }}% - Grade {{ $subjectResults['grade'] }})
+                                </span>
+                            @else
+                                Progress: {{ $questions->count() > 0 ? round((count(array_intersect($questions->pluck('id')->toArray(), $answeredQuestionIds)) / $questions->count()) * 100) : 0 }}%
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -188,26 +194,103 @@
                                     </div>
                                     
                                     <div class="flex-shrink-0 ml-4">
-                                        <a href="{{ route('student.questions.answer', $question->id) }}" 
-                                           class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white {{ $isAnswered ? 'bg-orange-600 hover:bg-orange-700' : 'bg-cyan-600 hover:bg-cyan-700' }} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 transition-colors duration-200">
-                                            @if($isAnswered)
+                                        @if($isAnswered && !$allSubjectQuestionsCompleted)
+                                            <span class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-500 bg-gray-100 rounded-md">
+                                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m0 0v2m0-2h2m-2 0H8m13 0a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                </svg>
+                                                Complete all {{ $subject->name }} questions first
+                                            </span>
+                                        @elseif($isAnswered && $allSubjectQuestionsCompleted)
+                                            <a href="{{ route('student.questions.answer', $question->id) }}" 
+                                               class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-colors duration-200">
                                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                                                 </svg>
                                                 Re-attempt
-                                            @else
+                                            </a>
+                                        @else
+                                            <a href="{{ route('student.questions.answer', $question->id) }}" 
+                                               class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-cyan-600 hover:bg-cyan-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 transition-colors duration-200">
                                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h8m2 2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2h8z"></path>
                                                 </svg>
                                                 Start Question
-                                            @endif
-                                        </a>
+                                            </a>
+                                        @endif
                                     </div>
                                 </div>
                             </div>
                         </div>
                     @endforeach
                 </div>
+
+                @if($allSubjectQuestionsCompleted && $subjectResults)
+                    <!-- Results Summary Card -->
+                    <div class="mt-8 bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-xl p-6 shadow-lg">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-bold text-gray-900 flex items-center">
+                                <svg class="w-6 h-6 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
+                                </svg>
+                                {{ $subject->name }} - {{ $day->title }} Results
+                            </h3>
+                            <div class="text-right">
+                                <div class="text-2xl font-bold text-{{ $subjectResults['grade'] === 'F' ? 'red' : ($subjectResults['percentage'] >= 80 ? 'green' : 'yellow') }}-600">
+                                    {{ $subjectResults['grade'] }}
+                                </div>
+                                <div class="text-sm text-gray-600">{{ $subjectResults['percentage'] }}%</div>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                            <div class="text-center p-3 bg-white rounded-lg border">
+                                <div class="text-lg font-bold text-blue-600">{{ $subjectResults['total_questions'] }}</div>
+                                <div class="text-xs text-gray-600">Total Questions</div>
+                            </div>
+                            <div class="text-center p-3 bg-white rounded-lg border">
+                                <div class="text-lg font-bold text-green-600">{{ $subjectResults['correct_answers'] }}</div>
+                                <div class="text-xs text-gray-600">Correct</div>
+                            </div>
+                            <div class="text-center p-3 bg-white rounded-lg border">
+                                <div class="text-lg font-bold text-red-600">{{ $subjectResults['wrong_answers'] }}</div>
+                                <div class="text-xs text-gray-600">Wrong</div>
+                            </div>
+                            <div class="text-center p-3 bg-white rounded-lg border">
+                                <div class="text-lg font-bold text-purple-600">{{ $subjectResults['earned_points'] }}/{{ $subjectResults['total_points'] }}</div>
+                                <div class="text-xs text-gray-600">Points</div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white rounded-lg p-4 border">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-sm font-medium text-gray-700">Progress</span>
+                                <span class="text-sm text-gray-600">{{ $subjectResults['percentage'] }}%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-3">
+                                <div class="bg-gradient-to-r from-green-400 to-blue-500 h-3 rounded-full transition-all duration-300" 
+                                     style="width: {{ $subjectResults['percentage'] }}%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4 text-center">
+                            <p class="text-sm text-gray-600 mb-2">
+                                @if($subjectResults['percentage'] >= 90)
+                                    🎉 Outstanding performance! You've mastered {{ $subject->name }}!
+                                @elseif($subjectResults['percentage'] >= 80)
+                                    🌟 Excellent work! You have a strong understanding of {{ $subject->name }}!
+                                @elseif($subjectResults['percentage'] >= 70)
+                                    👍 Good job! Consider reviewing the incorrect {{ $subject->name }} answers.
+                                @elseif($subjectResults['percentage'] >= 60)
+                                    📚 Fair performance. More {{ $subject->name }} practice will help improve your score.
+                                @else
+                                    💪 Keep practicing {{ $subject->name }}! Review the material and try again.
+                                @endif
+                            </p>
+                            <p class="text-xs text-gray-500">You can now re-attempt any question to improve your {{ $subject->name }} score!</p>
+                        </div>
+                    </div>
+                @endif
             @else
                 <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
                     <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

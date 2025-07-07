@@ -153,16 +153,45 @@
                         </div>
                         <div>
                             <div class="font-semibold">Category</div>
-                            <div class="mt-1">{{ $user->category ?? 'N/A' }}</div>
+                            <div class="mt-1">{{ ucfirst($user->category ?? 'N/A') }}</div>
+                        </div>
+                        <div>
+                            <div class="font-semibold">Qualification</div>
+                            <div class="mt-1">{{ ucwords(str_replace('_', ' ', $user->qualification ?? 'N/A')) }}</div>
+                        </div>
+                        <div>
+                            <div class="font-semibold">Experience</div>
+                            <div class="mt-1">{{ $user->experience_months ? $user->experience_months . ' months' : 'N/A' }}</div>
+                        </div>
+                        <div>
+                            <div class="font-semibold">Passport Number</div>
+                            <div class="mt-1">{{ $user->passport_number ?? 'N/A' }}</div>
+                        </div>
+                        <div>
+                            <div class="font-semibold">Father's WhatsApp</div>
+                            <div class="mt-1">{{ $user->father_whatsapp ?? 'N/A' }}</div>
+                        </div>
+                        <div>
+                            <div class="font-semibold">Mother's WhatsApp</div>
+                            <div class="mt-1">{{ $user->mother_whatsapp ?? 'N/A' }}</div>
                         </div>
                     </div>
                 </div>
                 <div class="mb-6 mt-10">
-                    <h2 class="text-2xl font-bold text-black mb-4">Educational Details</h2>
+                    <h2 class="text-2xl font-bold text-black mb-4">Address Information</h2>
                     <div class="bg-white rounded-lg shadow p-6">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-16 gap-y-2">
-                            <div>Course Fee: <span class="font-medium text-black">₹{{ number_format($user->course_fee ?? 0, 2) }}</span></div>
+                        <div class="font-semibold mb-2">Full Address</div>
+                        <div class="text-gray-700">{{ $user->address ?? 'N/A' }}</div>
+                    </div>
+                </div>
+                <div class="mb-6 mt-10">
+                    <h2 class="text-2xl font-bold text-black mb-4">Educational & Financial Details</h2>
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-16 gap-y-4">
                             <div>Batch: <span class="font-bold text-black">{{ $user->batch ? $user->batch->name : 'N/A' }}</span></div>
+                            <div>Course Fee: <span class="font-medium text-black">₹{{ number_format($user->course_fee ?? 0, 2) }}</span></div>
+                            <div>Fees Paid: <span class="font-medium text-green-600">₹{{ number_format($user->fees_paid ?? 0, 2) }}</span></div>
+                            <div>Balance Due: <span class="font-medium text-red-600">₹{{ number_format($user->balance_fees_due ?? 0, 2) }}</span></div>
                         </div>
                     </div>
                 </div>
@@ -185,31 +214,71 @@
                 <div class="mb-6 mt-10">
                     <h2 class="text-2xl font-bold text-black mb-4">Progress Report</h2>
                     <div class="bg-white rounded-lg shadow p-6">
+                        @php
+                            // Get user's assigned courses and days
+                            $assignedCourseIds = $user->assignedCourses()->pluck('id')->toArray();
+                            $assignedDayIds = $user->assignedDays()->pluck('id')->toArray();
+                            
+                            // Get answered question IDs for this user
+                            $answeredQuestionIds = \App\Models\StudentAnswer::where('user_id', $user->id)->pluck('question_id')->toArray();
+                            
+                            // Get all subjects (limit to first 4 for display)
+                            $subjects = \App\Models\Subject::take(4)->get();
+                            
+                            $subjectProgress = [];
+                            
+                            foreach($subjects as $subject) {
+                                // Get all questions for this subject from user's assigned courses and days
+                                $totalQuestions = \App\Models\Question::where('subject_id', $subject->id)
+                                    ->whereIn('course_id', $assignedCourseIds)
+                                    ->whereIn('day_id', $assignedDayIds)
+                                    ->where('is_active', true)
+                                    ->count();
+                                
+                                // Get answered questions for this subject
+                                $answeredQuestions = \App\Models\Question::where('subject_id', $subject->id)
+                                    ->whereIn('course_id', $assignedCourseIds)
+                                    ->whereIn('day_id', $assignedDayIds)
+                                    ->where('is_active', true)
+                                    ->whereIn('id', $answeredQuestionIds)
+                                    ->count();
+                                
+                                // Calculate percentage
+                                $percentage = $totalQuestions > 0 ? round(($answeredQuestions / $totalQuestions) * 100) : 0;
+                                
+                                $subjectProgress[] = [
+                                    'name' => $subject->name,
+                                    'percentage' => $percentage,
+                                    'answered' => $answeredQuestions,
+                                    'total' => $totalQuestions
+                                ];
+                            }
+                        @endphp
+                        
                         <div class="space-y-3">
-                            <div>
-                                <div class="flex justify-between text-sm mb-1 text-black"><span>German Language</span><span>78%</span></div>
-                                <div class="w-full bg-gray-200 rounded-full h-2.5">
-                                    <div class="bg-yellow-400 h-2.5 rounded-full" style="width: 78%"></div>
+                            @forelse($subjectProgress as $progress)
+                                <div>
+                                    <div class="flex justify-between text-sm mb-1 text-black">
+                                        <span>{{ $progress['name'] }}</span>
+                                        <span>{{ $progress['percentage'] }}% ({{ $progress['answered'] }}/{{ $progress['total'] }})</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                        @php
+                                            $color = 'bg-gray-400';
+                                            if($progress['percentage'] >= 80) $color = 'bg-green-500';
+                                            elseif($progress['percentage'] >= 60) $color = 'bg-yellow-400';
+                                            elseif($progress['percentage'] >= 40) $color = 'bg-orange-400';
+                                            else $color = 'bg-red-400';
+                                        @endphp
+                                        <div class="{{ $color }} h-2.5 rounded-full transition-all duration-300" style="width: {{ $progress['percentage'] }}%"></div>
+                                    </div>
                                 </div>
-                            </div>
-                            <div>
-                                <div class="flex justify-between text-sm mb-1 text-black"><span>Grammar</span><span>65%</span></div>
-                                <div class="w-full bg-gray-200 rounded-full h-2.5">
-                                    <div class="bg-yellow-400 h-2.5 rounded-full" style="width: 65%"></div>
+                            @empty
+                                <div class="text-center text-gray-500 py-4">
+                                    <p>No subjects available yet.</p>
+                                    <p class="text-sm">Progress will be shown once you start answering questions.</p>
                                 </div>
-                            </div>
-                            <div>
-                                <div class="flex justify-between text-sm mb-1 text-black"><span>Vocabulary</span><span>89%</span></div>
-                                <div class="w-full bg-gray-200 rounded-full h-2.5">
-                                    <div class="bg-yellow-400 h-2.5 rounded-full" style="width: 89%"></div>
-                                </div>
-                            </div>
-                            <div>
-                                <div class="flex justify-between text-sm mb-1 text-black"><span>Speaking</span><span>94%</span></div>
-                                <div class="w-full bg-gray-200 rounded-full h-2.5">
-                                    <div class="bg-yellow-400 h-2.5 rounded-full" style="width: 94%"></div>
-                                </div>
-                            </div>
+                            @endforelse
                         </div>
                     </div>
                 </div>

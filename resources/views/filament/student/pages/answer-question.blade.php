@@ -6,6 +6,8 @@
     <title>Answer Question - Rocys German Academy</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </head>
 <body>
 @php
@@ -104,16 +106,243 @@
         </div>
     </div>
 
-    @if(session('success'))
-        <div id="successModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-            <div class="max-w-md mx-auto bg-white rounded-2xl shadow-2xl p-8 text-center animate-fade-in flex flex-col items-center">
-                <svg class="w-16 h-16 text-green-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                <h2 class="text-2xl font-bold mb-2 text-green-700">Success!</h2>
-                <p class="mb-6 text-gray-700 text-lg">{{ session('success') }}</p>
-                <button onclick="window.location.href='{{ route('filament.student.pages.courses') }}'" class="px-8 py-2 bg-green-500 text-white rounded-lg font-semibold shadow hover:bg-green-600 transition text-lg">OK</button>
+    @if(session('answer_result'))
+        @php
+            $result = session('answer_result');
+            $questionId = session('question_id');
+            $courseId = session('course_id');
+            $subjectId = session('subject_id');
+            $dayId = session('day_id');
+        @endphp
+        
+        <!-- Result Modal -->
+        <div class="modal fade" id="resultModal" tabindex="-1" aria-labelledby="resultModalLabel" aria-hidden="true" data-bs-backdrop="static">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header {{ $result['is_correct'] ? 'bg-success' : 'bg-danger' }} text-white">
+                        <h5 class="modal-title" id="resultModalLabel">
+                            @if($result['is_correct'])
+                                <i class="fas fa-check-circle me-2"></i>{{ $result['message'] }}
+                            @else
+                                <i class="fas fa-times-circle me-2"></i>{{ $result['message'] }}
+                            @endif
+                        </h5>
+            </div>
+                    <div class="modal-body">
+                        @if(!$result['is_correct'])
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6 class="text-danger"><i class="fas fa-times me-2"></i>Your Answer:</h6>
+                                    <div class="p-3 bg-light rounded border-start border-danger border-3">
+                                        @if(is_array($result['student_answer_text']))
+                                            @php
+                                                $questionType = $question->questionType->name ?? '';
+                                            @endphp
+                                            @if($questionType === 'audio_picture_match')
+                                                @foreach($result['student_answer_text'] as $audioIndex => $imageIndex)
+                                                    <div class="mb-2">
+                                                        <strong>Audio {{ $audioIndex + 1 }}:</strong> 
+                                                        <span class="text-dark">{{ $imageIndex !== '' ? 'Image ' . ($imageIndex + 1) : '(No selection)' }}</span>
+        </div>
+                                                @endforeach
+                                            @elseif($questionType === 'picture_mcq' || $questionType === 'audio_image_text_single' || $questionType === 'audio_image_text_multiple')
+                                                @php
+                                                    $questionData = is_string($question->question_data) ? json_decode($question->question_data, true) : ($question->question_data ?? []);
+                                                    $rightOptions = $question->right_options ?? $questionData['right_options'] ?? [];
+                                                @endphp
+                                                @foreach($result['student_answer_text'] as $imageIndex => $optionIndex)
+                                                    <div class="mb-2">
+                                                        <strong>{{ $questionType === 'picture_mcq' ? 'Image' : 'Pair' }} {{ $imageIndex + 1 }}:</strong> 
+                                                        <span class="text-dark">{{ $optionIndex !== '' ? ($rightOptions[$optionIndex] ?? 'Option ' . ($optionIndex + 1)) : '(No selection)' }}</span>
+                                                    </div>
+                                                @endforeach
+                                            @elseif($questionType === 'audio_mcq_single')
+                                                @foreach($result['student_answer_text'] as $index => $answer)
+                                                    <div class="mb-2">
+                                                        <strong>Question {{ $index + 1 }}:</strong> 
+                                                        <span class="text-dark">{{ $answer ?: '(No answer provided)' }}</span>
+                                                    </div>
+                                                @endforeach
+                                            @elseif($questionType === 'true_false_multiple')
+                                                @foreach($result['student_answer_text'] as $index => $answer)
+                                                    <div class="mb-2">
+                                                        <strong>Statement {{ $index + 1 }}:</strong> 
+                                                        <span class="text-dark">{{ ucfirst($answer ?: '(No answer provided)') }}</span>
+                                                    </div>
+                                                @endforeach
+                                            @elseif($questionType === 'statement_match')
+                                                @foreach($result['student_answer_text'] as $index => $matchAnswer)
+                                                    <div class="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                                                        <div class="d-flex align-items-center">
+                                                            <span class="badge bg-danger me-2">{{ $index + 1 }}</span>
+                                                            <span class="text-dark fw-bold">{{ $matchAnswer ?: '(No answer provided)' }}</span>
+                                                        </div>
+                                                    </div>
+                                                @endforeach
+                                            @elseif($questionType === 'opinion')
+                                                <div class="p-3 bg-blue-50 rounded border">
+                                                    <p class="text-dark">{{ $result['student_answer_text'] ?: '(No response provided)' }}</p>
+                                                </div>
+                                            @elseif($questionType === 'reorder')
+                                                <div class="p-3 bg-blue-50 rounded border">
+                                                    <p class="text-dark">{{ $result['student_answer_text'] ?: '(No response provided)' }}</p>
+                                                </div>
+                                            @elseif($questionType === 'mcq_single')
+                                                @foreach($result['student_answer_text'] as $index => $answer)
+                                                    <div class="mb-2">
+                                                        <strong>Option {{ $index + 1 }}:</strong> 
+                                                        <span class="text-dark">{{ $answer ?: '(No answer provided)' }}</span>
+                                                    </div>
+                                                @endforeach
+                                            @elseif($questionType === 'mcq_multiple')
+                                                @foreach($result['student_answer_text'] as $index => $answer)
+                                                    <div class="mb-2">
+                                                        <strong>Sub-question {{ chr(97 + $index) }}):</strong> 
+                                                        <span class="text-dark">{{ $answer ?: '(No answer provided)' }}</span>
+                                                    </div>
+                                                @endforeach
+                                            @else
+                                                @foreach($result['student_answer_text'] as $index => $answer)
+                                                    <div class="mb-2">
+                                                        <strong>Blank {{ $index + 1 }}:</strong> 
+                                                        <span class="text-dark">{{ $answer ?: '(No answer provided)' }}</span>
+                                                    </div>
+                                                @endforeach
+    @endif
+                                        @else
+                                            <span class="text-dark">{{ $result['student_answer_text'] ?: '(No answer provided)' }}</span>
+                                        @endif
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="text-success"><i class="fas fa-check me-2"></i>Correct Answer:</h6>
+                                    <div class="p-3 bg-light rounded border-start border-success border-3">
+                                        @if(is_array($result['correct_answer_text']))
+                                            @php
+                                                $questionType = $question->questionType->name ?? '';
+                                            @endphp
+                                            @if($questionType === 'audio_picture_match')
+                                                @foreach($result['correct_answer_text'] as $pair)
+                                                    <div class="mb-2">
+                                                        <strong>Audio {{ ($pair['left'] ?? 0) + 1 }}:</strong> 
+                                                        <span class="text-dark">Image {{ ($pair['right'] ?? 0) + 1 }}</span>
+                                                    </div>
+                                                @endforeach
+                                            @elseif($questionType === 'picture_mcq' || $questionType === 'audio_image_text_single' || $questionType === 'audio_image_text_multiple')
+                                                @php
+                                                    $questionData = is_string($question->question_data) ? json_decode($question->question_data, true) : ($question->question_data ?? []);
+                                                    $rightOptions = $question->right_options ?? $questionData['right_options'] ?? [];
+                                                @endphp
+                                                @foreach($result['correct_answer_text'] as $pair)
+                                                    <div class="mb-2">
+                                                        <strong>{{ $questionType === 'picture_mcq' ? 'Image' : 'Pair' }} {{ ($pair['left'] ?? 0) + 1 }}:</strong> 
+                                                        <span class="text-dark">{{ $rightOptions[$pair['right'] ?? 0] ?? 'Option ' . (($pair['right'] ?? 0) + 1) }}</span>
+                                                    </div>
+                                                @endforeach
+                                            @elseif($questionType === 'audio_mcq_single')
+                                                @foreach($result['correct_answer_text'] as $index => $answer)
+                                                    <div class="mb-2">
+                                                        <strong>Question {{ $index + 1 }}:</strong> 
+                                                        <span class="text-dark">{{ $answer }}</span>
+                                                    </div>
+                                                @endforeach
+                                            @elseif($questionType === 'true_false_multiple')
+                                                @foreach($result['correct_answer_text'] as $index => $answer)
+                                                    <div class="mb-2">
+                                                        <strong>Statement {{ $index + 1 }}:</strong> 
+                                                        <span class="text-dark">{{ ucfirst($answer) }}</span>
+                                                    </div>
+                                                @endforeach
+                                            @elseif($questionType === 'statement_match')
+                                                @foreach($result['correct_answer_text'] as $index => $matchAnswer)
+                                                    <div class="mb-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                                                        <div class="d-flex align-items-center">
+                                                            <span class="badge bg-success me-2">{{ $index + 1 }}</span>
+                                                            <span class="text-dark fw-bold">{{ $matchAnswer }}</span>
+                                                        </div>
+                                                    </div>
+                                                @endforeach
+                                            @elseif($questionType === 'opinion')
+                                                <div class="p-3 bg-green-50 rounded border">
+                                                    <p class="text-dark">{{ $result['correct_answer_text'] }}</p>
+                                                </div>
+                                            @elseif($questionType === 'reorder')
+                                                <div class="p-3 bg-green-50 rounded border">
+                                                    <p class="text-dark">{{ $result['correct_answer_text'] }}</p>
+                                                </div>
+                                            @elseif($questionType === 'mcq_single')
+                                                @foreach($result['correct_answer_text'] as $index => $answer)
+                                                    <div class="mb-2">
+                                                        <strong>Option {{ $index + 1 }}:</strong> 
+                                                        <span class="text-dark">{{ $answer }}</span>
+                                                    </div>
+                                                @endforeach
+                                            @elseif($questionType === 'mcq_multiple')
+                                                @foreach($result['correct_answer_text'] as $index => $answer)
+                                                    <div class="mb-2">
+                                                        <strong>Sub-question {{ chr(97 + $index) }}):</strong> 
+                                                        <span class="text-dark">{{ $answer }}</span>
+                                                    </div>
+                                                @endforeach
+                                            @else
+                                                @foreach($result['correct_answer_text'] as $index => $answer)
+                                                    <div class="mb-2">
+                                                        <strong>Blank {{ $index + 1 }}:</strong> 
+                                                        <span class="text-dark">{{ $answer }}</span>
+                                                    </div>
+                                                @endforeach
+                                            @endif
+                                        @else
+                                            <span class="text-dark">{{ $result['correct_answer_text'] }}</span>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                        @else
+                            <div class="text-center py-4">
+                                <i class="fas fa-trophy text-warning" style="font-size: 4rem;"></i>
+                                <h4 class="mt-3 text-success">Excellent Work!</h4>
+                                <p class="text-muted">You've answered this question correctly.</p>
+                            </div>
+                        @endif
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" onclick="goBackToQuestions()">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Questions
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
+        
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Auto-show the modal
+                const resultModal = new bootstrap.Modal(document.getElementById('resultModal'));
+                resultModal.show();
+            });
+            
+            function goBackToQuestions() {
+                window.history.back();
+            }
+        </script>
     @endif
+
+    <!-- Image Preview Modal -->
+    <div id="imagePreviewModal" class="image-preview-modal" style="display: none;">
+        <div class="image-preview-overlay" onclick="closeImagePreview()"></div>
+        <div class="image-preview-content">
+            <button class="image-preview-close" onclick="closeImagePreview()">
+                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+            <img id="previewImage" src="" alt="Preview" class="preview-image">
+            <div class="image-preview-info">
+                <span id="previewImageTitle">Image Preview</span>
+            </div>
+        </div>
+    </div>
     <div class="modern-answer-form">
         <!-- Modern Answer Card -->
         <div class="modern-answer-card">
@@ -590,41 +819,55 @@
                             </div>
                             
                             @php
-                                $pairs = $qdata['pairs'] ?? [];
-                                $right = $qdata['right_options'] ?? [];
+                                $pairs = $question->audio_image_text_multiple_pairs ?? 
+                                         $qdata['audio_pairs'] ?? 
+                                         $qdata['image_audio_pairs'] ?? 
+                                         $qdata['pairs'] ?? [];
+                                $right = $question->right_options ?? $qdata['right_options'] ?? [];
                             @endphp
                             
-                            <div class="pairs-grid">
+                            <div class="audio-image-multiple-grid">
                                 @foreach($pairs as $i => $pair)
-                                    <div class="pair-item">
+                                    <div class="audio-image-multiple-item">
                                         <div class="pair-header">
                                             <h4 class="pair-title">Pair {{ $i + 1 }}</h4>
                                         </div>
                                         
-                                        <div class="pair-media">
+                                        <div class="media-grid">
                                             @if(!empty($pair['audio']))
-                                                <div class="audio-section">
-                                                    <div class="audio-header">
+                                                <div class="audio-container">
+                                                    <div class="media-header">
                                                         <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
                                                         </svg>
-                                                        <span class="audio-title">Listen to Audio</span>
+                                                        <span class="media-label">Audio</span>
                                                     </div>
-                                                    <audio controls class="audio-player-small">
+                                                    <div class="audio-player-wrapper">
+                                                        <audio controls class="audio-player-compact">
                                                         <source src="{{ asset('storage/'.$pair['audio']) }}" type="audio/mpeg">
+                                                            Your browser does not support the audio element.
                                                     </audio>
+                                                    </div>
                                                 </div>
                                             @endif
                                             
                                             @if(!empty($pair['image']))
-                                                <div class="image-section">
-                                                    <img src="{{ asset('storage/'.$pair['image']) }}" alt="Image {{ $i+1 }}" class="pair-image">
+                                                <div class="image-container">
+                                                    <div class="media-header">
+                                                        <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                                        </svg>
+                                                        <span class="media-label">Image</span>
+                                                    </div>
+                                                    <div class="image-wrapper">
+                                                        <img src="{{ asset('storage/'.$pair['image']) }}" alt="Image {{ $i+1 }}" class="pair-image-optimized">
+                                                    </div>
                                                 </div>
                                             @endif
                                         </div>
                                         
                                         <div class="select-area">
-                                            <label class="select-label">Select answer:</label>
+                                            <label class="select-label">Select matching text option:</label>
                                             <select name="answer[{{ $i }}]" class="pair-select">
                                                 <option value="">Choose option...</option>
                                                 @foreach($right as $j => $opt)
@@ -635,6 +878,98 @@
                                     </div>
                                 @endforeach
                             </div>
+                        </div>
+                    @endif
+
+                    <!-- Audio Picture Match -->
+                    @if($type === 'audio_picture_match')
+                        <div class="answer-section">
+                            <h3 class="section-title">Audio Picture Matching</h3>
+                            <div class="info-banner">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                Listen to each audio clip and select the matching image.
+                            </div>
+                            
+                            @php
+                                $audios = $qdata['audios'] ?? [];
+                                $images = $qdata['images'] ?? [];
+                            @endphp
+                            
+                            @if(!empty($audios) && !empty($images))
+                                <div class="audio-picture-match-container">
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <!-- Audio Files Section -->
+                                        <div class="audio-section">
+                                            <h4 class="media-section-title">🎵 Audio Files</h4>
+                                            <div class="audio-items-grid">
+                                                @foreach($audios as $audioIndex => $audioPath)
+                                                    <div class="audio-item-card">
+                                                        <div class="audio-item-header">
+                                                            <span class="audio-item-label">Audio {{ $audioIndex + 1 }}</span>
+                                                        </div>
+                                                        <div class="audio-player-container">
+                                                            <audio controls class="audio-player">
+                                                                <source src="{{ asset('storage/' . $audioPath) }}" type="audio/mpeg">
+                                                                Your browser does not support the audio element.
+                                                            </audio>
+                                                        </div>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Images Section -->
+                                        <div class="images-section">
+                                            <h4 class="media-section-title">🖼️ Images</h4>
+                                            <div class="images-grid">
+                                                @foreach($images as $imageIndex => $imagePath)
+                                                    <div class="image-item-card">
+                                                        <div class="image-item-header">
+                                                            <span class="image-item-label">Image {{ $imageIndex + 1 }}</span>
+                                                        </div>
+                                                        <div class="image-container">
+                                                            <img src="{{ asset('storage/' . $imagePath) }}" alt="Image {{ $imageIndex + 1 }}" class="matching-image">
+                                                        </div>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Matching Interface -->
+                                    <div class="matching-interface">
+                                        <h4 class="matching-title">Your Matches</h4>
+                                        <div class="matching-grid">
+                                            @foreach($audios as $audioIndex => $audioPath)
+                                                <div class="match-row">
+                                                    <div class="match-audio-label">
+                                                        <span class="audio-number">Audio {{ $audioIndex + 1 }}</span>
+                                                    </div>
+                                                    <div class="match-arrow">
+                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+                                                        </svg>
+                                                    </div>
+                                                    <div class="match-image-select">
+                                                        <select name="answer[{{ $audioIndex }}]" class="image-select">
+                                                            <option value="">Select an image...</option>
+                                                            @foreach($images as $imageIndex => $imagePath)
+                                                                <option value="{{ $imageIndex }}">Image {{ $imageIndex + 1 }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                </div>
+                            @else
+                                <div class="error-message">
+                                    <p>This question does not have proper audio and image files configured.</p>
+                                </div>
+                            @endif
                         </div>
                     @endif
 
@@ -670,16 +1005,18 @@
                                     <img src="{{ asset('storage/'.$qdata['image_file']) }}" alt="Reference Image" class="reference-image">
                                 </div>
                             @elseif($type === 'video_fill_blank' && !empty($qdata['video_file']))
-                                <div class="video-player-item">
+                                <div class="video-player-container">
                                     <div class="video-header">
                                         <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
                                         </svg>
                                         <span class="video-title">Watch Video</span>
                                     </div>
+                                    <div class="video-player-wrapper">
                                     <video controls class="video-player">
                                         <source src="{{ asset('storage/'.$qdata['video_file']) }}" type="video/mp4">
                                     </video>
+                                    </div>
                                 </div>
                             @endif
                             
@@ -1117,64 +1454,80 @@
     background: linear-gradient(135deg, #fef7ff, #f3e8ff);
     border: 2px solid #a855f7;
     border-radius: 12px;
-    padding: 1.25rem;
-    margin-bottom: 1.25rem;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
 }
 
 .paragraph-title {
-    font-size: 1rem;
+    font-size: 1.125rem;
     font-weight: 700;
     color: #7c2d92;
-    margin-bottom: 0.75rem;
+    margin-bottom: 1rem;
+    text-align: center;
 }
 
 .paragraph-content {
-    font-size: 1rem;
-    line-height: 1.6;
+    font-size: 1.125rem;
+    line-height: 1.8;
     color: #1f2937;
     white-space: pre-wrap;
+    text-align: left;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 1rem;
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
 }
 
 .blanks-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.25rem;
+    margin-top: 1.5rem;
 }
 
 .blank-input-item {
     background: white;
     border: 2px solid #e5e7eb;
-    border-radius: 8px;
-    padding: 1rem;
+    border-radius: 12px;
+    padding: 1.25rem;
     transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .blank-input-item:hover {
     border-color: #3b82f6;
-    box-shadow: 0 2px 8px -2px rgba(59, 130, 246, 0.15);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+    transform: translateY(-2px);
 }
 
 .blank-label {
     display: block;
-    font-weight: 600;
+    font-weight: 700;
     color: #374151;
-    margin-bottom: 0.5rem;
-    font-size: 0.875rem;
+    margin-bottom: 0.75rem;
+    font-size: 1rem;
+    text-align: center;
 }
 
 .blank-input {
     width: 100%;
-    padding: 0.625rem 0.75rem;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    font-size: 0.875rem;
+    padding: 0.875rem 1rem;
+    border: 2px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 1rem;
     transition: all 0.3s ease;
+    text-align: center;
+    font-weight: 500;
 }
 
 .blank-input:focus {
     outline: none;
     border-color: #3b82f6;
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    transform: scale(1.02);
 }
 
 /* Options Reference */
@@ -1547,9 +1900,37 @@
     gap: 0.75rem;
     max-height: unset;
 }
+
+/* Video Player Container - Enhanced for Video Fill in Blanks */
+.video-player-container {
+    background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+    border: 2px solid #0ea5e9;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.video-player-wrapper {
+    margin-top: 1rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.video-player {
+    width: 100%;
+    max-width: 800px;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border: 1px solid #e5e7eb;
+}
+
 .audio-header, .video-header, .image-header {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 0.375rem;
     margin-bottom: 0;
     min-width: 120px;
@@ -1586,7 +1967,470 @@
     .audio-player, .audio-player-small {
         margin-left: 0;
     }
+    .video-player-container {
+        padding: 1rem;
+    }
+    .video-player {
+        max-width: 100%;
+    }
 }
+
+/* Audio Picture Match Styles */
+.audio-picture-match-container {
+    margin-top: 1.5rem;
+}
+
+.media-section-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.audio-items-grid {
+    display: grid;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.audio-item-card {
+    background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+    border: 2px solid #0ea5e9;
+    border-radius: 12px;
+    padding: 1rem;
+    transition: all 0.3s ease;
+}
+
+.audio-item-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px -4px rgba(14, 165, 233, 0.3);
+}
+
+.audio-item-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+}
+
+.audio-item-label {
+    font-weight: 600;
+    color: #0c4a6e;
+    font-size: 0.875rem;
+}
+
+.audio-player-container {
+    width: 100%;
+}
+
+.audio-player-container .audio-player {
+    width: 100%;
+    height: 40px;
+    border-radius: 6px;
+}
+
+.images-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.image-item-card {
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    border: 2px solid #f59e0b;
+    border-radius: 12px;
+    padding: 1rem;
+    transition: all 0.3s ease;
+}
+
+.image-item-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px -4px rgba(245, 158, 11, 0.3);
+}
+
+.image-item-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+}
+
+.image-item-label {
+    font-weight: 600;
+    color: #92400e;
+    font-size: 0.875rem;
+}
+
+.image-container {
+    width: 100%;
+    height: 150px;
+    border-radius: 8px;
+    overflow: hidden;
+    background: white;
+    border: 1px solid #e5e7eb;
+}
+
+.matching-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.matching-image:hover {
+    transform: scale(1.05);
+}
+
+.matching-interface {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 2px solid #e5e7eb;
+}
+
+.matching-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.matching-grid {
+    display: grid;
+    gap: 1rem;
+}
+
+.match-row {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 1rem;
+    background: white;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 1rem;
+    transition: all 0.3s ease;
+}
+
+.match-row:hover {
+    border-color: #3b82f6;
+    box-shadow: 0 4px 12px -4px rgba(59, 130, 246, 0.3);
+}
+
+.match-audio-label {
+    text-align: center;
+}
+
+.audio-number {
+    font-weight: 600;
+    color: #1f2937;
+    font-size: 0.875rem;
+    background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    border: 1px solid #3b82f6;
+}
+
+.match-arrow {
+    color: #6b7280;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.match-image-select {
+    display: flex;
+    justify-content: center;
+}
+
+.image-select {
+    width: 100%;
+    max-width: 200px;
+    padding: 0.625rem 1rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    background: white;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #1f2937;
+    transition: all 0.3s ease;
+}
+
+.image-select:hover {
+    border-color: #3b82f6;
+}
+
+.image-select:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.error-message {
+    text-align: center;
+    padding: 2rem;
+    background: linear-gradient(135deg, #fee2e2, #fecaca);
+    border: 2px solid #ef4444;
+    border-radius: 12px;
+    color: #991b1b;
+    font-weight: 500;
+}
+
+/* Responsive Design for Audio Picture Match */
+@media (max-width: 768px) {
+    .images-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .match-row {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+        text-align: center;
+    }
+    
+    .match-arrow {
+        transform: rotate(90deg);
+    }
+    
+    .image-container {
+        height: 120px;
+    }
+    
+    .audio-item-card,
+    .image-item-card {
+        padding: 0.75rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .audio-picture-match-container .grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .media-section-title {
+        font-size: 1rem;
+    }
+    
+    .image-container {
+        height: 100px;
+    }
+    
+    .audio-item-card,
+    .image-item-card {
+        padding: 0.5rem;
+    }
+    
+    .match-row {
+        padding: 0.75rem;
+    }
+    
+    .matching-title {
+        font-size: 1.125rem;
+    }
+}
+
+/* Audio Image Text Multiple Styles */
+.audio-image-multiple-grid {
+    display: grid;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.audio-image-multiple-item {
+    background: white;
+    border: 2px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px -4px rgba(0, 0, 0, 0.1);
+}
+
+.audio-image-multiple-item:hover {
+    border-color: #3b82f6;
+    box-shadow: 0 8px 24px -8px rgba(59, 130, 246, 0.3);
+    transform: translateY(-2px);
+}
+
+.media-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+    align-items: start;
+}
+
+.audio-container, .image-container {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 1rem;
+    transition: all 0.3s ease;
+}
+
+.audio-container:hover, .image-container:hover {
+    border-color: #3b82f6;
+    box-shadow: 0 4px 12px -4px rgba(59, 130, 246, 0.2);
+}
+
+.media-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.media-label {
+    font-weight: 600;
+    color: #1f2937;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.audio-player-wrapper {
+    width: 100%;
+}
+
+.audio-player-compact {
+    width: 100%;
+    height: 40px;
+    border-radius: 8px;
+    outline: none;
+}
+
+.audio-player-compact:focus {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.image-wrapper {
+    width: 100%;
+    height: 150px;
+    border-radius: 8px;
+    overflow: hidden;
+    background: white;
+    border: 1px solid #e5e7eb;
+}
+
+.pair-image-optimized {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+    cursor: pointer;
+}
+
+.pair-image-optimized:hover {
+    transform: scale(1.05);
+}
+
+.select-area {
+    background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+    border: 1px solid #0ea5e9;
+    border-radius: 12px;
+    padding: 1rem;
+}
+
+.select-label {
+    display: block;
+    font-weight: 600;
+    color: #0c4a6e;
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.pair-select {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    background: white;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #1f2937;
+    transition: all 0.3s ease;
+}
+
+.pair-select:hover {
+    border-color: #3b82f6;
+}
+
+.pair-select:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.pair-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #e5e7eb;
+    text-align: center;
+}
+
+/* Responsive Design for Audio Image Multiple */
+@media (max-width: 768px) {
+    .media-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .audio-image-multiple-item {
+        padding: 1rem;
+    }
+    
+    .image-wrapper {
+        height: 120px;
+    }
+    
+    .audio-container, .image-container {
+        padding: 0.75rem;
+    }
+    
+    .pair-title {
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .audio-image-multiple-item {
+        padding: 0.75rem;
+    }
+    
+    .image-wrapper {
+        height: 100px;
+    }
+    
+    .audio-container, .image-container {
+        padding: 0.5rem;
+    }
+    
+    .media-header {
+        margin-bottom: 0.5rem;
+    }
+    
+    .media-label {
+        font-size: 0.75rem;
+    }
+    
+    .select-area {
+        padding: 0.75rem;
+    }
+    
+    .pair-title {
+        font-size: 0.875rem;
+        margin-bottom: 0.75rem;
+    }
+}
+
 .submit-section {
     text-align: center;
     margin-top: 2rem;
@@ -1778,6 +2622,138 @@
 
 @keyframes fade-in { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 .animate-fade-in { animation: fade-in 0.4s ease; }
+
+/* Image Preview Modal */
+.image-preview-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.9);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    animation: fadeIn 0.3s ease-out;
+}
+
+.image-preview-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+}
+
+.image-preview-content {
+    position: relative;
+    max-width: 95vw;
+    max-height: 95vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.image-preview-close {
+    position: absolute;
+    top: -50px;
+    right: -50px;
+    width: 44px;
+    height: 44px;
+    background: rgba(255, 255, 255, 0.9);
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 10001;
+    color: #374151;
+}
+
+.image-preview-close:hover {
+    background: white;
+    transform: scale(1.1);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.preview-image {
+    max-width: 100%;
+    max-height: 80vh;
+    object-fit: contain;
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    animation: zoomIn 0.3s ease-out;
+}
+
+.image-preview-info {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 0.75rem 1.5rem;
+    border-radius: 25px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.image-preview-info span {
+    font-weight: 600;
+    color: #374151;
+    font-size: 0.875rem;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes zoomIn {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* General clickable image styles - applied via JavaScript */
+.answer-section img,
+.image-container img,
+.image-wrapper img,
+.image-match-item img,
+.image-display-item img {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border-radius: 8px;
+}
+
+/* Responsive Design for Image Preview */
+@media (max-width: 768px) {
+    .image-preview-close {
+        top: -40px;
+        right: -20px;
+        width: 40px;
+        height: 40px;
+    }
+    
+    .preview-image {
+        max-height: 70vh;
+    }
+    
+    .image-preview-info {
+        padding: 0.5rem 1rem;
+        font-size: 0.75rem;
+    }
+}
 </style>
 
 <script>
@@ -1829,7 +2805,7 @@ document.addEventListener('DOMContentLoaded', function() {
         localStorage.setItem('temp_answers', JSON.stringify(answers));
     }
     
-    // Form validation before submit
+    // Enhanced form validation before submit
     form.addEventListener('submit', function(e) {
         let hasErrors = false;
         const errorElements = document.querySelectorAll('.error-highlight');
@@ -1838,7 +2814,62 @@ document.addEventListener('DOMContentLoaded', function() {
         // Check for required fields based on question type
         const questionType = document.querySelector('.question-type-badge').textContent.toLowerCase();
         
-        if (questionType.includes('mcq') || questionType.includes('true') || questionType.includes('audio')) {
+    // Specialized validation for True/False questions
+    if (questionType.includes('true')) {
+        // Check single true/false
+        if (questionType === 'true false' || questionType === 'true_false' || (questionType.includes('true') && !questionType.includes('multiple'))) {
+            const tfRadios = form.querySelectorAll('input[name="answer"]:checked');
+            if (tfRadios.length === 0) {
+                hasErrors = true;
+                const tfContainer = form.querySelector('.true-false-grid');
+                if (tfContainer) {
+                    tfContainer.style.border = '2px solid #ef4444';
+                    tfContainer.style.borderRadius = '12px';
+                    tfContainer.style.padding = '1rem';
+                    tfContainer.style.backgroundColor = '#fee2e2';
+                    tfContainer.classList.add('error-highlight');
+                }
+            }
+        }
+        
+        // Check multiple true/false - IMPROVED VALIDATION
+        if (questionType.includes('multiple') || questionType.includes('true false multiple') || questionType.includes('true_false_multiple')) {
+            const allSubQuestions = form.querySelectorAll('.sub-question-item');
+            
+            allSubQuestions.forEach((subQuestion, index) => {
+                // Check for radio buttons with specific names like answer[0], answer[1], etc.
+                const answerName = `answer[${index}]`;
+                const allRadios = subQuestion.querySelectorAll(`input[name="${answerName}"]`);
+                const checkedRadios = subQuestion.querySelectorAll(`input[name="${answerName}"]:checked`);
+                
+                // Only validate if there are radio buttons in this sub-question
+                if (allRadios.length > 0 && checkedRadios.length === 0) {
+                    hasErrors = true;
+                    subQuestion.style.border = '2px solid #ef4444';
+                    subQuestion.style.backgroundColor = '#fee2e2';
+                    subQuestion.style.borderRadius = '12px';
+                    subQuestion.style.padding = '1rem';
+                    subQuestion.classList.add('error-highlight');
+                    
+                    // Add error message
+                    let errorMsg = subQuestion.querySelector('.validation-error-msg');
+                    if (!errorMsg) {
+                        errorMsg = document.createElement('div');
+                        errorMsg.className = 'validation-error-msg';
+                        errorMsg.style.cssText = 'color: #dc2626; font-size: 0.875rem; margin-top: 0.5rem; font-weight: 500;';
+                        errorMsg.textContent = 'Please select True or False for this statement.';
+                        subQuestion.appendChild(errorMsg);
+                    }
+                }
+            });
+        }
+    }
+    
+    // MCQ validation
+    else if (questionType.includes('mcq') || (questionType.includes('audio') && !questionType.includes('fill') && !questionType.includes('true')) || (questionType.includes('picture') && !questionType.includes('fill'))) {
+        
+        // MCQ Single - Radio button validation
+        if (questionType.includes('mcq single') || questionType === 'mcq single' || (questionType.includes('mcq') && !questionType.includes('multiple'))) {
             const radioGroups = {};
             form.querySelectorAll('input[type="radio"]').forEach(radio => {
                 if (!radioGroups[radio.name]) {
@@ -1855,15 +2886,90 @@ document.addEventListener('DOMContentLoaded', function() {
                     const radioGroup = form.querySelector(`input[name="${groupName}"]`).closest('.sub-question-item, .answer-section');
                     if (radioGroup) {
                         radioGroup.style.border = '2px solid #ef4444';
+                        radioGroup.style.borderRadius = '12px';
+                        radioGroup.style.padding = '1rem';
+                        radioGroup.style.backgroundColor = '#fee2e2';
                         radioGroup.classList.add('error-highlight');
                     }
                 }
             });
         }
         
-        // Check text inputs
+        // MCQ Multiple - Checkbox validation
+        else if (questionType.includes('mcq multiple') || questionType === 'mcq multiple' || questionType.includes('multiple')) {
+            const allSubQuestions = form.querySelectorAll('.sub-question-item');
+            allSubQuestions.forEach(subQuestion => {
+                const checkboxes = subQuestion.querySelectorAll('input[type="checkbox"]:checked');
+                if (checkboxes.length === 0) {
+                    hasErrors = true;
+                    subQuestion.style.border = '2px solid #ef4444';
+                    subQuestion.style.backgroundColor = '#fee2e2';
+                    subQuestion.style.borderRadius = '12px';
+                    subQuestion.style.padding = '1rem';
+                    subQuestion.classList.add('error-highlight');
+                }
+            });
+        }
+        
+        // Other MCQ types (audio, picture) - Radio button validation
+        else {
+            const radioGroups = {};
+            form.querySelectorAll('input[type="radio"]').forEach(radio => {
+                if (!radioGroups[radio.name]) {
+                    radioGroups[radio.name] = false;
+                }
+                if (radio.checked) {
+                    radioGroups[radio.name] = true;
+                }
+            });
+            
+            Object.keys(radioGroups).forEach(groupName => {
+                if (!radioGroups[groupName]) {
+                    hasErrors = true;
+                    const radioGroup = form.querySelector(`input[name="${groupName}"]`).closest('.sub-question-item, .answer-section');
+                    if (radioGroup) {
+                        radioGroup.style.border = '2px solid #ef4444';
+                        radioGroup.style.borderRadius = '12px';
+                        radioGroup.style.padding = '1rem';
+                        radioGroup.style.backgroundColor = '#fee2e2';
+                        radioGroup.classList.add('error-highlight');
+                    }
+                }
+            });
+        }
+    }
+    
+    // Statement match validation (number inputs)
+    if (questionType.includes('statement')) {
+        form.querySelectorAll('input[type="number"]').forEach(input => {
+            if (!input.value.trim()) {
+                hasErrors = true;
+                input.style.borderColor = '#ef4444';
+                input.classList.add('error-highlight');
+            }
+        });
+    }
+    
+    // Reorder validation (text input for order)
+    if (questionType.includes('reorder')) {
+        form.querySelectorAll('.reorder-input').forEach(input => {
+            if (!input.value.trim()) {
+                hasErrors = true;
+                input.style.borderColor = '#ef4444';
+                input.classList.add('error-highlight');
+                const container = input.closest('.reorder-input-item');
+                if (container) {
+                    container.style.border = '2px solid #ef4444';
+                    container.style.backgroundColor = '#fee2e2';
+                    container.classList.add('error-highlight');
+                }
+            }
+        });
+    }
+    
+    // Check text inputs (excluding reorder inputs which are handled separately)
         form.querySelectorAll('input[type="text"], textarea').forEach(input => {
-            if (input.hasAttribute('required') || input.closest('.blank-input-item, .match-input-item')) {
+        if ((input.hasAttribute('required') || input.closest('.blank-input-item, .match-input-item')) && !input.closest('.reorder-input-item')) {
                 if (!input.value.trim()) {
                     hasErrors = true;
                     input.style.borderColor = '#ef4444';
@@ -1872,7 +2978,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
-        // Check selects
+    // Check selects (skip those in statement match since they use number inputs)
+    if (!questionType.includes('statement')) {
         form.querySelectorAll('select').forEach(select => {
             if (!select.value) {
                 hasErrors = true;
@@ -1880,6 +2987,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 select.classList.add('error-highlight');
             }
         });
+    }
         
         if (hasErrors) {
             e.preventDefault();
@@ -1909,6 +3017,64 @@ document.addEventListener('DOMContentLoaded', function() {
             }, 5000);
         }
     });
+
+// Clear error highlighting on input - ENHANCED FOR TRUE/FALSE MULTIPLE
+inputs.forEach(input => {
+    input.addEventListener('input', function() {
+        this.style.borderColor = '';
+        this.classList.remove('error-highlight');
+        const container = this.closest('.sub-question-item, .answer-section, .true-false-grid, .reorder-input-item');
+        if (container) {
+            container.style.border = '';
+            container.style.backgroundColor = '';
+            container.style.padding = '';
+            container.style.borderRadius = '';
+            container.classList.remove('error-highlight');
+            
+            // Remove validation error message
+            const errorMsg = container.querySelector('.validation-error-msg');
+            if (errorMsg) {
+                errorMsg.remove();
+            }
+        }
+    });
+    
+    // Special handling for radio buttons (including true/false)
+    if (input.type === 'radio') {
+        input.addEventListener('change', function() {
+            // Clear error styling from the container
+            const container = this.closest('.sub-question-item, .answer-section, .true-false-grid');
+            if (container) {
+                container.style.border = '';
+                container.style.backgroundColor = '';
+                container.style.padding = '';
+                container.style.borderRadius = '';
+                container.classList.remove('error-highlight');
+                
+                // Remove validation error message
+                const errorMsg = container.querySelector('.validation-error-msg');
+                if (errorMsg) {
+                    errorMsg.remove();
+                }
+            }
+        });
+    }
+    
+    // Special handling for checkboxes (MCQ multiple)
+    if (input.type === 'checkbox') {
+        input.addEventListener('change', function() {
+            // Clear error styling from the container
+            const container = this.closest('.sub-question-item, .answer-section');
+            if (container) {
+                container.style.border = '';
+                container.style.backgroundColor = '';
+                container.style.padding = '';
+                container.style.borderRadius = '';
+                container.classList.remove('error-highlight');
+            }
+        });
+    }
+});
     
     // Message system
     function showMessage(text, type = 'info') {
@@ -1960,12 +3126,45 @@ document.addEventListener('DOMContentLoaded', function() {
         input.addEventListener('input', function() {
             this.style.borderColor = '';
             this.classList.remove('error-highlight');
-            const container = this.closest('.sub-question-item, .answer-section');
+            const container = this.closest('.sub-question-item, .answer-section, .true-false-grid, .reorder-input-item');
             if (container) {
                 container.style.border = '';
+                container.style.backgroundColor = '';
+                container.style.padding = '';
+                container.style.borderRadius = '';
                 container.classList.remove('error-highlight');
             }
         });
+        
+        // Special handling for radio buttons (including true/false)
+        if (input.type === 'radio') {
+            input.addEventListener('change', function() {
+                // Clear error styling from the container
+                const container = this.closest('.sub-question-item, .answer-section, .true-false-grid');
+                if (container) {
+                    container.style.border = '';
+                    container.style.backgroundColor = '';
+                    container.style.padding = '';
+                    container.style.borderRadius = '';
+                    container.classList.remove('error-highlight');
+                }
+            });
+        }
+        
+        // Special handling for checkboxes (MCQ multiple)
+        if (input.type === 'checkbox') {
+            input.addEventListener('change', function() {
+                // Clear error styling from the container
+            const container = this.closest('.sub-question-item, .answer-section');
+            if (container) {
+                container.style.border = '';
+                    container.style.backgroundColor = '';
+                    container.style.padding = '';
+                    container.style.borderRadius = '';
+                container.classList.remove('error-highlight');
+            }
+        });
+        }
     });
     
     // Enhanced keyboard navigation
@@ -2005,7 +3204,77 @@ document.addEventListener('DOMContentLoaded', function() {
             this.style.height = this.scrollHeight + 'px';
         });
     });
+    
+    // Image Preview Functionality
+    function setupImagePreview() {
+        // Include all possible image classes from different question types
+        const images = document.querySelectorAll('img:not(.preview-image)');
+        
+        images.forEach(image => {
+            // Only add click handler to images that are part of questions (not UI elements)
+            const isQuestionImage = image.closest('.answer-section, .image-container, .image-wrapper, .audio-image-multiple-item, .image-match-item, .image-display-item, .audio-picture-match-container');
+            
+            if (isQuestionImage) {
+                image.style.cursor = 'pointer';
+                image.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    const imageSrc = this.src;
+                    const imageAlt = this.alt || 'Image Preview';
+                    
+                    showImagePreview(imageSrc, imageAlt);
+                });
+                
+                // Add hover effect
+                image.addEventListener('mouseenter', function() {
+                    this.style.transform = 'scale(1.02)';
+                    this.style.transition = 'transform 0.2s ease';
+                    this.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.15)';
+                });
+                
+                image.addEventListener('mouseleave', function() {
+                    this.style.transform = 'scale(1)';
+                    this.style.boxShadow = '';
+                });
+            }
+        });
+    }
+    
+    // Initialize image preview on page load
+    setupImagePreview();
 });
+
+// Image Preview Functions (global scope)
+function showImagePreview(src, title) {
+    const modal = document.getElementById('imagePreviewModal');
+    const previewImage = document.getElementById('previewImage');
+    const previewTitle = document.getElementById('previewImageTitle');
+    
+    previewImage.src = src;
+    previewTitle.textContent = title;
+    
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    
+    // Handle escape key
+    document.addEventListener('keydown', handleEscapeKey);
+}
+
+function closeImagePreview() {
+    const modal = document.getElementById('imagePreviewModal');
+    modal.style.display = 'none';
+    document.body.style.overflow = 'auto';
+    
+    // Remove escape key listener
+    document.removeEventListener('keydown', handleEscapeKey);
+}
+
+function handleEscapeKey(event) {
+    if (event.key === 'Escape') {
+        closeImagePreview();
+    }
+}
 
 // Add CSS animation for message alerts
 const style = document.createElement('style');

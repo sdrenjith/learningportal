@@ -212,32 +212,46 @@
                         <!-- Course Content: Subjects -->
                         <div x-show="open" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform scale-95" x-transition:enter-end="opacity-100 transform scale-100" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 transform scale-100" x-transition:leave-end="opacity-0 transform scale-95" class="mt-4 bg-white rounded-lg border border-gray-200 shadow-sm">
                             @foreach($subjects as $subject)
-                                <div x-data="{ subjectOpen: false }" class="border-b border-gray-100 last:border-b-0">
-                                    <!-- Subject Header -->
-                                    <div class="px-6 py-4 bg-gray-50 hover:bg-gray-100 transition-colors duration-200">
-                                        <button @click="subjectOpen = !subjectOpen" class="w-full text-left focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-opacity-50 rounded">
-                                            <div class="flex items-center justify-between">
-                                                <div class="flex items-center">
-                                                    <div class="flex-shrink-0 w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center mr-3">
-                                                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                @php
+                                    // Check if this subject has any questions for any day in this course
+                                    $subjectHasQuestions = false;
+                                    foreach(\App\Models\Day::where('course_id', $course->id)->get() as $checkDay) {
+                                        if(in_array($checkDay->id, $assignedDayIds)) {
+                                            $checkDayQuestions = $questions->get($course->id . '-' . $subject->id . '-' . $checkDay->id, collect());
+                                            if($checkDayQuestions->count() > 0) {
+                                                $subjectHasQuestions = true;
+                                                break;
+                                            }
+                                        }
+                                    }
+                                @endphp
+                                @if($subjectHasQuestions)
+                                    <div x-data="{ subjectOpen: false }" class="border-b border-gray-100 last:border-b-0">
+                                        <!-- Subject Header -->
+                                        <div class="px-6 py-4 bg-gray-50 hover:bg-gray-100 transition-colors duration-200">
+                                            <button @click="subjectOpen = !subjectOpen" class="w-full text-left focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-opacity-50 rounded">
+                                                <div class="flex items-center justify-between">
+                                                    <div class="flex items-center">
+                                                        <div class="flex-shrink-0 w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center mr-3">
+                                                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                                            </svg>
+                                                        </div>
+                                                        <div>
+                                                            <h4 class="font-semibold text-gray-800">{{ $subject->name }}</h4>
+                                                            <p class="text-sm text-gray-600">Practice exercises and activities</p>
+                                                        </div>
+                                                    </div>
+                                                    <div class="flex items-center space-x-2">
+                                                        <svg class="w-5 h-5 text-gray-400 transform transition-transform duration-200" :class="subjectOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                                                         </svg>
                                                     </div>
-                                                    <div>
-                                                        <h4 class="font-semibold text-gray-800">{{ $subject->name }}</h4>
-                                                        <p class="text-sm text-gray-600">Practice exercises and activities</p>
-                                                    </div>
                                                 </div>
-                                                <div class="flex items-center space-x-2">
-                                                    <svg class="w-5 h-5 text-gray-400 transform transition-transform duration-200" :class="subjectOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                                                    </svg>
-                                                </div>
-                                            </div>
-                                        </button>
-                                    </div>
+                                            </button>
+                                        </div>
 
-                                    <!-- Subject Content: Days -->
+                                        <!-- Subject Content: Days -->
                                     <div x-show="subjectOpen" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 max-h-0" x-transition:enter-end="opacity-100 max-h-screen" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 max-h-screen" x-transition:leave-end="opacity-0 max-h-0" class="bg-white">
                                         @php
                                             $courseDays = \App\Models\Day::where('course_id', $course->id)->get();
@@ -247,8 +261,11 @@
                                                 @foreach($courseDays as $day)
                                                     @php
                                                         $isDayAssigned = in_array($day->id, $assignedDayIds);
+                                                        // Check if this day has any questions for this subject
+                                                        $dayQuestions = $questions->get($course->id . '-' . $subject->id . '-' . $day->id, collect());
+                                                        $totalQuestions = $dayQuestions->count();
                                                     @endphp
-                                                    @if($isDayAssigned)
+                                                    @if($isDayAssigned && $totalQuestions > 0)
                                                         <div class="flex items-center justify-between p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200 hover:border-green-300 transition-colors duration-200">
                                                             <div class="flex items-center">
                                                                 <div class="flex-shrink-0 w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center mr-3">
@@ -263,22 +280,18 @@
                                                             </div>
                                                             <div class="flex items-center space-x-2">
                                                                 @php
-                                                                    $dayQuestions = $questions->get($course->id . '-' . $subject->id . '-' . $day->id, collect());
-                                                                    $totalQuestions = $dayQuestions->count();
                                                                     $answeredCount = $dayQuestions->filter(function($q) use ($answeredQuestionIds) {
                                                                         return in_array($q->id, $answeredQuestionIds);
                                                                     })->count();
                                                                 @endphp
                                                                 <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Available</span>
                                                                 <span class="text-sm text-gray-500">{{ $answeredCount }}/{{ $totalQuestions }}</span>
-                                                                @if($totalQuestions > 0)
-                                                                    <a href="{{ route('filament.student.pages.questions', ['course' => $course->id, 'subject' => $subject->id, 'day' => $day->id]) }}" class="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-cyan-600 hover:bg-cyan-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 transition-colors duration-200">
-                                                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h8m2 2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2h8z"></path>
-                                                                        </svg>
-                                                                        Start
-                                                                    </a>
-                                                                @endif
+                                                                <a href="{{ route('filament.student.pages.questions', ['course' => $course->id, 'subject' => $subject->id, 'day' => $day->id]) }}" class="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-cyan-600 hover:bg-cyan-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 transition-colors duration-200">
+                                                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h8m2 2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2h8z"></path>
+                                                                    </svg>
+                                                                    Start
+                                                                </a>
                                                             </div>
                                                         </div>
                                                     @endif
@@ -291,6 +304,7 @@
                                         @endif
                                     </div>
                                 </div>
+                                @endif
                             @endforeach
                         </div>
                     </div>

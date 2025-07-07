@@ -73,15 +73,105 @@ class StudentCourseController extends Controller
             ->orderBy('id')
             ->get();
         
-        // Get answered question IDs for this user
+        // Get answered question IDs and results for this user
         $answeredQuestionIds = [];
+        $studentAnswers = [];
         if (auth()->check()) {
-            $answeredQuestionIds = \DB::table('student_answers')
+            $studentAnswers = \DB::table('student_answers')
                 ->where('user_id', auth()->id())
-                ->pluck('question_id')
-                ->toArray();
+                ->whereIn('question_id', $questions->pluck('id'))
+                ->get();
+            
+            $answeredQuestionIds = $studentAnswers->pluck('question_id')->toArray();
         }
         
-        return view('filament.student.pages.questions', compact('course', 'subject', 'day', 'questions', 'answeredQuestionIds'));
+        // Check if all questions for this specific subject in the day are completed
+        $allSubjectQuestionsCompleted = $this->checkAllSubjectQuestionsCompleted($courseId, $subjectId, $dayId, $user->id);
+        
+        // Calculate results if all subject questions are completed
+        $subjectResults = null;
+        if ($allSubjectQuestionsCompleted) {
+            $subjectResults = $this->calculateSubjectResults($courseId, $subjectId, $dayId, $user->id);
+        }
+        
+        return view('filament.student.pages.questions', compact('course', 'subject', 'day', 'questions', 'answeredQuestionIds', 'allSubjectQuestionsCompleted', 'subjectResults'));
+    }
+    
+    private function checkAllSubjectQuestionsCompleted($courseId, $subjectId, $dayId, $userId)
+    {
+        $totalQuestions = \App\Models\Question::where('course_id', $courseId)
+            ->where('subject_id', $subjectId)
+            ->where('day_id', $dayId)
+            ->where('is_active', true)
+            ->count();
+        
+        $subjectQuestionIds = \App\Models\Question::where('course_id', $courseId)
+            ->where('subject_id', $subjectId)
+            ->where('day_id', $dayId)
+            ->where('is_active', true)
+            ->pluck('id');
+        
+        $answeredQuestions = \DB::table('student_answers')
+            ->where('user_id', $userId)
+            ->whereIn('question_id', $subjectQuestionIds)
+            ->count();
+        
+        return $totalQuestions > 0 && $answeredQuestions >= $totalQuestions;
+    }
+    
+    private function calculateSubjectResults($courseId, $subjectId, $dayId, $userId)
+    {
+        $questions = \App\Models\Question::where('course_id', $courseId)
+            ->where('subject_id', $subjectId)
+            ->where('day_id', $dayId)
+            ->where('is_active', true)
+            ->with('questionType')
+            ->get();
+        
+        $studentAnswers = \DB::table('student_answers')
+            ->where('user_id', $userId)
+            ->whereIn('question_id', $questions->pluck('id'))
+            ->get()
+            ->keyBy('question_id');
+        
+        $totalQuestions = $questions->count();
+        $correctAnswers = 0;
+        $totalPoints = 0;
+        $earnedPoints = 0;
+        
+        foreach ($questions as $question) {
+            $totalPoints += $question->points ?? 1;
+            
+            if (isset($studentAnswers[$question->id])) {
+                $isCorrect = $studentAnswers[$question->id]->is_correct ?? false;
+                if ($isCorrect) {
+                    $correctAnswers++;
+                    $earnedPoints += $question->points ?? 1;
+                }
+            }
+        }
+        
+        $percentage = $totalQuestions > 0 ? round(($correctAnswers / $totalQuestions) * 100, 2) : 0;
+        
+        return [
+            'total_questions' => $totalQuestions,
+            'correct_answers' => $correctAnswers,
+            'wrong_answers' => $totalQuestions - $correctAnswers,
+            'total_points' => $totalPoints,
+            'earned_points' => $earnedPoints,
+            'percentage' => $percentage,
+            'grade' => $this->calculateGrade($percentage)
+        ];
+    }
+    
+    private function calculateGrade($percentage)
+    {
+        if ($percentage >= 90) return 'A+';
+        if ($percentage >= 80) return 'A';
+        if ($percentage >= 70) return 'B+';
+        if ($percentage >= 60) return 'B';
+        if ($percentage >= 50) return 'C';
+        if ($percentage >= 40) return 'D';
+        return 'F';
     }
 } 
