@@ -49,19 +49,26 @@ class SecureFilePreviewController extends Controller
                 abort(404, 'File not found or access denied');
             }
             
-            $filePath = $video->video_path;
-            $fileName = $video->title . '.mp4';
+            // Check if it's a YouTube video
+            if ($video->youtube_url) {
+                // For YouTube videos, we'll handle them differently in the view
+                $filePath = null;
+                $fileName = $video->title;
+            } else {
+                $filePath = $video->video_path;
+                $fileName = $video->title . '.mp4';
+            }
             
         } else {
             abort(400, 'Invalid file type');
         }
         
-        // Check if file exists in storage
-        if (!Storage::disk('public')->exists($filePath)) {
+        // Check if file exists in storage (skip for YouTube videos)
+        if ($filePath && !Storage::disk('public')->exists($filePath)) {
             abort(404, 'File not found: ' . $filePath);
         }
         
-        $fullPath = Storage::disk('public')->path($filePath);
+        $fullPath = $filePath ? Storage::disk('public')->path($filePath) : null;
         
         // Get mime type, with fallback for PDFs
         try {
@@ -130,6 +137,11 @@ class SecureFilePreviewController extends Controller
                 ->header('X-XSS-Protection', '1; mode=block')
                 ->header('Feature-Policy', "camera 'none'; microphone 'none'; geolocation 'none'; payment 'none';")
                 ->header('Permissions-Policy', "camera=(), microphone=(), geolocation=(), payment=()");
+        }
+        
+        // For YouTube videos, redirect to modal view
+        if ($type === 'video' && !$filePath) {
+            return redirect()->route('secure-modal', ['type' => $type, 'id' => $id]);
         }
         
         return response()->file($fullPath, $headers);

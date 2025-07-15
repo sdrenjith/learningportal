@@ -44,6 +44,7 @@ class User extends Authenticatable implements FilamentUser
         'balance_fees_due',
         'father_whatsapp',
         'mother_whatsapp',
+        'total_score',
     ];
 
     /**

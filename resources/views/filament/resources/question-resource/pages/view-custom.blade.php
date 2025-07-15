@@ -9,7 +9,8 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label class="modern-label">Day Number</label>
-                            <input type="text" value="{{ $record->day->name ?? '' }}" class="modern-input" readonly>                        </div>
+                            <input type="text" value="{{ isset($day_number) ? $day_number : ($record->day->day_number ?? $record->day->number ?? '') }}" class="modern-input" readonly>
+                        </div>
 
                         <div>
                             <label class="modern-label">Course</label>
@@ -20,6 +21,13 @@
                             <label class="modern-label">Subject</label>
                             <input type="text" value="{{ $record->subject->name ?? '' }}" class="modern-input" readonly>
                         </div>
+
+                        @if($record->topic)
+                        <div>
+                            <label class="modern-label">Topic</label>
+                            <input type="text" value="{{ $record->topic }}" class="modern-input" readonly>
+                        </div>
+                        @endif
 
                         <div>
                             <label class="modern-label">Question Type</label>
@@ -36,6 +44,10 @@
                                 <input type="checkbox" class="modern-checkbox" @if($record->is_active) checked @endif disabled>
                                 <span class="ml-2">Active Question</span>
                             </label>
+                        </div>
+
+                        <div>
+                            <strong>Test:</strong> {{ $test_name ? $test_name : 'None' }}
                         </div>
                     </div>
                 </div>

@@ -17,6 +17,20 @@
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         /* Hide scrollbar for IE, Edge and Firefox */
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Line clamp utility for text truncation */
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        /* Additional mobile optimizations */
+        @media (max-width: 640px) {
+            .mobile-text-base { font-size: 0.875rem; }
+            .mobile-text-sm { font-size: 0.75rem; }
+        }
     </style>
 </head>
 <body class="bg-gray-50">
@@ -65,14 +79,15 @@
                 
                 <!-- Desktop Navigation Links -->
                 <div class="hidden md:flex justify-center border-t border-gray-100 py-3">
-                    <div class="flex space-x-8">
-                        <a href="{{ route('filament.student.pages.dashboard') }}" class="text-base font-medium {{ request()->routeIs('filament.student.pages.dashboard') ? 'text-cyan-600 border-b-2 border-cyan-500' : 'text-gray-500 hover:text-gray-700' }} px-3 py-2 transition-colors duration-200">Dashboard</a>
-                        <a href="{{ route('filament.student.pages.courses') }}" class="text-base font-medium {{ request()->routeIs('filament.student.pages.courses') ? 'text-cyan-600 border-b-2 border-cyan-500' : 'text-gray-500 hover:text-gray-700' }} px-3 py-2 transition-colors duration-200">Courses</a>
-                        <a href="{{ route('filament.student.pages.study-materials') }}" class="text-base font-medium {{ request()->routeIs('filament.student.pages.study-materials') ? 'text-cyan-600 border-b-2 border-cyan-500' : 'text-gray-500 hover:text-gray-700' }} px-3 py-2 transition-colors duration-200">Study Materials</a>
-                        <a href="{{ route('filament.student.pages.profile') }}" class="text-base font-medium {{ request()->routeIs('filament.student.pages.profile') ? 'text-cyan-600 border-b-2 border-cyan-500' : 'text-gray-500 hover:text-gray-700' }} px-3 py-2 transition-colors duration-200">Profile</a>
-                        <a href="{{ route('filament.student.pages.daily-works') }}" class="text-base font-medium {{ request()->routeIs('filament.student.pages.daily-works') ? 'text-cyan-600 border-b-2 border-cyan-500' : 'text-gray-500 hover:text-gray-700' }} px-3 py-2 transition-colors duration-200">Daily Works</a>
-                        <a href="{{ route('filament.student.pages.speaking-sessions') }}" class="text-base font-medium {{ request()->routeIs('filament.student.pages.speaking-sessions') ? 'text-cyan-600 border-b-2 border-cyan-500' : 'text-gray-500 hover:text-gray-700' }} px-3 py-2 transition-colors duration-200">Speaking Sessions</a>
-                        <a href="{{ route('filament.student.pages.doubt-clearance') }}" class="text-base font-medium {{ request()->routeIs('filament.student.pages.doubt-clearance') ? 'text-cyan-600 border-b-2 border-cyan-500' : 'text-gray-500 hover:text-gray-700' }} px-3 py-2 transition-colors duration-200">Doubt Clearance</a>
+                    <div class="flex space-x-4 lg:space-x-8 overflow-x-auto scrollbar-hide">
+                        <a href="{{ route('filament.student.pages.dashboard') }}" class="text-sm lg:text-base font-medium {{ request()->routeIs('filament.student.pages.dashboard') ? 'text-cyan-600 border-b-2 border-cyan-500' : 'text-gray-500 hover:text-gray-700' }} px-2 lg:px-3 py-2 transition-colors duration-200 whitespace-nowrap">Dashboard</a>
+                        <a href="{{ route('filament.student.pages.courses') }}" class="text-sm lg:text-base font-medium {{ request()->routeIs('filament.student.pages.courses') ? 'text-cyan-600 border-b-2 border-cyan-500' : 'text-gray-500 hover:text-gray-700' }} px-2 lg:px-3 py-2 transition-colors duration-200 whitespace-nowrap">Courses</a>
+                        <a href="{{ route('filament.student.pages.tests') }}" class="text-sm lg:text-base font-medium {{ request()->routeIs('filament.student.pages.tests') ? 'text-cyan-600 border-b-2 border-cyan-500' : 'text-gray-500 hover:text-gray-700' }} px-2 lg:px-3 py-2 transition-colors duration-200 whitespace-nowrap">Test</a>
+                        <a href="{{ route('filament.student.pages.study-materials') }}" class="text-sm lg:text-base font-medium {{ request()->routeIs('filament.student.pages.study-materials') ? 'text-cyan-600 border-b-2 border-cyan-500' : 'text-gray-500 hover:text-gray-700' }} px-2 lg:px-3 py-2 transition-colors duration-200 whitespace-nowrap">Study Materials</a>
+                        <a href="{{ route('filament.student.pages.profile') }}" class="text-sm lg:text-base font-medium {{ request()->routeIs('filament.student.pages.profile') ? 'text-cyan-600 border-b-2 border-cyan-500' : 'text-gray-500 hover:text-gray-700' }} px-2 lg:px-3 py-2 transition-colors duration-200 whitespace-nowrap">Profile</a>
+                        <a href="{{ route('filament.student.pages.daily-works') }}" class="text-sm lg:text-base font-medium {{ request()->routeIs('filament.student.pages.daily-works') ? 'text-cyan-600 border-b-2 border-cyan-500' : 'text-gray-500 hover:text-gray-700' }} px-2 lg:px-3 py-2 transition-colors duration-200 whitespace-nowrap">Daily Works</a>
+                        <a href="{{ route('filament.student.pages.speaking-sessions') }}" class="text-sm lg:text-base font-medium {{ request()->routeIs('filament.student.pages.speaking-sessions') ? 'text-cyan-600 border-b-2 border-cyan-500' : 'text-gray-500 hover:text-gray-700' }} px-2 lg:px-3 py-2 transition-colors duration-200 whitespace-nowrap">Speaking Sessions</a>
+                        <a href="{{ route('filament.student.pages.doubt-clearance') }}" class="text-sm lg:text-base font-medium {{ request()->routeIs('filament.student.pages.doubt-clearance') ? 'text-cyan-600 border-b-2 border-cyan-500' : 'text-gray-500 hover:text-gray-700' }} px-2 lg:px-3 py-2 transition-colors duration-200 whitespace-nowrap">Doubt Clearance</a>
                     </div>
                 </div>
             </div>
@@ -82,6 +97,7 @@
                 <div class="px-4 py-3 space-y-2">
                     <a href="{{ route('filament.student.pages.dashboard') }}" class="block px-4 py-3 text-base font-medium {{ request()->routeIs('filament.student.pages.dashboard') ? 'text-cyan-600 bg-cyan-50 border-l-4 border-cyan-500' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }} rounded-lg transition-all duration-200" onclick="closeMobileMenu()">Dashboard</a>
                     <a href="{{ route('filament.student.pages.courses') }}" class="block px-4 py-3 text-base font-medium {{ request()->routeIs('filament.student.pages.courses') ? 'text-cyan-600 bg-cyan-50 border-l-4 border-cyan-500' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }} rounded-lg transition-all duration-200" onclick="closeMobileMenu()">Courses</a>
+                    <a href="{{ route('filament.student.pages.tests') }}" class="block px-4 py-3 text-base font-medium {{ request()->routeIs('filament.student.pages.tests') ? 'text-cyan-600 bg-cyan-50 border-l-4 border-cyan-500' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }} rounded-lg transition-all duration-200" onclick="closeMobileMenu()">Test</a>
                     <a href="{{ route('filament.student.pages.study-materials') }}" class="block px-4 py-3 text-base font-medium {{ request()->routeIs('filament.student.pages.study-materials') ? 'text-cyan-600 bg-cyan-50 border-l-4 border-cyan-500' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }} rounded-lg transition-all duration-200" onclick="closeMobileMenu()">Study Materials</a>
                     <a href="{{ route('filament.student.pages.profile') }}" class="block px-4 py-3 text-base font-medium {{ request()->routeIs('filament.student.pages.profile') ? 'text-cyan-600 bg-cyan-50 border-l-4 border-cyan-500' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }} rounded-lg transition-all duration-200" onclick="closeMobileMenu()">Profile</a>
                     <a href="{{ route('filament.student.pages.daily-works') }}" class="block px-4 py-3 text-base font-medium {{ request()->routeIs('filament.student.pages.daily-works') ? 'text-cyan-600 bg-cyan-50 border-l-4 border-cyan-500' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }} rounded-lg transition-all duration-200" onclick="closeMobileMenu()">Daily Works</a>
@@ -136,18 +152,18 @@
                 </div>
             </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 md:gap-10 mb-8 sm:mb-12">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 md:gap-8 mb-6 sm:mb-8 md:mb-12">
             @forelse($assignedCourses as $course)
                 <div class="bg-[#F5F5F5] rounded-lg shadow-sm overflow-hidden transform transition-transform duration-200 hover:scale-[1.02] block relative">
-                    <div class="bg-gradient-to-r from-cyan-500 to-blue-500 p-3 sm:p-4 text-white flex justify-between items-center">
-                        <span class="text-sm sm:text-base font-medium">{{ $course->name }}</span>
-                        <span class="inline-block bg-green-500 text-white text-xs px-2 py-1 rounded-full">Available</span>
+                    <div class="bg-gradient-to-r from-cyan-500 to-blue-500 p-3 sm:p-4 text-white flex justify-between items-start sm:items-center">
+                        <span class="text-sm sm:text-base font-medium flex-1 mr-2">{{ $course->name }}</span>
+                        <span class="inline-block bg-green-500 text-white text-xs px-2 py-1 rounded-full whitespace-nowrap">Available</span>
                     </div>
                     <div class="p-3 sm:p-4">
-                        <p class="text-xs sm:text-sm text-gray-600 mb-2 sm:mb-3">{{ $course->description ?? 'Course curriculum and daily structure' }}</p>
+                        <p class="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4 leading-relaxed">{{ $course->description ?? 'Course curriculum and daily structure' }}</p>
                         <div class="flex items-center justify-between text-xs sm:text-sm text-gray-500">
                             <span>Interactive Learning</span>
-                            <span>📚</span>
+                            <span class="text-lg">📚</span>
                         </div>
                     </div>
                 </div>
@@ -184,21 +200,21 @@
                     <div x-data="{ open: false }" class="mb-4 last:mb-0">
                         <!-- Course Header -->
                         <div class="bg-gradient-to-r from-cyan-50 to-blue-50 rounded-lg border border-cyan-200 hover:border-cyan-300 transition-colors duration-200 relative">
-                            <button @click="open = !open" class="w-full px-6 py-4 text-left focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-opacity-50 rounded-lg">
+                            <button @click="open = !open" class="w-full px-4 sm:px-6 py-3 sm:py-4 text-left focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-opacity-50 rounded-lg">
                                 <div class="flex items-center justify-between">
-                                    <div class="flex items-center">
-                                        <div class="flex-shrink-0 w-10 h-10 bg-cyan-500 rounded-lg flex items-center justify-center mr-4">
-                                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <div class="flex items-center flex-1 min-w-0">
+                                        <div class="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 bg-cyan-500 rounded-lg flex items-center justify-center mr-3 sm:mr-4">
+                                            <svg class="w-4 h-4 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
                                             </svg>
                                         </div>
-                                        <div>
-                                            <h3 class="text-lg font-bold text-gray-800">{{ $course->name }}</h3>
-                                            <p class="text-sm text-gray-600">{{ $course->description ?? 'Course curriculum and daily structure' }}</p>
+                                        <div class="min-w-0 flex-1">
+                                            <h3 class="text-base sm:text-lg font-bold text-gray-800 truncate">{{ $course->name }}</h3>
+                                            <p class="text-xs sm:text-sm text-gray-600 mt-1 line-clamp-2">{{ $course->description ?? 'Course curriculum and daily structure' }}</p>
                                         </div>
                                     </div>
-                                    <div class="flex items-center space-x-2">
-                                        <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Available</span>
+                                    <div class="flex items-center space-x-2 flex-shrink-0 ml-3">
+                                        <span class="hidden sm:inline text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Available</span>
                                         <div class="flex-shrink-0">
                                             <svg class="w-5 h-5 text-cyan-600 transform transition-transform duration-200" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
@@ -228,22 +244,22 @@
                                 @if($subjectHasQuestions)
                                     <div x-data="{ subjectOpen: false }" class="border-b border-gray-100 last:border-b-0">
                                         <!-- Subject Header -->
-                                        <div class="px-6 py-4 bg-gray-50 hover:bg-gray-100 transition-colors duration-200">
+                                        <div class="px-4 sm:px-6 py-3 sm:py-4 bg-gray-50 hover:bg-gray-100 transition-colors duration-200">
                                             <button @click="subjectOpen = !subjectOpen" class="w-full text-left focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-opacity-50 rounded">
                                                 <div class="flex items-center justify-between">
-                                                    <div class="flex items-center">
-                                                        <div class="flex-shrink-0 w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center mr-3">
-                                                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <div class="flex items-center flex-1 min-w-0">
+                                                        <div class="flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 bg-orange-500 rounded-lg flex items-center justify-center mr-3">
+                                                            <svg class="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                                                             </svg>
                                                         </div>
-                                                        <div>
-                                                            <h4 class="font-semibold text-gray-800">{{ $subject->name }}</h4>
-                                                            <p class="text-sm text-gray-600">Practice exercises and activities</p>
+                                                        <div class="min-w-0 flex-1">
+                                                            <h4 class="text-sm sm:text-base font-semibold text-gray-800 truncate">{{ $subject->name }}</h4>
+                                                            <p class="text-xs sm:text-sm text-gray-600 mt-1">Practice exercises and activities</p>
                                                         </div>
                                                     </div>
-                                                    <div class="flex items-center space-x-2">
-                                                        <svg class="w-5 h-5 text-gray-400 transform transition-transform duration-200" :class="subjectOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <div class="flex items-center space-x-2 flex-shrink-0 ml-3">
+                                                        <svg class="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 transform transition-transform duration-200" :class="subjectOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                                                         </svg>
                                                     </div>
@@ -266,28 +282,30 @@
                                                         $totalQuestions = $dayQuestions->count();
                                                     @endphp
                                                     @if($isDayAssigned && $totalQuestions > 0)
-                                                        <div class="flex items-center justify-between p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200 hover:border-green-300 transition-colors duration-200">
-                                                            <div class="flex items-center">
-                                                                <div class="flex-shrink-0 w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center mr-3">
-                                                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 sm:p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200 hover:border-green-300 transition-colors duration-200 space-y-3 sm:space-y-0">
+                                                            <div class="flex items-center flex-1 min-w-0">
+                                                                <div class="flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 bg-green-500 rounded-lg flex items-center justify-center mr-3">
+                                                                    <svg class="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                                                                     </svg>
                                                                 </div>
-                                                                <div>
-                                                                    <h5 class="font-semibold text-gray-800">{{ $day->title }}</h5>
-                                                                    <p class="text-sm text-gray-600">{{ $day->description ?? 'Daily exercises and practice' }}</p>
+                                                                <div class="min-w-0 flex-1">
+                                                                    <h5 class="text-sm sm:text-base font-semibold text-gray-800 truncate">{{ $day->title }}</h5>
+                                                                    <p class="text-xs sm:text-sm text-gray-600 mt-1 line-clamp-2">{{ $day->description ?? 'Daily exercises and practice' }}</p>
                                                                 </div>
                                                             </div>
-                                                            <div class="flex items-center space-x-2">
+                                                            <div class="flex items-center justify-between sm:justify-end space-x-2 sm:space-x-3 flex-shrink-0">
                                                                 @php
                                                                     $answeredCount = $dayQuestions->filter(function($q) use ($answeredQuestionIds) {
                                                                         return in_array($q->id, $answeredQuestionIds);
                                                                     })->count();
                                                                 @endphp
-                                                                <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Available</span>
-                                                                <span class="text-sm text-gray-500">{{ $answeredCount }}/{{ $totalQuestions }}</span>
-                                                                <a href="{{ route('filament.student.pages.questions', ['course' => $course->id, 'subject' => $subject->id, 'day' => $day->id]) }}" class="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-cyan-600 hover:bg-cyan-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 transition-colors duration-200">
-                                                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <div class="flex items-center space-x-2 text-xs text-gray-500">
+                                                                    <span class="hidden sm:inline bg-green-100 text-green-800 px-2 py-1 rounded-full">Available</span>
+                                                                    <span class="bg-gray-100 text-gray-700 px-2 py-1 rounded-full">{{ $answeredCount }}/{{ $totalQuestions }}</span>
+                                                                </div>
+                                                                <a href="{{ route('filament.student.pages.questions', ['course' => $course->id, 'subject' => $subject->id, 'day' => $day->id]) }}" class="inline-flex items-center px-3 py-2 border border-transparent text-xs sm:text-sm leading-4 font-medium rounded-md text-white bg-cyan-600 hover:bg-cyan-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 transition-colors duration-200 whitespace-nowrap">
+                                                                    <svg class="w-3 h-3 sm:w-4 sm:h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h8m2 2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2h8z"></path>
                                                                     </svg>
                                                                     Start

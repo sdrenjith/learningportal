@@ -32,6 +32,11 @@ class NoteResource extends Resource
                         Forms\Components\Textarea::make('description')
                             ->maxLength(65535)
                             ->columnSpanFull(),
+                        Forms\Components\TextInput::make('topic')
+                            ->label('Topic')
+                            ->placeholder('Enter the topic covered in this note')
+                            ->helperText('Brief description of the main topic or concept covered')
+                            ->columnSpanFull(),
                         Forms\Components\View::make('filament.resources.note-resource.replace-pdf-field')
                             ->label('')
                             ->columnSpanFull(),
@@ -66,6 +71,9 @@ class NoteResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('title')
                     ->searchable(),
+                Tables\Columns\TextColumn::make('topic')
+                    ->searchable()
+                    ->limit(30),
                 Tables\Columns\TextColumn::make('course.name')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('subject.name')
@@ -76,12 +84,10 @@ class NoteResource extends Resource
                     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('updated_at')
                     ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->sortable(),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('course')

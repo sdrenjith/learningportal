@@ -1,0 +1,68 @@
+/* Force user menu dropdown to be black with white text, including all children */
+/*
+.fi-user-menu .fi-dropdown,
+.fi-user-menu .fi-dropdown-panel,
+.fi-user-menu .fi-dropdown-list,
+.fi-user-menu .fi-dropdown-header,
+.fi-user-menu .fi-dropdown-header-label,
+.fi-user-menu .fi-dropdown-list-item,
+.fi-user-menu .fi-dropdown-list-item a,
+.fi-user-menu .fi-dropdown-list-item button {
+    background: #111 !important;
+    color: #fff !important;
+    border: none !important;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.18) !important;
+}
+
+.fi-user-menu .fi-dropdown-list-item:hover,
+.fi-user-menu .fi-dropdown-list-item:focus,
+.fi-user-menu .fi-dropdown-list-item a:hover,
+.fi-user-menu .fi-dropdown-list-item button:hover {
+    background: #2563eb !important;
+    color: #fff !important;
+}
+
+.fi-user-menu .fi-dropdown-list-item[aria-disabled='true'],
+.fi-user-menu .fi-dropdown-list-item[disabled],
+.fi-user-menu .fi-dropdown-header-label {
+    opacity: 0.7 !important;
+    color: #fff !important;
+}
+
+.fi-user-menu .fi-dropdown-panel {
+    background: black !important;
+}
+*/
+
+/* --- Filament Table Actions Dropdown: Clean Implementation --- */
+
+/* Only color/z-index fixes, let Filament/Popper.js handle positioning and display */
+.fi-dropdown,
+.fi-dropdown-panel {
+    z-index: 9999 !important;
+    background: #fff !important;
+    color: #111 !important;
+    border: 1px solid #e5e7eb !important;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12) !important;
+}
+
+.fi-dropdown-list-item,
+.fi-dropdown-list-item-label {
+    color: #111 !important;
+}
+
+.fi-dropdown-list-item:hover,
+.fi-dropdown-list-item:focus {
+    background: #2563eb !important;
+    color: #fff !important;
+}
+
+.fi-table-container,
+.fi-table {
+    overflow: visible !important;
+}
+
+.fi-dropdown-panel {
+    max-height: 80vh;
+    overflow-y: auto;
+} 

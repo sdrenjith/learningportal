@@ -67,6 +67,7 @@
                     <div class="flex space-x-8">
                         <a href="{{ route('filament.student.pages.dashboard') }}" class="text-base font-medium {{ request()->routeIs('filament.student.pages.dashboard') ? 'text-cyan-600 border-b-2 border-cyan-500' : 'text-gray-500 hover:text-gray-700' }} px-3 py-2 transition-colors duration-200">Dashboard</a>
                         <a href="{{ route('filament.student.pages.courses') }}" class="text-base font-medium {{ request()->routeIs('filament.student.pages.courses') ? 'text-cyan-600 border-b-2 border-cyan-500' : 'text-gray-500 hover:text-gray-700' }} px-3 py-2 transition-colors duration-200">Courses</a>
+                        <a href="{{ route('filament.student.pages.tests') }}" class="text-base font-medium {{ request()->routeIs('filament.student.pages.tests') ? 'text-cyan-600 border-b-2 border-cyan-500' : 'text-gray-500 hover:text-gray-700' }} px-3 py-2 transition-colors duration-200">Test</a>
                         <a href="{{ route('filament.student.pages.study-materials') }}" class="text-base font-medium {{ request()->routeIs('filament.student.pages.study-materials') ? 'text-cyan-600 border-b-2 border-cyan-500' : 'text-gray-500 hover:text-gray-700' }} px-3 py-2 transition-colors duration-200">Study Materials</a>
                         <a href="{{ route('filament.student.pages.profile') }}" class="text-base font-medium {{ request()->routeIs('filament.student.pages.profile') ? 'text-cyan-600 border-b-2 border-cyan-500' : 'text-gray-500 hover:text-gray-700' }} px-3 py-2 transition-colors duration-200">Profile</a>
                         <a href="{{ route('filament.student.pages.daily-works') }}" class="text-base font-medium {{ request()->routeIs('filament.student.pages.daily-works') ? 'text-cyan-600 border-b-2 border-cyan-500' : 'text-gray-500 hover:text-gray-700' }} px-3 py-2 transition-colors duration-200">Daily Works</a>
@@ -81,6 +82,7 @@
                 <div class="px-4 py-3 space-y-2">
                     <a href="{{ route('filament.student.pages.dashboard') }}" class="block px-4 py-3 text-base font-medium {{ request()->routeIs('filament.student.pages.dashboard') ? 'text-cyan-600 bg-cyan-50 border-l-4 border-cyan-500' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }} rounded-lg transition-all duration-200" onclick="closeMobileMenu()">Dashboard</a>
                     <a href="{{ route('filament.student.pages.courses') }}" class="block px-4 py-3 text-base font-medium {{ request()->routeIs('filament.student.pages.courses') ? 'text-cyan-600 bg-cyan-50 border-l-4 border-cyan-500' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }} rounded-lg transition-all duration-200" onclick="closeMobileMenu()">Courses</a>
+                    <a href="{{ route('filament.student.pages.tests') }}" class="block px-4 py-3 text-base font-medium {{ request()->routeIs('filament.student.pages.tests') ? 'text-cyan-600 bg-cyan-50 border-l-4 border-cyan-500' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }} rounded-lg transition-all duration-200" onclick="closeMobileMenu()">Test</a>
                     <a href="{{ route('filament.student.pages.study-materials') }}" class="block px-4 py-3 text-base font-medium {{ request()->routeIs('filament.student.pages.study-materials') ? 'text-cyan-600 bg-cyan-50 border-l-4 border-cyan-500' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }} rounded-lg transition-all duration-200" onclick="closeMobileMenu()">Study Materials</a>
                     <a href="{{ route('filament.student.pages.profile') }}" class="block px-4 py-3 text-base font-medium {{ request()->routeIs('filament.student.pages.profile') ? 'text-cyan-600 bg-cyan-50 border-l-4 border-cyan-500' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }} rounded-lg transition-all duration-200" onclick="closeMobileMenu()">Profile</a>
                     <a href="{{ route('filament.student.pages.daily-works') }}" class="block px-4 py-3 text-base font-medium {{ request()->routeIs('filament.student.pages.daily-works') ? 'text-cyan-600 bg-cyan-50 border-l-4 border-cyan-500' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }} rounded-lg transition-all duration-200" onclick="closeMobileMenu()">Daily Works</a>
@@ -226,7 +228,7 @@
                                         <div class="flex items-center justify-between text-sm text-gray-600 mb-1">
                                             @if($allSubjectQuestionsCompleted && $subjectResults)
                                                 <span class="font-semibold text-{{ $subjectResults['grade'] === 'F' ? 'red' : ($subjectResults['percentage'] >= 80 ? 'green' : 'yellow') }}-600">
-                                                    Mark: {{ $subjectResults['earned_points'] }}/{{ $subjectResults['total_points'] }} ({{ $subjectResults['percentage'] }}% - Grade {{ $subjectResults['grade'] }})
+                                                    Mark: {{ $subjectResults['earned_points'] }}/{{ $subjectResults['total_points'] }} ({{ $subjectResults['percentage'] }}%)
                                                 </span>
                                             @else
                                                 <span>Progress</span>
@@ -276,11 +278,7 @@
                                                             return in_array($q->id, $answeredQuestionIds);
                                                         })->count() === $subjectQuestions->count();
                                                     @endphp
-                                                    @if($isAnswered && !$allSubjectQuestionsCompleted)
-                                                        <span class="inline-flex items-center px-3 py-1 text-xs font-medium text-gray-500 bg-gray-200 rounded-md">
-                                                            Complete all {{ $subject->name }} first
-                                                        </span>
-                                                    @elseif($isAnswered && $allSubjectQuestionsCompleted)
+                                                    @if($isAnswered)
                                                         <a href="{{ route('student.questions.answer', $question->id) }}" 
                                                            class="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md text-white bg-orange-500 hover:bg-orange-600 transition-colors duration-200">
                                                             Re-attempt
@@ -369,9 +367,8 @@
                                 </h3>
                                 <div class="text-right">
                                     <div class="text-2xl font-bold text-{{ $grade === 'F' ? 'red' : ($percentage >= 80 ? 'green' : 'yellow') }}-600">
-                                        {{ $grade }}
+                                        {{ $percentage }}%
                                     </div>
-                                    <div class="text-sm text-gray-600">{{ $percentage }}%</div>
                                 </div>
                             </div>
                             

@@ -22,7 +22,6 @@
         \Filament\Support\prepare_inherited_attributes($attributes)
             ->class(['fi-user-menu'])
     "
-    style="--popperjs-placement: bottom-start;"
 >
     <x-slot name="trigger">
         <button

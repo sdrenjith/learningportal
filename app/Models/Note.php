@@ -13,6 +13,7 @@ class Note extends Model
     protected $fillable = [
         'title',
         'description',
+        'topic',
         'pdf_path',
         'course_id',
         'subject_id',

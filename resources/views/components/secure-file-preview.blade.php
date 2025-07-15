@@ -306,6 +306,9 @@
                 <h1 class="preview-title">{{ $item->title }}</h1>
                 <div class="preview-meta">
                     {{ $item->course->name ?? 'N/A' }} - {{ $item->subject->name ?? 'N/A' }}
+                    @if($item->topic)
+                        | <span style="color: #fbbf24; font-weight: 500;">📚 {{ $item->topic }}</span>
+                    @endif
                     @if($item->description)
                         | {{ $item->description }}
                     @endif
@@ -329,20 +332,35 @@
                 </div>
                 
                 @if($type === 'video')
-                    <div class="video-wrapper" style="width: 100%; height: 100%; position: relative; background: #000;">
-                        <video 
-                            src="{{ $previewUrl }}" 
-                            class="preview-iframe video-frame" 
-                            id="previewFrame"
-                            onloadeddata="hideLoading()"
-                            controls
-                            controlsList="nodownload nofullscreen noremoteplayback"
-                            disablePictureInPicture
-                            preload="metadata"
-                            style="width: 100%; height: 100%; object-fit: contain;">
-                            Your browser does not support the video tag.
-                        </video>
-                    </div>
+                    @if($item->youtube_url)
+                        <div class="video-wrapper" style="width: 100%; height: 100%; position: relative; background: #000;">
+                            <iframe 
+                                src="https://www.youtube.com/embed/{{ \App\Helpers\VideoHelper::getYoutubeVideoId($item->youtube_url) }}?rel=0" 
+                                class="preview-iframe video-frame" 
+                                id="previewFrame"
+                                onload="hideLoading()"
+                                frameborder="0" 
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                allowfullscreen
+                                style="width: 100%; height: 100%; object-fit: contain;">
+                            </iframe>
+                        </div>
+                    @else
+                        <div class="video-wrapper" style="width: 100%; height: 100%; position: relative; background: #000;">
+                            <video 
+                                src="{{ $previewUrl }}" 
+                                class="preview-iframe video-frame" 
+                                id="previewFrame"
+                                onloadeddata="hideLoading()"
+                                controls
+                                controlsList="nodownload nofullscreen noremoteplayback"
+                                disablePictureInPicture
+                                preload="metadata"
+                                style="width: 100%; height: 100%; object-fit: contain;">
+                                Your browser does not support the video tag.
+                            </video>
+                        </div>
+                    @endif
                 @else
                     <div class="pdf-container">
                         <!-- PDF viewer with maximum security parameters -->

@@ -35,6 +35,76 @@
             $pendingDays++;
         }
     }
+    
+    // Calculate test progress
+    $assignedTests = \App\Models\Test::where('is_active', true)
+        ->whereIn('course_id', $assignedCourses->pluck('id'))
+        ->get();
+    
+    $totalTests = $assignedTests->count();
+    $completedTests = 0;
+    $passedTests = 0;
+    $testResults = [];
+    
+    foreach($assignedTests as $test) {
+        $testQuestions = $test->questions()->where('is_active', true)->get();
+        $testQuestionIds = $testQuestions->pluck('id');
+        $testStudentAnswers = \App\Models\StudentAnswer::where('user_id', $user->id)
+            ->whereIn('question_id', $testQuestionIds)
+            ->get()->keyBy('question_id');
+        
+        $testAnsweredCount = $testStudentAnswers->count();
+        $testTotalQuestions = $testQuestions->count();
+        
+        $testResult = [
+            'name' => $test->name,
+            'status' => 'Not Started',
+            'completed' => false,
+            'passed' => false,
+            'earnedPoints' => 0,
+            'totalPoints' => $test->total_score,
+            'passmark' => $test->passmark
+        ];
+        
+        if($testTotalQuestions > 0 && $testAnsweredCount === $testTotalQuestions) {
+            $completedTests++;
+            $testResult['completed'] = true;
+            
+            // Check if test is passed
+            $earnedPoints = 0;
+            foreach ($testQuestions as $question) {
+                if ($testStudentAnswers->has($question->id)) {
+                    $studentAnswer = $testStudentAnswers->get($question->id);
+                    $isCorrect = false;
+                    
+                    if ($question->questionType && $question->questionType->name === 'opinion') {
+                        $isCorrect = $studentAnswer->verification_status === 'verified_correct';
+                    } else {
+                        $isCorrect = $studentAnswer->is_correct === true;
+                    }
+                    
+                    if ($isCorrect) {
+                        $earnedPoints += $question->points ?? 1;
+                    }
+                }
+            }
+            
+            $testResult['earnedPoints'] = $earnedPoints;
+            $passmark = $test->passmark;
+            
+            if ($earnedPoints >= $passmark) {
+                $passedTests++;
+                $testResult['passed'] = true;
+                $testResult['status'] = 'Passed';
+            } else {
+                $testResult['status'] = 'Failed';
+            }
+        } elseif($testAnsweredCount > 0) {
+            $testResult['status'] = 'In Progress';
+        }
+        
+        $testResults[] = $testResult;
+    }
 @endphp
 
 <x-filament-panels::page>
@@ -97,6 +167,7 @@
                     <div class="flex space-x-8">
                         <a href="{{ route('filament.student.pages.dashboard') }}" class="text-base font-medium {{ request()->routeIs('filament.student.pages.dashboard') ? 'text-cyan-600 border-b-2 border-cyan-500' : 'text-gray-500 hover:text-gray-700' }} px-3 py-2 transition-colors duration-200">Dashboard</a>
                         <a href="{{ route('filament.student.pages.courses') }}" class="text-base font-medium {{ request()->routeIs('filament.student.pages.courses') ? 'text-cyan-600 border-b-2 border-cyan-500' : 'text-gray-500 hover:text-gray-700' }} px-3 py-2 transition-colors duration-200">Courses</a>
+                        <a href="{{ route('filament.student.pages.tests') }}" class="text-base font-medium {{ request()->routeIs('filament.student.pages.tests') ? 'text-cyan-600 border-b-2 border-cyan-500' : 'text-gray-500 hover:text-gray-700' }} px-3 py-2 transition-colors duration-200">Test</a>
                         <a href="{{ route('filament.student.pages.study-materials') }}" class="text-base font-medium {{ request()->routeIs('filament.student.pages.study-materials') ? 'text-cyan-600 border-b-2 border-cyan-500' : 'text-gray-500 hover:text-gray-700' }} px-3 py-2 transition-colors duration-200">Study Materials</a>
                         <a href="{{ route('filament.student.pages.profile') }}" class="text-base font-medium {{ request()->routeIs('filament.student.pages.profile') ? 'text-cyan-600 border-b-2 border-cyan-500' : 'text-gray-500 hover:text-gray-700' }} px-3 py-2 transition-colors duration-200">Profile</a>
                         <a href="{{ route('filament.student.pages.daily-works') }}" class="text-base font-medium {{ request()->routeIs('filament.student.pages.daily-works') ? 'text-cyan-600 border-b-2 border-cyan-500' : 'text-gray-500 hover:text-gray-700' }} px-3 py-2 transition-colors duration-200">Daily Works</a>
@@ -111,6 +182,7 @@
                 <div class="px-4 py-3 space-y-2">
                     <a href="{{ route('filament.student.pages.dashboard') }}" class="block px-4 py-3 text-base font-medium {{ request()->routeIs('filament.student.pages.dashboard') ? 'text-cyan-600 bg-cyan-50 border-l-4 border-cyan-500' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }} rounded-lg transition-all duration-200" onclick="closeMobileMenu()">Dashboard</a>
                     <a href="{{ route('filament.student.pages.courses') }}" class="block px-4 py-3 text-base font-medium {{ request()->routeIs('filament.student.pages.courses') ? 'text-cyan-600 bg-cyan-50 border-l-4 border-cyan-500' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }} rounded-lg transition-all duration-200" onclick="closeMobileMenu()">Courses</a>
+                    <a href="{{ route('filament.student.pages.tests') }}" class="block px-4 py-3 text-base font-medium {{ request()->routeIs('filament.student.pages.tests') ? 'text-cyan-600 bg-cyan-50 border-l-4 border-cyan-500' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }} rounded-lg transition-all duration-200" onclick="closeMobileMenu()">Test</a>
                     <a href="{{ route('filament.student.pages.study-materials') }}" class="block px-4 py-3 text-base font-medium {{ request()->routeIs('filament.student.pages.study-materials') ? 'text-cyan-600 bg-cyan-50 border-l-4 border-cyan-500' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }} rounded-lg transition-all duration-200" onclick="closeMobileMenu()">Study Materials</a>
                     <a href="{{ route('filament.student.pages.profile') }}" class="block px-4 py-3 text-base font-medium {{ request()->routeIs('filament.student.pages.profile') ? 'text-cyan-600 bg-cyan-50 border-l-4 border-cyan-500' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }} rounded-lg transition-all duration-200" onclick="closeMobileMenu()">Profile</a>
                     <a href="{{ route('filament.student.pages.daily-works') }}" class="block px-4 py-3 text-base font-medium {{ request()->routeIs('filament.student.pages.daily-works') ? 'text-cyan-600 bg-cyan-50 border-l-4 border-cyan-500' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }} rounded-lg transition-all duration-200" onclick="closeMobileMenu()">Daily Works</a>
@@ -328,6 +400,107 @@
                     </div>
                 </div>
             </div>
+            </div>
+        </section>
+
+        <!-- Test Progress Section -->
+        <section class="w-full bg-gray-50">
+            <div class="w-full max-w-[120rem] mx-auto px-4 py-4 sm:py-6 sm:px-6 lg:px-8">
+                <div class="flex flex-col lg:flex-row items-start lg:items-center gap-6">
+                    <div class="flex-1 w-full lg:w-auto">
+                        <h2 class="text-xl sm:text-2xl font-bold mb-2 sm:mb-4 text-left">Test Performance</h2>
+                        <p class="text-sm sm:text-base text-gray-600">Track your test completion and success rate</p>
+                    </div>
+                    <div class="flex-1 w-full lg:w-auto">
+                        @php
+                            $testProgressPercentage = $totalTests > 0 ? round(($completedTests / $totalTests) * 100) : 0;
+                            $testPassPercentage = $completedTests > 0 ? round(($passedTests / $completedTests) * 100) : 0;
+                            
+                            // Motivational message based on test progress
+                            $testMotivationalMessage = '';
+                            if ($totalTests === 0) {
+                                $testMotivationalMessage = "📝 No tests assigned yet";
+                            } elseif ($completedTests === 0) {
+                                $testMotivationalMessage = "🚀 Start your first test!";
+                            } elseif ($testPassPercentage >= 90) {
+                                $testMotivationalMessage = "🎉 Outstanding test performance!";
+                            } elseif ($testPassPercentage >= 75) {
+                                $testMotivationalMessage = "⭐ Great test results!";
+                            } elseif ($testPassPercentage >= 50) {
+                                $testMotivationalMessage = "💪 Good test progress!";
+                            } else {
+                                $testMotivationalMessage = "📚 Keep practicing for better results!";
+                            }
+                        @endphp
+                        <div class="bg-purple-500 p-4 sm:p-6 text-white rounded-lg">
+                            <h3 class="text-base sm:text-lg font-semibold">Test Progress</h3>
+                            
+                            <!-- Overall Summary -->
+                            <div class="mt-3 mb-4 p-3 bg-purple-400 rounded-lg">
+                                <p class="text-sm font-medium">Overall Summary</p>
+                                <p class="text-sm">{{ $completedTests }}/{{ $totalTests }} tests completed ({{ $testProgressPercentage }}%)</p>
+                                @if($completedTests > 0)
+                                    <p class="text-sm">{{ $passedTests }}/{{ $completedTests }} tests passed ({{ $testPassPercentage }}%)</p>
+                                @endif
+                            </div>
+                            
+                            <!-- Individual Test Results -->
+                            @if($totalTests > 0)
+                                <div class="space-y-2 mb-4">
+                                    @foreach($testResults as $test)
+                                        <div class="flex items-center justify-between p-2 bg-purple-400 rounded-lg">
+                                            <div class="flex-1">
+                                                <p class="text-sm font-medium truncate">{{ $test['name'] }}</p>
+                                                @if($test['completed'])
+                                                    <p class="text-xs opacity-90">{{ $test['earnedPoints'] }}/{{ $test['totalPoints'] }} points</p>
+                                                @endif
+                                            </div>
+                                            <div class="ml-3">
+                                                @if($test['status'] === 'Passed')
+                                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                                        </svg>
+                                                        Passed
+                                                    </span>
+                                                @elseif($test['status'] === 'Failed')
+                                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                                        </svg>
+                                                        Failed
+                                                    </span>
+                                                @elseif($test['status'] === 'In Progress')
+                                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                        </svg>
+                                                        In Progress
+                                                    </span>
+                                                @else
+                                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                                        </svg>
+                                                        Not Started
+                                                    </span>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endif
+                            
+                            <!-- Progress Bar -->
+                            <div class="w-full bg-purple-400 rounded-full h-2 mb-3">
+                                <div class="bg-white h-2 rounded-full transition-all duration-300" style="width: {{ $testProgressPercentage }}%"></div>
+                            </div>
+                            
+                            <p class="text-sm mb-3">{{ $testMotivationalMessage }}</p>
+                            <a href="{{ route('filament.student.pages.tests') }}" class="mt-3 sm:mt-4 bg-white text-purple-500 px-3 sm:px-4 py-2 rounded inline-block text-sm sm:text-base font-medium hover:bg-gray-50 transition-colors duration-200">View Tests</a>
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
 

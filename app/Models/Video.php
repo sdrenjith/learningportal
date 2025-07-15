@@ -13,7 +13,9 @@ class Video extends Model
     protected $fillable = [
         'title',
         'description',
+        'topic',
         'video_path',
+        'youtube_url',
         'course_id',
         'subject_id',
         'day_number',

@@ -35,12 +35,22 @@ class VideoResource extends Resource
                         Forms\Components\Textarea::make('description')
                             ->maxLength(65535)
                             ->columnSpanFull(),
-                        Forms\Components\Grid::make(['default' => 1])
-                            ->schema([
-                                Forms\Components\View::make('filament.resources.video-resource.replace-video-field')
-                                    ->label('')
-                                    ->columnSpan(2),
-                            ]),
+                        Forms\Components\TextInput::make('topic')
+                            ->label('Topic')
+                            ->placeholder('Enter the topic covered in this video')
+                            ->helperText('Brief description of the main topic or concept covered')
+                            ->columnSpanFull(),
+                        Forms\Components\TextInput::make('youtube_url')
+                            ->label('YouTube Video URL')
+                            ->placeholder('https://www.youtube.com/watch?v=...')
+                            ->helperText('Paste the full YouTube video URL (e.g., https://www.youtube.com/watch?v=VIDEO_ID)')
+                            ->columnSpanFull(),
+                        Forms\Components\FileUpload::make('replace_video')
+                            ->label('Upload Video File')
+                            ->helperText('Upload a new video to replace the existing one. Leave empty to keep the current video.')
+                            ->acceptedFileTypes(['video/mp4', 'video/quicktime', 'video/x-msvideo'])
+                            ->maxSize(102400) // 100MB
+                            ->columnSpanFull(),
                         Forms\Components\Grid::make(['default' => 1, 'md' => 3])
                             ->schema([
                                 Forms\Components\Select::make('course_id')
@@ -72,6 +82,9 @@ class VideoResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('title')
                     ->searchable(),
+                Tables\Columns\TextColumn::make('topic')
+                    ->searchable()
+                    ->limit(30),
                 Tables\Columns\TextColumn::make('course.name')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('subject.name')
@@ -80,14 +93,27 @@ class VideoResource extends Resource
                     ->label('Day')
                     ->formatStateUsing(fn($state) => 'Day ' . $state)
                     ->sortable(),
+                Tables\Columns\TextColumn::make('video_type')
+                    ->label('Type')
+                    ->formatStateUsing(function ($record) {
+                        if ($record->youtube_url) {
+                            return 'YouTube';
+                        } elseif ($record->video_path) {
+                            return 'File';
+                        }
+                        return 'None';
+                    })
+                    ->badge()
+                    ->color(fn ($record) => 
+                        $record->youtube_url ? 'danger' : 
+                        ($record->video_path ? 'success' : 'gray')
+                    ),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('updated_at')
                     ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->sortable(),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('course')

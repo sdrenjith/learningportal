@@ -24,9 +24,17 @@ class StudentCourseController extends Controller
         } else {
             $subjects = \App\Models\Subject::all();
         }
-        $questions = \App\Models\Question::all()->groupBy(function($q) {
-            return $q->course_id . '-' . $q->subject_id . '-' . $q->day_id;
-        });
+        
+        // Get questions not assigned to any active test
+        $questions = \App\Models\Question::where('is_active', true)
+            ->whereDoesntHave('test', function($query) {
+                $query->where('is_active', true);
+            })
+            ->get()
+            ->groupBy(function($q) {
+                return $q->course_id . '-' . $q->subject_id . '-' . $q->day_id;
+            });
+        
         $answeredQuestionIds = [];
         if (auth()->check()) {
             $answeredQuestionIds = \DB::table('student_answers')
@@ -65,11 +73,15 @@ class StudentCourseController extends Controller
         $subject = \App\Models\Subject::findOrFail($subjectId);
         $day = \App\Models\Day::findOrFail($dayId);
         
-        // Get questions for this specific combination
+        // Get questions for this specific combination, excluding those in tests
         $questions = \App\Models\Question::where('course_id', $courseId)
             ->where('subject_id', $subjectId)
             ->where('day_id', $dayId)
             ->where('is_active', true)
+            // Only show questions not assigned to any active test
+            ->whereDoesntHave('test', function($query) {
+                $query->where('is_active', true);
+            })
             ->orderBy('id')
             ->get();
         
@@ -85,6 +97,11 @@ class StudentCourseController extends Controller
             $answeredQuestionIds = $studentAnswers->pluck('question_id')->toArray();
         }
         
+        // Calculate progress dynamically for this specific subject and day
+        $totalQuestions = $questions->count();
+        $completedQuestions = count($answeredQuestionIds);
+        $progressPercentage = $totalQuestions > 0 ? round(($completedQuestions / $totalQuestions) * 100) : 0;
+        
         // Check if all questions for this specific subject in the day are completed
         $allSubjectQuestionsCompleted = $this->checkAllSubjectQuestionsCompleted($courseId, $subjectId, $dayId, $user->id);
         
@@ -94,7 +111,18 @@ class StudentCourseController extends Controller
             $subjectResults = $this->calculateSubjectResults($courseId, $subjectId, $dayId, $user->id);
         }
         
-        return view('filament.student.pages.questions', compact('course', 'subject', 'day', 'questions', 'answeredQuestionIds', 'allSubjectQuestionsCompleted', 'subjectResults'));
+        return view('filament.student.pages.questions', compact(
+            'course', 
+            'subject', 
+            'day', 
+            'questions', 
+            'answeredQuestionIds', 
+            'allSubjectQuestionsCompleted', 
+            'subjectResults',
+            'totalQuestions',
+            'completedQuestions',
+            'progressPercentage'
+        ));
     }
     
     private function checkAllSubjectQuestionsCompleted($courseId, $subjectId, $dayId, $userId)

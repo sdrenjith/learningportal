@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\QuestionResource\Pages;
 use App\Models\Question;
+use App\Models\Test;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -35,11 +36,11 @@ class QuestionResource extends Resource
                                     ->searchable()
                                     ->preload(),
 
-                                Forms\Components\Select::make('level_id')
-                                    ->label('Level')
-                                    ->relationship('level', 'name')
+                                Forms\Components\Select::make('course_id')
+                                    ->label('Course')
+                                    ->relationship('course', 'name')
                                     ->required()
-                                    ->placeholder('Select level')
+                                    ->placeholder('Select course')
                                     ->searchable()
                                     ->preload(),
 
@@ -50,6 +51,19 @@ class QuestionResource extends Resource
                                     ->placeholder('Select subject')
                                     ->searchable()
                                     ->preload(),
+
+                                Forms\Components\Select::make('test_id')
+                                    ->label('Test (Optional)')
+                                    ->options(fn () => Test::pluck('name', 'id'))
+                                    ->searchable()
+                                    ->placeholder('Select test (optional)')
+                                    ->preload()
+                                    ->required(false),
+
+                                Forms\Components\TextInput::make('topic')
+                                    ->label('Topic')
+                                    ->placeholder('Enter topic (e.g., Grammar, Vocabulary)')
+                                    ->maxLength(255),
 
                                 Forms\Components\Select::make('question_type_id')
                                     ->label('Question Type')
@@ -216,51 +230,161 @@ class QuestionResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\TextColumn::make('id')
+                    ->label('ID')
+                    ->sortable()
+                    ->searchable()
+                    ->width('60px'),
+                    
                 Tables\Columns\TextColumn::make('instruction')
                     ->label('Question')
                     ->searchable()
-                    ->extraAttributes(['style' => 'max-width: 600px; min-width: 350px; white-space: normal; word-break: break-word; font-size: 1rem;']),
+                    ->limit(80)
+                    ->tooltip(function ($record) {
+                        return $record->instruction;
+                    })
+                    ->extraAttributes(['class' => 'font-medium']),
 
-                Tables\Columns\TextColumn::make('day.title')
-                    ->label('Day'),
-
-                Tables\Columns\TextColumn::make('day.course.name')
+                Tables\Columns\TextColumn::make('course.name')
                     ->label('Course')
                     ->badge()
-                    ->color('secondary'),
+                    ->color(fn (string $state): string => match ($state) {
+                        'A1' => 'success',
+                        'A2' => 'info',
+                        'B1' => 'warning',
+                        'B2' => 'danger',
+                        default => 'gray',
+                    })
+                    ->searchable()
+                    ->sortable()
+                    ->getStateUsing(function ($record) {
+                        // Try to get course from day first, then fallback to direct course relationship
+                        return $record->day?->course?->name ?? $record->course?->name ?? 'No Course';
+                    }),
 
                 Tables\Columns\TextColumn::make('subject.name')
-                    ->label('Subject'),
+                    ->label('Subject')
+                    ->badge()
+                    ->color('secondary')
+                    ->searchable()
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('test.name')
+                    ->label('Test')
+                    ->default('None')
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('topic')
+                    ->label('Topic')
+                    ->searchable()
+                    ->badge()
+                    ->color('primary')
+                    ->placeholder('No topic'),
 
                 Tables\Columns\TextColumn::make('questionType.name')
-                    ->label('Type'),
+                    ->label('Type')
+                    ->badge()
+                    ->color('info')
+                    ->formatStateUsing(fn (string $state): string => str_replace('_', ' ', ucwords($state)))
+                    ->sortable(),
 
-                Tables\Columns\TextColumn::make('created_at')
-                    ->label('Created')
-                    ->dateTime()
+                Tables\Columns\TextColumn::make('day.title')
+                    ->label('Day')
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->searchable(),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('level_id')
-                    ->relationship('level', 'name'),
+                Tables\Filters\SelectFilter::make('course_id')
+                    ->label('Course')
+                    ->relationship('course', 'name')
+                    ->searchable()
+                    ->preload(),
                 Tables\Filters\SelectFilter::make('subject_id')
-                    ->relationship('subject', 'name'),
+                    ->label('Subject')
+                    ->relationship('subject', 'name', function ($query) {
+                        // If user is a teacher, only show their assigned subjects
+                        if (auth()->user()->isTeacher()) {
+                            $teacherSubjectIds = auth()->user()->subjects()->pluck('id');
+                            return $query->whereIn('id', $teacherSubjectIds);
+                        }
+                        return $query;
+                    })
+                    ->searchable()
+                    ->preload(),
+                Tables\Filters\SelectFilter::make('question_type_id')
+                    ->label('Question Type')
+                    ->relationship('questionType', 'name')
+                    ->searchable()
+                    ->preload(),
+                Tables\Filters\SelectFilter::make('topic')
+                    ->label('Topic')
+                    ->options(function () {
+                        return \App\Models\Question::whereNotNull('topic')
+                            ->distinct()
+                            ->pluck('topic', 'topic')
+                            ->filter()
+                            ->toArray();
+                    })
+                    ->searchable()
+                    ->multiple(),
             ])
             ->actions([
-                \Filament\Tables\Actions\Action::make('view')
+                \Filament\Tables\Actions\ViewAction::make()
                     ->label('View')
-                    ->icon('heroicon-o-eye')
-                    ->url(fn ($record) => static::getUrl('view', ['record' => $record])),
-                \Filament\Tables\Actions\EditAction::make(),
-                \Filament\Tables\Actions\DeleteAction::make(),
+                    ->icon('heroicon-m-eye')
+                    ->color('info'),
+                \Filament\Tables\Actions\EditAction::make()
+                    ->label('Edit')
+                    ->icon('heroicon-m-pencil-square')
+                    ->color('warning'),
+                \Filament\Tables\Actions\DeleteAction::make()
+                    ->label('Delete')
+                    ->icon('heroicon-m-trash')
+                    ->requiresConfirmation()
+                    ->modalHeading('Delete Question')
+                    ->modalDescription('Are you sure you want to delete this question? This action cannot be undone.')
+                    ->modalSubmitActionLabel('Yes, delete it'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\DeleteBulkAction::make()
+                        ->requiresConfirmation()
+                        ->modalHeading('Delete Selected Questions')
+                        ->modalDescription('Are you sure you want to delete the selected questions? This action cannot be undone.')
+                        ->deselectRecordsAfterCompletion(),
+                    Tables\Actions\BulkAction::make('activate')
+                        ->label('Activate')
+                        ->icon('heroicon-m-check-circle')
+                        ->color('success')
+                        ->requiresConfirmation()
+                        ->action(fn ($records) => $records->each->update(['is_active' => true]))
+                        ->deselectRecordsAfterCompletion(),
+                    Tables\Actions\BulkAction::make('deactivate')
+                        ->label('Deactivate')
+                        ->icon('heroicon-m-x-circle')
+                        ->color('danger')
+                        ->requiresConfirmation()
+                        ->action(fn ($records) => $records->each->update(['is_active' => false]))
+                        ->deselectRecordsAfterCompletion(),
                 ]),
             ])
-            ->recordUrl(fn ($record) => static::getUrl('view', ['record' => $record]));
+            ->striped()
+            ->paginated([10, 25, 50, 100])
+            ->defaultPaginationPageOption(25)
+            ->poll('60s')
+            ->deferLoading()
+            ->toggleColumnsTriggerAction(null)
+            ->recordUrl(fn ($record) => static::getUrl('view', ['record' => $record]))
+            ->emptyStateHeading('No questions found')
+            ->emptyStateDescription('Start by creating your first question.')
+            ->emptyStateIcon('heroicon-o-academic-cap')
+            ->emptyStateActions([
+                \Filament\Tables\Actions\Action::make('create')
+                    ->label('Create Question')
+                    ->url(static::getUrl('create'))
+                    ->icon('heroicon-m-plus')
+                    ->button(),
+            ]);
     }
 
     public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder

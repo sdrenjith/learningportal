@@ -39,6 +39,12 @@
                             </div>
 
                             <div>
+                                <label class="modern-label">Topic (Optional)</label>
+                                <input type="text" wire:model="topic" placeholder="Enter topic (e.g., Grammar, Vocabulary, etc.)" class="modern-input">
+                                @error('topic') <p class="error-text">{{ $message }}</p> @enderror
+                            </div>
+
+                            <div>
                                 <label class="modern-label">Question Type *</label>
                                 <select wire:model="question_type_id" class="modern-select" id="question_type_id">
                                     <option value="">Select type</option>
@@ -66,6 +72,17 @@
                                 <label class="modern-label">Marks</label>
                                 <input type="number" wire:model="points" min="1" placeholder="1" class="modern-input">
                                 @error('points') <p class="error-text">{{ $message }}</p> @enderror
+                            </div>
+
+                            <div>
+                                <label class="modern-label">Test (Optional)</label>
+                                <select wire:model="test_id" class="modern-select">
+                                    <option value="">Select test (optional)</option>
+                                    @foreach($tests as $test)
+                                        <option value="{{ $test->id }}">{{ $test->name }}</option>
+                                    @endforeach
+                                </select>
+                                @error('test_id') <p class="error-text">{{ $message }}</p> @enderror
                             </div>
 
                             <div class="flex items-center pt-6">

@@ -19,6 +19,7 @@ class CreateQuestion extends Page
     public $day_id = '';
     public $course_id = '';
     public $subject_id = '';
+    public $topic = '';
     public $question_type_id = '';
     public $points = 1;
     public $is_active = true;
@@ -122,6 +123,8 @@ class CreateQuestion extends Page
     public $audio_picture_audios = [null];
     public $audio_picture_images = [null];
     public $audio_picture_pairs = [ ['left' => '', 'right' => ''] ];
+
+    public $test_id = null;
 
     protected $listeners = ['refreshComponent' => '$refresh'];
 
@@ -1093,6 +1096,8 @@ class CreateQuestion extends Page
             'day_id' => $this->day_id,
             'course_id' => $this->course_id,
             'subject_id' => $this->subject_id,
+            'topic' => $this->topic,
+            'topic' => $this->topic,
             'question_type_id' => $questionTypeId,
             'instruction' => $this->instruction,
             'explanation' => $explanationFilePath,
@@ -1107,6 +1112,7 @@ class CreateQuestion extends Page
                 'answer_keys' => array_values($answerKeys),
                 'blank_count' => $blankCount
             ]),
+            'test_id' => $this->test_id,
         ]);
         Notification::make()
             ->title('Question created successfully!')
@@ -1205,6 +1211,8 @@ class CreateQuestion extends Page
             'day_id' => $this->day_id,
             'course_id' => $this->course_id,
             'subject_id' => $this->subject_id,
+            'topic' => $this->topic,
+            'topic' => $this->topic,
             'question_type_id' => $questionTypeId,
             'instruction' => $this->instruction,
             'explanation' => $explanationFilePath,
@@ -1224,6 +1232,7 @@ class CreateQuestion extends Page
             'correct_pairs' => array_values($pairs),
             'audio_image_text_images' => array_values($uploadedImages),
             'audio_image_text_audio_file' => $audioFilePath,
+            'test_id' => $this->test_id,
         ]);
 
         Notification::make()
@@ -1345,6 +1354,7 @@ class CreateQuestion extends Page
             'day_id' => $this->day_id,
             'course_id' => $this->course_id,
             'subject_id' => $this->subject_id,
+            'topic' => $this->topic,
             'question_type_id' => $questionTypeId,
             'instruction' => $this->instruction,
             'explanation' => $explanationFilePath,
@@ -1362,6 +1372,7 @@ class CreateQuestion extends Page
             'right_options' => array_values($rightOptions),
             'correct_pairs' => array_values($pairs),
             'audio_image_text_multiple_pairs' => array_values($uploadedPairs),
+            'test_id' => $this->test_id,
         ]);
 
         Notification::make()
@@ -1460,6 +1471,7 @@ class CreateQuestion extends Page
             'day_id' => $this->day_id,
             'course_id' => $this->course_id,
             'subject_id' => $this->subject_id,
+            'topic' => $this->topic,
             'question_type_id' => $questionTypeId,
             'instruction' => $this->instruction,
             'explanation' => $explanationFilePath,
@@ -1478,6 +1490,7 @@ class CreateQuestion extends Page
             'left_options' => null,
             'right_options' => null,
             'correct_pairs' => null,
+            'test_id' => $this->test_id,
         ]);
         
         Notification::make()
@@ -1567,6 +1580,7 @@ class CreateQuestion extends Page
             'day_id' => $this->day_id,
             'course_id' => $this->course_id,
             'subject_id' => $this->subject_id,
+            'topic' => $this->topic,
             'question_type_id' => $questionTypeId,
             'instruction' => $this->instruction,
             'explanation' => $explanationFilePath,
@@ -1584,6 +1598,7 @@ class CreateQuestion extends Page
             'right_options' => array_values($rightOptions),
             'correct_pairs' => array_values($pairs),
             'picture_mcq_images' => array_values($uploadedImages),
+            'test_id' => $this->test_id,
         ]);
 
         Notification::make()
@@ -1630,6 +1645,7 @@ class CreateQuestion extends Page
             'day_id' => $this->day_id,
             'course_id' => $this->course_id,
             'subject_id' => $this->subject_id,
+            'topic' => $this->topic,
             'question_type_id' => $questionTypeId,
             'instruction' => $this->instruction,
             'explanation' => $explanationFilePath,
@@ -1647,6 +1663,7 @@ class CreateQuestion extends Page
             'left_options' => null,
             'right_options' => null,
             'correct_pairs' => null,
+            'test_id' => $this->test_id,
         ]);
         
         Notification::make()
@@ -1725,6 +1742,7 @@ class CreateQuestion extends Page
             'day_id' => $this->day_id,
             'course_id' => $this->course_id,
             'subject_id' => $this->subject_id,
+            'topic' => $this->topic,
             'question_type_id' => $questionTypeId,
             'instruction' => $this->instruction,
             'explanation' => $explanationFilePath,
@@ -1744,6 +1762,7 @@ class CreateQuestion extends Page
             'left_options' => null,
             'right_options' => null,
             'correct_pairs' => null,
+            'test_id' => $this->test_id,
         ]);
         
         Notification::make()
@@ -1823,6 +1842,7 @@ class CreateQuestion extends Page
             'day_id' => $this->day_id,
             'course_id' => $this->course_id,
             'subject_id' => $this->subject_id,
+            'topic' => $this->topic,
             'question_type_id' => $questionTypeId,
             'instruction' => $this->instruction,
             'explanation' => $explanationFilePath,
@@ -1839,6 +1859,7 @@ class CreateQuestion extends Page
             'answer_data' => json_encode([
                 'correct_pairs' => array_values($pairs)
             ]),
+            'test_id' => $this->test_id,
         ]);
 
         Notification::make()
@@ -1864,6 +1885,8 @@ class CreateQuestion extends Page
             'day_id' => $this->day_id,
             'course_id' => $this->course_id,
             'subject_id' => $this->subject_id,
+            'topic' => $this->topic,
+            'topic' => $this->topic,
             'question_type_id' => $questionTypeId,
             'instruction' => $this->instruction,
             'explanation' => $explanationFilePath,
@@ -1879,6 +1902,7 @@ class CreateQuestion extends Page
             'left_options' => null,
             'right_options' => null,
             'correct_pairs' => null,
+            'test_id' => $this->test_id,
         ]);
         
         Notification::make()
@@ -1925,6 +1949,7 @@ class CreateQuestion extends Page
             'day_id' => $this->day_id,
             'course_id' => $this->course_id,
             'subject_id' => $this->subject_id,
+            'topic' => $this->topic,
             'question_type_id' => $questionTypeId,
             'instruction' => $this->instruction,
             'explanation' => $explanationFilePath,
@@ -1943,6 +1968,7 @@ class CreateQuestion extends Page
             'left_options' => null,
             'right_options' => null,
             'correct_pairs' => null,
+            'test_id' => $this->test_id,
         ]);
         
         Notification::make()
@@ -2007,6 +2033,7 @@ class CreateQuestion extends Page
             'day_id' => $this->day_id,
             'course_id' => $this->course_id,
             'subject_id' => $this->subject_id,
+            'topic' => $this->topic,
             'question_type_id' => $questionTypeId,
             'instruction' => $this->instruction,
             'explanation' => $explanationFilePath,
@@ -2028,6 +2055,7 @@ class CreateQuestion extends Page
             'left_options' => null,
             'right_options' => null,
             'correct_pairs' => null,
+            'test_id' => $this->test_id,
         ]);
         
         Notification::make()
@@ -2115,6 +2143,7 @@ class CreateQuestion extends Page
             'day_id' => $this->day_id,
             'course_id' => $this->course_id,
             'subject_id' => $this->subject_id,
+            'topic' => $this->topic,
             'question_type_id' => $questionTypeId,
             'instruction' => $this->instruction,
             'explanation' => $explanationFilePath,
@@ -2132,6 +2161,7 @@ class CreateQuestion extends Page
             'left_options' => null,
             'right_options' => null,
             'correct_pairs' => null,
+            'test_id' => $this->test_id,
         ]);
         
         Notification::make()
@@ -2188,6 +2218,7 @@ class CreateQuestion extends Page
             'day_id' => $this->day_id,
             'course_id' => $this->course_id,
             'subject_id' => $this->subject_id,
+            'topic' => $this->topic,
             'question_type_id' => is_numeric($this->question_type_id) ? $this->question_type_id : \App\Models\QuestionType::where('name', $this->question_type_id)->first()?->id ?? 1,
             'instruction' => $this->instruction,
             'explanation' => $explanationFilePath,
@@ -2200,6 +2231,7 @@ class CreateQuestion extends Page
             'answer_data' => json_encode([
                 'correct_indices' => array_map('intval', $answerIndices),
             ]),
+            'test_id' => $this->test_id,
         ]);
 
         Notification::make()
@@ -2264,6 +2296,7 @@ class CreateQuestion extends Page
             'day_id' => $this->day_id,
             'course_id' => $this->course_id,
             'subject_id' => $this->subject_id,
+            'topic' => $this->topic,
             'question_type_id' => $questionTypeId,
             'instruction' => $this->instruction,
             'explanation' => $explanationFilePath,
@@ -2278,6 +2311,7 @@ class CreateQuestion extends Page
                 'answer_keys' => array_values($answerKeys),
                 'blank_count' => $blankCount
             ]),
+            'test_id' => $this->test_id,
         ]);
         Notification::make()
             ->title('Question created successfully!')
@@ -2340,6 +2374,7 @@ class CreateQuestion extends Page
             'day_id' => $this->day_id,
             'course_id' => $this->course_id,
             'subject_id' => $this->subject_id,
+            'topic' => $this->topic,
             'question_type_id' => $questionTypeId,
             'instruction' => $this->instruction,
             'explanation' => $explanationFilePath,
@@ -2354,6 +2389,7 @@ class CreateQuestion extends Page
                 'answer_keys' => array_values($answerKeys),
                 'blank_count' => $blankCount
             ]),
+            'test_id' => $this->test_id,
         ]);
         Notification::make()
             ->title('Question created successfully!')
@@ -2454,6 +2490,7 @@ class CreateQuestion extends Page
             'day_id' => $this->day_id,
             'course_id' => $this->course_id,
             'subject_id' => $this->subject_id,
+            'topic' => $this->topic,
             'question_type_id' => $questionTypeId,
             'instruction' => $this->instruction,
             'explanation' => $explanationFilePath,
@@ -2466,6 +2503,7 @@ class CreateQuestion extends Page
             'answer_data' => json_encode([
                 'correct_pairs' => array_values($pairs)
             ]),
+            'test_id' => $this->test_id,
         ]);
         Notification::make()
             ->title('Question created successfully!')
@@ -2482,6 +2520,7 @@ class CreateQuestion extends Page
             'courses' => \App\Models\Course::all(),
             'subjects' => Subject::all(),
             'questionTypes' => QuestionType::all(),
+            'tests' => \App\Models\Test::all(),
         ];
     }
 

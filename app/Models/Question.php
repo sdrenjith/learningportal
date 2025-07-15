@@ -10,6 +10,8 @@ class Question extends Model
         'day_id',
         'course_id',
         'subject_id',
+        'test_id',
+        'topic',
         'question_type_id',
         'instruction',
         'question_data',
@@ -77,5 +79,10 @@ class Question extends Model
     public function studentAnswers()
     {
         return $this->hasMany(StudentAnswer::class);
+    }
+
+    public function test()
+    {
+        return $this->belongsTo(Test::class);
     }
 }

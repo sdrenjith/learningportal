@@ -20,6 +20,7 @@ class EditQuestion extends Page
     public $day_id = '';
     public $course_id = '';
     public $subject_id = '';
+    public $topic = '';
     public $question_type_id = '';
     public $points = 1;
     public $is_active = true;
@@ -212,6 +213,8 @@ class EditQuestion extends Page
         'audio_picture_pairs.*.right' => 'nullable',
     ];
 
+    public $test_id = null;
+
     public function mount($record)
     {
         if (is_string($record)) {
@@ -223,11 +226,13 @@ class EditQuestion extends Page
         $this->day_id = $record->day_id;
         $this->course_id = $record->course_id;
         $this->subject_id = $record->subject_id;
+        $this->topic = $record->topic;
         $this->points = $record->points;
         $this->is_active = $record->is_active;
         $this->instruction = $record->instruction;
         $this->explanation = $record->explanation;
         $this->day_number_input = $record->day->number ?? 1;
+        $this->test_id = $record->test_id;
 
         // Determine question type and set question_type_id
         $questionTypeName = $record->questionType->name ?? '';
@@ -1211,6 +1216,7 @@ try {
         'day_id' => $this->day_id,
         'course_id' => $this->course_id,
         'subject_id' => $this->subject_id,
+            'topic' => $this->topic,
         'question_type_id' => $questionType->id,
         'instruction' => $this->instruction,
         'explanation' => $explanationFilePath,
@@ -1227,6 +1233,7 @@ try {
         'right_options' => array_values($rightOptions),
         'correct_pairs' => array_values($pairs),
         'audio_image_text_multiple_pairs' => array_values($uploadedPairs),
+        'test_id' => $this->validateTestId($this->test_id),
     ]);
 
     $this->showSuccessAndRedirect('audio image text multiple question');
@@ -1308,6 +1315,7 @@ private function updateAudioImageTextSingle()
         'day_id' => $this->day_id,
         'course_id' => $this->course_id,
         'subject_id' => $this->subject_id,
+            'topic' => $this->topic,
         'question_type_id' => $questionType->id,
         'instruction' => $this->instruction,
         'explanation' => $explanationFilePath,
@@ -1326,6 +1334,7 @@ private function updateAudioImageTextSingle()
         'correct_pairs' => array_values($pairs),
         'audio_image_text_images' => array_values($uploadedImages),
         'audio_image_text_audio_file' => $audioFilePath,
+        'test_id' => $this->validateTestId($this->test_id),
     ]);
     
     $this->showSuccessAndRedirect('audio image text single question');
@@ -1418,6 +1427,7 @@ private function updateAudioImageTextSingle()
             'day_id' => $this->day_id,
             'course_id' => $this->course_id,
             'subject_id' => $this->subject_id,
+            'topic' => $this->topic,
             'question_type_id' => $questionType->id,
             'instruction' => $this->instruction,
             'explanation' => $explanationFilePath,
@@ -1433,6 +1443,7 @@ private function updateAudioImageTextSingle()
                     return $subQ['correct_indices'];
                 }, $validatedAudioSubQuestions)
             ]),
+            'test_id' => $this->validateTestId($this->test_id),
         ]);
         
         $this->showSuccessAndRedirect('Audio MCQ Single question');
@@ -1499,6 +1510,7 @@ private function updateAudioImageTextSingle()
             'day_id' => $this->day_id,
             'course_id' => $this->course_id,
             'subject_id' => $this->subject_id,
+            'topic' => $this->topic,
             'question_type_id' => $questionType->id,
             'instruction' => $this->instruction,
             'explanation' => $explanationFilePath,
@@ -1515,6 +1527,7 @@ private function updateAudioImageTextSingle()
             'right_options' => array_values($rightOptions),
             'correct_pairs' => array_values($pairs),
             'picture_mcq_images' => array_values($uploadedImages),
+            'test_id' => $this->validateTestId($this->test_id),
         ]);
         
         $this->showSuccessAndRedirect('Picture MCQ question');
@@ -1554,6 +1567,7 @@ private function updateAudioImageTextSingle()
             'day_id' => $this->day_id,
             'course_id' => $this->course_id,
             'subject_id' => $this->subject_id,
+            'topic' => $this->topic,
             'question_type_id' => $questionType->id,
             'instruction' => $this->instruction,
             'explanation' => $explanationFilePath,
@@ -1571,6 +1585,7 @@ private function updateAudioImageTextSingle()
             'left_options' => null,
             'right_options' => null,
             'correct_pairs' => null,
+            'test_id' => $this->validateTestId($this->test_id),
         ]);
         
         $this->showSuccessAndRedirect('True/False question');
@@ -1642,6 +1657,7 @@ private function updateAudioImageTextSingle()
             'day_id' => $this->day_id,
             'course_id' => $this->course_id,
             'subject_id' => $this->subject_id,
+            'topic' => $this->topic,
             'question_type_id' => $questionType->id,
             'instruction' => $this->instruction,
             'explanation' => $explanationFilePath,
@@ -1661,6 +1677,7 @@ private function updateAudioImageTextSingle()
             'left_options' => null,
             'right_options' => null,
             'correct_pairs' => null,
+            'test_id' => $this->validateTestId($this->test_id),
         ]);
         
         $this->showSuccessAndRedirect('form fill question');
@@ -1700,6 +1717,7 @@ private function updateAudioImageTextSingle()
             'day_id' => $this->day_id,
             'course_id' => $this->course_id,
             'subject_id' => $this->subject_id,
+            'topic' => $this->topic,
             'question_type_id' => $questionType->id,
             'instruction' => $this->instruction,
             'explanation' => $explanationFilePath,
@@ -1718,6 +1736,7 @@ private function updateAudioImageTextSingle()
             'left_options' => null,
             'right_options' => null,
             'correct_pairs' => null,
+            'test_id' => $this->validateTestId($this->test_id),
         ]);
         
         $this->showSuccessAndRedirect('sentence reordering question');
@@ -1775,6 +1794,7 @@ private function updateAudioImageTextSingle()
             'day_id' => $this->day_id,
             'course_id' => $this->course_id,
             'subject_id' => $this->subject_id,
+            'topic' => $this->topic,
             'question_type_id' => $questionType->id,
             'instruction' => $this->instruction,
             'explanation' => $explanationFilePath,
@@ -1796,6 +1816,7 @@ private function updateAudioImageTextSingle()
             'left_options' => null,
             'right_options' => null,
             'correct_pairs' => null,
+            'test_id' => $this->validateTestId($this->test_id),
         ]);
         
         $this->showSuccessAndRedirect('True/False Multiple question');
@@ -1884,6 +1905,7 @@ private function updateAudioImageTextSingle()
             'day_id' => $this->day_id,
             'course_id' => $this->course_id,
             'subject_id' => $this->subject_id,
+            'topic' => $this->topic,
             'question_type_id' => $questionType->id,
             'instruction' => $this->instruction,
             'explanation' => $explanationFilePath,
@@ -1901,6 +1923,7 @@ private function updateAudioImageTextSingle()
             'left_options' => null,
             'right_options' => null,
             'correct_pairs' => null,
+            'test_id' => $this->validateTestId($this->test_id),
         ]);
         
         $this->showSuccessAndRedirect('MCQ Multiple question');
@@ -1927,6 +1950,7 @@ private function updateAudioImageTextSingle()
             'day_id' => $this->day_id,
             'course_id' => $this->course_id,
             'subject_id' => $this->subject_id,
+            'topic' => $this->topic,
             'question_type_id' => $questionType->id,
             'instruction' => $this->instruction,
             'explanation' => $explanationFilePath,
@@ -1942,6 +1966,7 @@ private function updateAudioImageTextSingle()
             'left_options' => null,
             'right_options' => null,
             'correct_pairs' => null,
+            'test_id' => $this->validateTestId($this->test_id),
         ]);
         
         $this->showSuccessAndRedirect('opinion question');
@@ -2022,6 +2047,7 @@ private function updateAudioImageTextSingle()
             'day_id' => $this->day_id,
             'course_id' => $this->course_id,
             'subject_id' => $this->subject_id,
+            'topic' => $this->topic,
             'question_type_id' => $questionType->id,
             'instruction' => $this->instruction,
             'explanation' => $explanationFilePath,
@@ -2038,6 +2064,7 @@ private function updateAudioImageTextSingle()
             'answer_data' => json_encode([
                 'correct_pairs' => array_values($pairs)
             ]),
+            'test_id' => $this->validateTestId($this->test_id),
         ]);
 
         $this->showSuccessAndRedirect('statement match question');
@@ -2084,22 +2111,29 @@ private function updateAudioImageTextSingle()
             $explanationFilePath = $this->explanation_file->store('explanations', 'public');
         }
 
+        // Ensure question_type_id is always an integer
+        $questionTypeId = is_numeric($this->question_type_id)
+            ? $this->question_type_id
+            : (\App\Models\QuestionType::where('name', $this->question_type_id)->first()?->id ?? 1);
+
         $this->record->update([
             'day_id' => $this->day_id,
             'course_id' => $this->course_id,
             'subject_id' => $this->subject_id,
-            'question_type_id' => $this->question_type_id,
+            'topic' => $this->topic,
+            'question_type_id' => $questionTypeId,
             'instruction' => $this->instruction,
             'explanation' => $explanationFilePath,
             'points' => $this->points ?: 1,
             'is_active' => $this->is_active,
             'question_data' => json_encode([
                 'question' => $this->instruction,
-                'options' => $options,
+                'options' => array_values($options),
             ]),
             'answer_data' => json_encode([
                 'correct_indices' => array_map('intval', $answerIndices),
             ]),
+            'test_id' => $this->validateTestId($this->test_id),
         ]);
 
         $this->showSuccessAndRedirect('question');
@@ -2123,6 +2157,7 @@ private function updateAudioImageTextSingle()
             'courses' => \App\Models\Course::all(),
             'subjects' => Subject::all(),
             'questionTypes' => QuestionType::all(),
+            'tests' => \App\Models\Test::all(),
         ];
     }
 
@@ -2211,6 +2246,7 @@ private function updateAudioImageTextSingle()
             'day_id' => $this->day_id,
             'course_id' => $this->course_id,
             'subject_id' => $this->subject_id,
+            'topic' => $this->topic,
             'question_type_id' => $questionType->id,
             'instruction' => $this->instruction,
             'explanation' => $explanationFilePath,
@@ -2229,6 +2265,7 @@ private function updateAudioImageTextSingle()
             'left_options' => null,
             'right_options' => null,
             'correct_pairs' => null,
+            'test_id' => $this->validateTestId($this->test_id),
         ]);
         
         $this->showSuccessAndRedirect('audio fill in the blank question');
@@ -2332,6 +2369,7 @@ private function updateAudioImageTextSingle()
             'day_id' => $this->day_id,
             'course_id' => $this->course_id,
             'subject_id' => $this->subject_id,
+            'topic' => $this->topic,
             'question_type_id' => $questionType->id,
             'instruction' => $this->instruction,
             'explanation' => $explanationFilePath,
@@ -2350,6 +2388,7 @@ private function updateAudioImageTextSingle()
             'left_options' => null,
             'right_options' => null,
             'correct_pairs' => null,
+            'test_id' => $this->validateTestId($this->test_id),
         ]);
         $this->showSuccessAndRedirect('picture fill in the blank question');
     }
@@ -2443,6 +2482,7 @@ private function updateAudioImageTextSingle()
             'day_id' => $this->day_id,
             'course_id' => $this->course_id,
             'subject_id' => $this->subject_id,
+            'topic' => $this->topic,
             'question_type_id' => $questionType->id,
             'instruction' => $this->instruction,
             'explanation' => $explanationFilePath,
@@ -2461,6 +2501,7 @@ private function updateAudioImageTextSingle()
             'left_options' => null,
             'right_options' => null,
             'correct_pairs' => null,
+            'test_id' => $this->validateTestId($this->test_id),
         ]);
         $this->showSuccessAndRedirect('video fill in the blank question');
     }
@@ -2648,6 +2689,7 @@ private function updateAudioImageTextSingle()
             'day_id' => $this->day_id,
             'course_id' => $this->course_id,
             'subject_id' => $this->subject_id,
+            'topic' => $this->topic,
             'question_type_id' => $questionType->id,
             'instruction' => $this->instruction,
             'explanation' => $explanationFilePath,
@@ -2660,9 +2702,27 @@ private function updateAudioImageTextSingle()
             ]),
             'answer_data' => json_encode([
                 'correct_pairs' => array_values($pairs)
-            ])
+            ]),
+            'test_id' => $this->validateTestId($this->test_id),
         ]);
 
         $this->showSuccessAndRedirect('audio picture matching question');
+    }
+
+    private function validateTestId($testId)
+    {
+        // If testId is a string, try to find the test by name
+        if (is_string($testId)) {
+            $test = \App\Models\Test::where('name', $testId)->first();
+            return $test ? $test->id : null;
+        }
+        
+        // If it's numeric, convert to integer
+        if (is_numeric($testId)) {
+            return (int)$testId;
+        }
+        
+        // If it's null or empty, return null
+        return null;
     }
 }

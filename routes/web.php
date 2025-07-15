@@ -27,7 +27,24 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/student/questions', [\App\Http\Controllers\StudentCourseController::class, 'questions'])->name('filament.student.pages.questions');
     Route::get('/student/questions/{question}/answer', [\App\Http\Controllers\StudentQuestionController::class, 'answer'])->name('student.questions.answer');
-    Route::post('/student/questions/{question}/answer', [\App\Http\Controllers\StudentQuestionController::class, 'submitAnswer'])->name('student.questions.answer.submit');
+    
+    // Explicitly define submit answer route with full path
+    Route::post('/student/questions/{id}/submit-answer', function(Illuminate\Http\Request $request, $id) {
+        \Log::info('Submit Answer Route Debug', [
+            'route_name' => $request->route()->getName(),
+            'route_parameters' => $request->route()->parameters(),
+            'all_input' => $request->all(),
+            'id' => $id
+        ]);
+        
+        $controller = new \App\Http\Controllers\StudentQuestionController();
+        return $controller->submitAnswer($request, $id);
+    })->name('filament.student.submit_answer')
+      ->where('id', '[0-9]+');
+
+    // Remove any redundant routes for submitting answers
+    // Route::post('/student/questions/{question}/answer', [\App\Http\Controllers\StudentQuestionController::class, 'submitAnswer'])->name('student.questions.answer.submit');
+    // Route::post('/student/questions/{question}/submit', [\App\Http\Controllers\StudentQuestionController::class, 'submitAnswer'])->name('filament.student.pages.questions.submit');
     Route::get('/student/doubt-clearance', function () {
         $doubts = \App\Models\Doubt::where('user_id', auth()->id())->orderBy('created_at')->get();
         return view('filament.student.pages.doubt-clearance', compact('doubts'));
@@ -44,6 +61,30 @@ Route::middleware('auth')->group(function () {
     // Secure file preview routes
     Route::get('/secure-preview/{type}/{id}', [\App\Http\Controllers\SecureFilePreviewController::class, 'previewFile'])->name('secure-file-preview');
     Route::get('/secure-modal/{type}/{id}', [\App\Http\Controllers\SecureFilePreviewController::class, 'previewModal'])->name('secure-file-modal');
+
+    // Explicitly define test routes with full path
+    Route::prefix('student/tests')->group(function () {
+        Route::get('/', [\App\Http\Controllers\StudentTestController::class, 'index'])
+            ->name('filament.student.pages.tests');
+        
+        Route::get('/{test}', [\App\Http\Controllers\StudentTestController::class, 'show'])
+            ->name('filament.student.pages.tests.show');
+        
+        // Fallback route for tests.detail
+        Route::get('/{test}/detail', function($test) {
+            return redirect()->route('filament.student.pages.tests.show', $test);
+        })->name('filament.student.pages.tests.detail');
+        
+        Route::get('/{test}/question/{question}', [\App\Http\Controllers\StudentTestController::class, 'question'])
+            ->name('filament.student.pages.tests.question');
+        
+        // Specific route for test question submissions with explicit method
+        Route::post('/{test}/question/{question}/submit', [\App\Http\Controllers\StudentTestController::class, 'submitAnswer'])
+            ->name('filament.student.pages.tests.question.submit');
+        
+        Route::get('/test-questions', [\App\Http\Controllers\StudentTestController::class, 'testQuestions'])
+            ->name('filament.student.pages.test-questions');
+    });
 });
 
 Route::post('/admin/set-locale', function (\Illuminate\Http\Request $request) {

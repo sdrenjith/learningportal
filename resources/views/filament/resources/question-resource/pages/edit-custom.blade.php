@@ -3,6 +3,7 @@
         $courses = $courses ?? \App\Models\Course::all();
         $subjects = $subjects ?? \App\Models\Subject::all();
         $questionTypes = $questionTypes ?? \App\Models\QuestionType::all();
+        $tests = $tests ?? \App\Models\Test::all();
     @endphp
     <div class="modern-question-form">
         <form wire:submit="update">
@@ -33,7 +34,6 @@
                                 <input type="number" wire:model="day_number_input" min="1" placeholder="1" class="modern-input">
                                 @error('day_number_input') <p class="error-text">{{ $message }}</p> @enderror
                             </div>
-
                             <div>
                                 <label class="modern-label">Course *</label>
                                 <select wire:model="course_id" class="modern-select" required>
@@ -44,7 +44,6 @@
                                 </select>
                                 @error('course_id') <p class="error-text">{{ $message }}</p> @enderror
                             </div>
-
                             <div>
                                 <label class="modern-label">Subject *</label>
                                 <select wire:model="subject_id" class="modern-select">
@@ -55,37 +54,36 @@
                                 </select>
                                 @error('subject_id') <p class="error-text">{{ $message }}</p> @enderror
                             </div>
-
+                            <div>
+                                <label class="modern-label">Topic (Optional)</label>
+                                <input type="text" wire:model="topic" placeholder="Enter topic (e.g., Grammar, Vocabulary, etc.)" class="modern-input">
+                                @error('topic') <p class="error-text">{{ $message }}</p> @enderror
+                            </div>
                             <div>
                                 <label class="modern-label">Question Type *</label>
                                 <select wire:model="question_type_id" class="modern-select" id="question_type_id">
                                     <option value="">Select type</option>
-                                    <option value="mcq_single">MCQ single answer</option>
-                                    <option value="mcq_multiple">MCQ multiple answer</option>
-                                    <option value="reorder">Rearrange options</option>
-                                    <option value="opinion">Essay/para writing</option>
-                                    <option value="statement_match">Match the following</option>
-                                    <option value="true_false">True or false- single question</option>
-                                    <option value="true_false_multiple">True or false multiple questions</option>
-                                    <option value="form_fill">Fill in the blanks</option>
-                                    <option value="audio_mcq_single">Audio with MCQ</option>
-                                    <option value="audio_image_text_single">Audio with image matching</option>
-                                    <option value="audio_image_text_multiple">Multiple audio text matching</option>
-                                    <option value="picture_mcq">Image to text matching</option>
-                                    <option value="audio_fill_blank">Audio fill in the blanks</option>
-                                    <option value="picture_fill_blank">Picture fill in the blanks</option>
-                                    <option value="video_fill_blank">Video fill in the blanks</option>
-                                    <option value="audio_picture_match">Audio + image matching</option>
+                                    @foreach($questionTypes as $type)
+                                        <option value="{{ $type->id }}" {{ $question_type_id == $type->id ? 'selected' : '' }}>{{ $type->name }}</option>
+                                    @endforeach
                                 </select>
                                 @error('question_type_id') <p class="error-text">{{ $message }}</p> @enderror
                             </div>
-
                             <div>
                                 <label class="modern-label">Marks</label>
                                 <input type="number" wire:model="points" min="1" placeholder="1" class="modern-input">
                                 @error('points') <p class="error-text">{{ $message }}</p> @enderror
                             </div>
-
+                            <div>
+                                <label class="modern-label">Test (Optional)</label>
+                                <select wire:model="test_id" class="modern-select">
+                                    <option value="">Select test (optional)</option>
+                                    @foreach($tests as $test)
+                                        <option value="{{ $test->id }}">{{ $test->name }}</option>
+                                    @endforeach
+                                </select>
+                                @error('test_id') <p class="error-text">{{ $message }}</p> @enderror
+                            </div>
                             <div class="flex items-center pt-6">
                                 <label class="modern-checkbox-label">
                                     <input type="checkbox" wire:model="is_active" class="modern-checkbox">
@@ -1616,6 +1614,48 @@
                                                 </div>
                                             </div>
                                             <input type="text" wire:model="options.{{ $index }}" placeholder="Enter option text..." class="option-input">
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                            
+                            <!-- Correct Answer Selection -->
+                            <div class="mt-6">
+                                <h4 class="sub-question-title mb-4">Correct Answer Selection</h4>
+                                <div class="info-banner-small">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <span class="text-sm">Select the correct answer(s) from the options above. Use 0 for first option, 1 for second option, etc.</span>
+                                </div>
+                                <div class="space-y-3">
+                                    @foreach($answer_indices as $index => $answerIndex)
+                                        <div class="flex items-center space-x-3" wire:key="answer_index_{{ $index }}">
+                                            <div class="flex-1">
+                                                <label class="modern-label">Correct Answer {{ $index + 1 }}</label>
+                                                <select wire:model="answer_indices.{{ $index }}" class="modern-select">
+                                                    @for($optIndex = 0; $optIndex < count($options); $optIndex++)
+                                                        <option value="{{ $optIndex }}" {{ $answerIndex == $optIndex ? 'selected' : '' }}>
+                                                            Option {{ $optIndex + 1 }}: {{ $options[$optIndex] ?? '' }}
+                                                        </option>
+                                                    @endfor
+                                                </select>
+                                            </div>
+                                            <div class="flex items-center space-x-2">
+                                                @if($index === 0)
+                                                    <button type="button" wire:click="addAnswerIndex" class="add-btn-small">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                                        </svg>
+                                                    </button>
+                                                @else
+                                                    <button type="button" wire:click="removeAnswerIndex({{ $index }})" class="remove-btn-small">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                                        </svg>
+                                                    </button>
+                                                @endif
+                                            </div>
                                         </div>
                                     @endforeach
                                 </div>
@@ -4851,6 +4891,446 @@
                         card.style.borderColor = '';
                         card.style.boxShadow = '';
                     }, 1500);
+                }
+            });
+        });
+    </script>
+    @endpush
+
+    @push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Auto-save functionality
+            const inputs = document.querySelectorAll('.modern-input, .modern-textarea, .modern-select');
+            inputs.forEach(input => {
+                input.addEventListener('input', function() {
+                    // Add visual feedback for unsaved changes
+                    this.classList.add('modified');
+                    
+                    // Remove modified class after a delay
+                    setTimeout(() => {
+                        this.classList.remove('modified');
+                    }, 2000);
+                });
+            });
+
+            // Enhanced form validation
+            const form = document.querySelector('form');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    const requiredFields = form.querySelectorAll('[required]');
+                    let hasErrors = false;
+                    
+                    requiredFields.forEach(field => {
+                        if (!field.value.trim()) {
+                            field.classList.add('error');
+                            hasErrors = true;
+                        } else {
+                            field.classList.remove('error');
+                            field.classList.add('success');
+                        }
+                    });
+                    
+                    if (hasErrors) {
+                        e.preventDefault();
+                        // Scroll to first error
+                        const firstError = form.querySelector('.error');
+                        if (firstError) {
+                            firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            firstError.focus();
+                        }
+                    }
+                });
+            }
+
+            // Dynamic preview updates
+            const previewElements = document.querySelectorAll('[wire\\:model]');
+            previewElements.forEach(element => {
+                element.addEventListener('input', function() {
+                    // Add loading state
+                    const section = this.closest('.section-block');
+                    if (section) {
+                        section.classList.add('loading');
+                        setTimeout(() => {
+                            section.classList.remove('loading');
+                        }, 500);
+                    }
+                });
+            });
+
+            // Smooth scrolling for section navigation
+            const sectionTitles = document.querySelectorAll('.section-title');
+            sectionTitles.forEach(title => {
+                title.style.cursor = 'pointer';
+                title.addEventListener('click', function() {
+                    this.closest('.section-block').scrollIntoView({ 
+                        behavior: 'smooth', 
+                        block: 'start' 
+                    });
+                });
+            });
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                // Ctrl+S to save (prevent default and submit form)
+                if (e.ctrlKey && e.key === 's') {
+                    e.preventDefault();
+                    const submitBtn = document.querySelector('.submit-btn');
+                    if (submitBtn) {
+                        submitBtn.click();
+                    }
+                }
+                
+                // Escape to cancel
+                if (e.key === 'Escape') {
+                    const cancelBtn = document.querySelector('.cancel-btn');
+                    if (cancelBtn) {
+                        cancelBtn.click();
+                    }
+                }
+            });
+
+            // Add visual feedback for button interactions
+            const buttons = document.querySelectorAll('.add-btn, .remove-btn, .clear-pair-btn, .clear-all-btn');
+            buttons.forEach(button => {
+                button.addEventListener('click', function() {
+                    this.style.transform = 'scale(0.95)';
+                    setTimeout(() => {
+                        this.style.transform = '';
+                    }, 150);
+                });
+            });
+
+            // Auto-resize textareas
+            const textareas = document.querySelectorAll('.modern-textarea');
+            textareas.forEach(textarea => {
+                textarea.addEventListener('input', function() {
+                    this.style.height = 'auto';
+                    this.style.height = this.scrollHeight + 'px';
+                });
+                
+                // Initialize height on load
+                textarea.style.height = 'auto';
+                textarea.style.height = textarea.scrollHeight + 'px';
+            });
+
+            // File upload progress indication
+            const fileInputs = document.querySelectorAll('input[type="file"]');
+            fileInputs.forEach(input => {
+                input.addEventListener('change', function() {
+                    const fileName = this.files[0]?.name;
+                    if (fileName) {
+                        // Remove existing progress indicators
+                        const existingProgress = this.parentNode.querySelector('.upload-progress');
+                        if (existingProgress) {
+                            existingProgress.remove();
+                        }
+                        
+                        // Create progress indicator
+                        const progressDiv = document.createElement('div');
+                        progressDiv.className = 'upload-progress';
+                        progressDiv.innerHTML = `<div class="progress-bar"></div><span>${fileName}</span>`;
+                        
+                        // Insert after the input
+                        this.parentNode.insertBefore(progressDiv, this.nextSibling);
+                        
+                        // Simulate upload progress
+                        const progressBar = progressDiv.querySelector('.progress-bar');
+                        let width = 0;
+                        const interval = setInterval(() => {
+                            width += 10;
+                            progressBar.style.width = width + '%';
+                            if (width >= 100) {
+                                clearInterval(interval);
+                                setTimeout(() => {
+                                    progressDiv.remove();
+                                }, 1000);
+                            }
+                        }, 100);
+                    }
+                });
+            });
+
+            // Enhanced audio player controls
+            const audioPlayers = document.querySelectorAll('audio');
+            audioPlayers.forEach(audio => {
+                audio.addEventListener('loadstart', function() {
+                    this.style.opacity = '0.7';
+                });
+                
+                audio.addEventListener('canplay', function() {
+                    this.style.opacity = '1';
+                });
+                
+                audio.addEventListener('error', function() {
+                    this.style.borderColor = '#ef4444';
+                    this.style.background = '#fef2f2';
+                });
+            });
+
+            // Form auto-save warning
+            window.addEventListener('beforeunload', function(e) {
+                const modifiedFields = document.querySelectorAll('.modified');
+                if (modifiedFields.length > 0) {
+                    e.preventDefault();
+                    e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+                    return e.returnValue;
+                }
+            });
+        });
+
+        // Livewire event listeners
+        document.addEventListener('livewire:load', function() {
+            // Show loading state during Livewire requests
+            Livewire.hook('message.sent', (message, component) => {
+                const form = document.querySelector('.modern-card');
+                if (form) {
+                    form.style.opacity = '0.8';
+                    form.style.pointerEvents = 'none';
+                }
+            });
+
+            Livewire.hook('message.processed', (message, component) => {
+                const form = document.querySelector('.modern-card');
+                if (form) {
+                    form.style.opacity = '1';
+                    form.style.pointerEvents = 'auto';
+                }
+            });
+
+            // Handle validation errors
+            Livewire.on('validationError', function(message) {
+                console.log('Validation Error:', message);
+                
+                // Scroll to first error field
+                setTimeout(() => {
+                    const firstError = document.querySelector('.error-text');
+                    if (firstError) {
+                        firstError.scrollIntoView({ 
+                            behavior: 'smooth', 
+                            block: 'center' 
+                        });
+                    }
+                }, 100);
+            });
+
+            // Handle successful updates
+            Livewire.on('questionUpdated', function() {
+                const card = document.querySelector('.modern-card');
+                if (card) {
+                    card.style.transform = 'scale(1.02)';
+                    card.style.borderColor = '#10b981';
+                    card.style.boxShadow = '0 0 20px rgba(16, 185, 129, 0.3)';
+                    
+                    setTimeout(() => {
+                        card.style.transform = '';
+                        card.style.borderColor = '';
+                        card.style.boxShadow = '';
+                    }, 1500);
+                }
+            });
+        });
+    </script>
+    @endpush
+
+    @push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Auto-save functionality
+            const inputs = document.querySelectorAll('.modern-input, .modern-textarea, .modern-select');
+            inputs.forEach(input => {
+                input.addEventListener('input', function() {
+                    // Add visual feedback for unsaved changes
+                    this.classList.add('modified');
+                    
+                    // Remove modified class after a delay
+                    setTimeout(() => {
+                        this.classList.remove('modified');
+                    }, 2000);
+                });
+            });
+
+            // Enhanced form validation
+            const form = document.querySelector('form');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    const requiredFields = form.querySelectorAll('[required]');
+                    let hasErrors = false;
+                    
+                    requiredFields.forEach(field => {
+                        if (!field.value.trim()) {
+                            field.classList.add('error');
+                            hasErrors = true;
+                        } else {
+                            field.classList.remove('error');
+                            field.classList.add('success');
+                        }
+                    });
+                    
+                    if (hasErrors) {
+                        e.preventDefault();
+                        // Scroll to first error
+                        const firstError = form.querySelector('.error');
+                        if (firstError) {
+                            firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            firstError.focus();
+                        }
+                    }
+                });
+            }
+
+            // Dynamic preview updates
+            const previewElements = document.querySelectorAll('[wire\\:model]');
+            previewElements.forEach(element => {
+                element.addEventListener('input', function() {
+                    // Add loading state
+                    const section = this.closest('.section-block');
+                    if (section) {
+                        section.classList.add('loading');
+                        setTimeout(() => {
+                            section.classList.remove('loading');
+                        }, 500);
+                    }
+                });
+            });
+
+            // Smooth scrolling for section navigation
+            const sectionTitles = document.querySelectorAll('.section-title');
+            sectionTitles.forEach(title => {
+                title.style.cursor = 'pointer';
+                title.addEventListener('click', function() {
+                    this.closest('.section-block').scrollIntoView({ 
+                        behavior: 'smooth', 
+                        block: 'start' 
+                    });
+                });
+            });
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                // Ctrl+S to save (prevent default and submit form)
+                if (e.ctrlKey && e.key === 's') {
+                    e.preventDefault();
+                    const submitBtn = document.querySelector('.submit-btn');
+                    if (submitBtn) {
+                        submitBtn.click();
+                    }
+                }
+                
+                // Escape to cancel
+                if (e.key === 'Escape') {
+                    const cancelBtn = document.querySelector('.cancel-btn');
+                    if (cancelBtn) {
+                        cancelBtn.click();
+                    }
+                }
+            });
+
+            // Add visual feedback for button interactions
+            const buttons = document.querySelectorAll('.add-btn, .remove-btn, .clear-pair-btn, .clear-all-btn');
+            buttons.forEach(button => {
+                button.addEventListener('click', function() {
+                    this.style.transform = 'scale(0.95)';
+                    setTimeout(() => {
+                        this.style.transform = '';
+                    }, 150);
+                });
+            });
+
+            // Auto-resize textareas
+            const textareas = document.querySelectorAll('.modern-textarea');
+            textareas.forEach(textarea => {
+                textarea.addEventListener('input', function() {
+                    this.style.height = 'auto';
+                    this.style.height = this.scrollHeight + 'px';
+                });
+                
+                // Initialize height on load
+                textarea.style.height = 'auto';
+                textarea.style.height = textarea.scrollHeight + 'px';
+            });
+
+            // File upload progress indication
+            const fileInputs = document.querySelectorAll('input[type="file"]');
+            fileInputs.forEach(input => {
+                input.addEventListener('change', function() {
+                    const fileName = this.files[0]?.name;
+                    if (fileName) {
+                        // Remove existing progress indicators
+                        const existingProgress = this.parentNode.querySelector('.upload-progress');
+                        if (existingProgress) {
+                            existingProgress.remove();
+                        }
+                        
+                        // Create progress indicator
+                        const progressDiv = document.createElement('div');
+                        progressDiv.className = 'upload-progress';
+                        progressDiv.innerHTML = `<div class="progress-bar"></div><span>${fileName}</span>`;
+                        
+                        // Insert after the input
+                        this.parentNode.insertBefore(progressDiv, this.nextSibling);
+                        
+                        // Simulate upload progress
+                        const progressBar = progressDiv.querySelector('.progress-bar');
+                        let width = 0;
+                        const interval = setInterval(() => {
+                            width += 10;
+                            progressBar.style.width = width + '%';
+                            if (width >= 100) {
+                                clearInterval(interval);
+                                setTimeout(() => {
+                                    progressDiv.remove();
+                                }, 1000);
+                            }
+                        }, 100);
+                    }
+                });
+            });
+
+            // Enhanced audio player controls
+            const audioPlayers = document.querySelectorAll('audio');
+            audioPlayers.forEach(audio => {
+                audio.addEventListener('loadstart', function() {
+                    this.style.opacity = '0.7';
+                });
+                
+                audio.addEventListener('canplay', function() {
+                    this.style.opacity = '1';
+                });
+                
+                audio.addEventListener('error', function() {
+                    this.style.borderColor = '#ef4444';
+                    this.style.background = '#fef2f2';
+                });
+            });
+
+            // Form auto-save warning
+            window.addEventListener('beforeunload', function(e) {
+                const modifiedFields = document.querySelectorAll('.modified');
+                if (modifiedFields.length > 0) {
+                    e.preventDefault();
+                    e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+                    return e.returnValue;
+                }
+            });
+        });
+
+        // Livewire event listeners
+        document.addEventListener('livewire:load', function() {
+            // Show loading state during Livewire requests
+            Livewire.hook('message.sent', (message, component) => {
+                const form = document.querySelector('.modern-card');
+                if (form) {
+                    form.style.opacity = '0.8';
+                    form.style.pointerEvents = 'none';
+                }
+            });
+
+            Livewire.hook('message.processed', (message, component) => {
+                const form = document.querySelector('.modern-card');
+                if (form) {
+                    form.style.opacity = '1';
+                    form.style.pointerEvents = 'auto';
                 }
             });
         });

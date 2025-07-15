@@ -78,6 +78,7 @@ class ViewQuestion extends ViewRecord
             'points' => $record->points ?? 1,
             'is_active' => $record->is_active ?? false,
             'instruction' => $record->instruction ?? '',
+            'topic' => $record->topic ?? null,  // Add topic to view data
             
             // File information
             'explanation_file' => $explanationFile,
@@ -109,6 +110,7 @@ class ViewQuestion extends ViewRecord
             
             // Pair previews for statement match
             'pair_previews' => $this->getPairPreviews($leftOptions, $rightOptions, $correctPairs),
+            'test_name' => $record->test->name ?? null,
         ];
     }
 

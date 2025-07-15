@@ -2,6 +2,219 @@
 /* Import the complete modern styling based on your custom design */
 @import url('../../modern-form.css');
 
+
+
+/* Custom Opinion Verification Toggle Styles */
+.opinion-verification-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0;
+}
+
+.opinion-verification-toggle .fi-fo-field-wrp {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.opinion-verification-toggle .fi-toggle {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    vertical-align: middle;
+}
+
+.opinion-verification-toggle .fi-toggle input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.opinion-verification-toggle .fi-toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 4.5rem;
+    height: 2.25rem;
+    background-color: #ef4444;
+    border-radius: 9999px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    border: 4px solid #374151;
+    vertical-align: middle;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1), 0 0 0 2px rgba(55, 65, 81, 0.1);
+    outline: 1px solid #e5e7eb;
+    outline-offset: 2px;
+}
+
+.opinion-verification-toggle .fi-toggle-switch-button {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: 1.625rem;
+    height: 1.625rem;
+    background-color: white;
+    border-radius: 50%;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+    border: 2px solid #374151;
+}
+
+/* When toggle is ON (checked) */
+.opinion-verification-toggle input:checked + .fi-toggle-switch {
+    background-color: #10b981;
+    border-color: #059669;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1), 0 0 0 2px rgba(16, 185, 129, 0.3);
+    outline: 1px solid #10b981;
+    outline-offset: 2px;
+}
+
+.opinion-verification-toggle input:checked + .fi-toggle-switch .fi-toggle-switch-button {
+    transform: translateX(2.375rem);
+    background-color: white;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+    border: 2px solid #10b981;
+}
+
+/* When toggle is OFF (unchecked) */
+.opinion-verification-toggle input:not(:checked) + .fi-toggle-switch {
+    background: linear-gradient(135deg, #f87171 0%, #ef4444 50%, #dc2626 100%);
+    border-color: #b91c1c;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.15), 0 0 0 2px rgba(239, 68, 68, 0.3), 0 4px 12px rgba(239, 68, 68, 0.2);
+    outline: 1px solid #ef4444;
+    outline-offset: 2px;
+}
+
+.opinion-verification-toggle input:not(:checked) + .fi-toggle-switch .fi-toggle-switch-button {
+    transform: translateX(0);
+    background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25), inset 0 1px 2px rgba(255, 255, 255, 0.8);
+    border: 2px solid #ef4444;
+}
+
+/* Hover effects */
+.opinion-verification-toggle .fi-toggle-switch:hover {
+    /* Base hover effect - specific states override this */
+}
+
+.opinion-verification-toggle input:checked + .fi-toggle-switch:hover {
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1), 0 0 0 3px rgba(16, 185, 129, 0.2);
+}
+
+.opinion-verification-toggle input:not(:checked) + .fi-toggle-switch:hover {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 50%, #b91c1c 100%);
+    border-color: #991b1b;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2), 0 0 0 3px rgba(239, 68, 68, 0.4), 0 6px 16px rgba(239, 68, 68, 0.3);
+    transform: scale(1.02) translateY(-1px);
+}
+
+/* Focus effects for accessibility */
+.opinion-verification-toggle input:focus + .fi-toggle-switch {
+    outline: 3px solid #3b82f6;
+    outline-offset: 2px;
+}
+
+/* Icon positioning within the toggle button */
+.opinion-verification-toggle .fi-toggle-switch-button svg {
+    width: 1rem;
+    height: 1rem;
+    color: #374151;
+}
+
+/* Label alignment */
+.opinion-verification-toggle .fi-fo-field-wrp-label {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.25rem;
+}
+
+.opinion-verification-toggle .fi-fo-field-wrp-label-text {
+    font-weight: 500;
+    color: #374151;
+}
+
+.opinion-verification-toggle .fi-fo-field-wrp-helper-text {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin-top: 0.25rem;
+}
+
+/* Fix for Filament field wrapper alignment */
+.opinion-verification-toggle [data-field-wrapper] {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.opinion-verification-toggle [data-field-wrapper] > div {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+/* Animation for the toggle switch */
+.opinion-verification-toggle .fi-toggle-switch-button:hover {
+    transform: scale(1.05);
+}
+
+.opinion-verification-toggle input:checked + .fi-toggle-switch .fi-toggle-switch-button:hover {
+    transform: translateX(2.375rem) scale(1.05);
+}
+
+.opinion-verification-toggle input:not(:checked) + .fi-toggle-switch .fi-toggle-switch-button:hover {
+    transform: translateX(0) scale(1.05) translateY(-1px);
+    background: linear-gradient(135deg, #ffffff 0%, #f3f4f6 100%);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.9);
+    border: 2px solid #d1d5db;
+}
+
+/* Enhanced border visibility */
+.opinion-verification-toggle .fi-toggle-switch {
+    position: relative;
+}
+
+.opinion-verification-toggle .fi-toggle-switch::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: -1px;
+    right: -1px;
+    bottom: -1px;
+    border-radius: 9999px;
+    background: linear-gradient(145deg, rgba(255,255,255,0.2), rgba(0,0,0,0.1));
+    z-index: -1;
+}
+
+/* Add text labels to make it more understandable */
+.opinion-verification-toggle .fi-toggle-switch::after {
+    content: attr(data-state);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: white;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    z-index: 0;
+    pointer-events: none;
+}
+
+.opinion-verification-toggle input:checked + .fi-toggle-switch::after {
+    content: 'ON';
+    color: white;
+}
+
+.opinion-verification-toggle input:not(:checked) + .fi-toggle-switch::after {
+    content: 'OFF';
+    color: white;
+}
+
 /* Core theme variables */
 :root {
     --primary: 59 130 246;
@@ -10,6 +223,38 @@
     --danger: 239 68 68;
     --warning: 245 158 11;
     --info: 6 182 212;
+}
+
+/* Table spacing improvements */
+.fi-ta-table {
+    border-spacing: 0 8px;
+}
+
+.fi-ta-table td {
+    padding: 12px 16px !important;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+.fi-ta-table th {
+    padding: 16px 16px !important;
+    font-weight: 600;
+}
+
+/* Status badge improvements */
+.fi-badge {
+    padding: 4px 12px !important;
+    font-size: 0.875rem;
+    min-width: 80px;
+    text-align: center;
+    display: inline-block;
+}
+
+/* Question column wrapping */
+.fi-ta-table td:nth-child(3) {
+    white-space: normal !important;
+    word-wrap: break-word;
+    max-width: 300px;
 }
 
 /* Enhanced sidebar styling */
@@ -422,6 +667,75 @@ input[type="date"]::-webkit-clear-button {
     z-index: 10000 !important;
 }
 
+/* Fix for Filament columns dropdown text visibility */
+.fi-dropdown-panel {
+    background: white !important;
+    border: 1px solid #e5e7eb !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+}
+
+.fi-dropdown-list-item-label {
+    color: #111827 !important;
+    font-weight: 500 !important;
+}
+
+.fi-dropdown-list-item:hover {
+    background: #f3f4f6 !important;
+}
+
+.fi-dropdown-list-item:hover .fi-dropdown-list-item-label {
+    color: #1f2937 !important;
+    fill: black !important;
+}
+
+/* Fix for table column visibility toggles */
+.fi-ta-col-visibility-toggle {
+    color: #111827 !important;
+}
+
+.fi-ta-col-visibility-toggle-label {
+    color: #111827 !important;
+    font-weight: 500 !important;
+}
+
+.fi-ta-col-visibility-toggle-checkbox {
+    accent-color: #3b82f6 !important;
+}
+
+/* Fix checkbox labels in dropdowns */
+.fi-checkbox-label {
+    color: #111827 !important;
+}
+
+/* Ensure all dropdown text is visible */
+.fi-dropdown-panel * {
+    color: #111827 !important;
+}
+
+/* Fix for search input in dropdowns */
+.fi-dropdown-panel input[type="search"],
+.fi-dropdown-panel input[type="text"] {
+    color: #111827 !important;
+    background: white !important;
+    border: 1px solid #e5e7eb !important;
+}
+
+.fi-dropdown-panel input[type="search"]::placeholder,
+.fi-dropdown-panel input[type="text"]::placeholder {
+    color: #9ca3af !important;
+}
+
+/* Fix for dropdown headers */
+.fi-dropdown-header {
+    background: black !important;
+    border-bottom: 1px solid #e5e7eb !important;
+}
+
+.fi-dropdown-header-label {
+    color: white !important;
+    font-weight: 600 !important;
+}
+
 /* Mobile responsiveness */
 @media (max-width: 768px) {
     .flatpickr-calendar {
@@ -441,4 +755,92 @@ input[type="date"]::-webkit-clear-button {
         font-size: 10px !important;
         padding: 6px 2px !important;
     }
+}
+
+/* ===== CHECKBOX FIXES ===== */
+/* Fix checkbox visual feedback for Filament tables */
+.filament-tables-checkbox-cell input[type="checkbox"]:checked {
+    background-color: #3b82f6 !important;
+    border-color: #3b82f6 !important;
+    background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e") !important;
+}
+
+.filament-tables-checkbox-cell input[type="checkbox"]:checked:hover {
+    background-color: #2563eb !important;
+    border-color: #2563eb !important;
+}
+
+.filament-tables-checkbox-cell input[type="checkbox"]:focus {
+    outline: 2px solid #3b82f6 !important;
+    outline-offset: 2px !important;
+}
+
+/* Fix for bulk actions header checkbox */
+.filament-tables-checkbox-cell input[type="checkbox"][data-check-all]:checked {
+    background-color: #3b82f6 !important;
+    border-color: #3b82f6 !important;
+    background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e") !important;
+}
+
+/* Enhanced hover states */
+.filament-tables-checkbox-cell input[type="checkbox"]:hover {
+    border-color: #9ca3af !important;
+}
+
+.filament-tables-checkbox-cell input[type="checkbox"]:checked:hover {
+    background-color: #2563eb !important;
+    border-color: #2563eb !important;
+}
+
+/* Fix for indeterminate state (select all) */
+.filament-tables-checkbox-cell input[type="checkbox"]:indeterminate {
+    background-color: #6b7280 !important;
+    border-color: #6b7280 !important;
+    background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M3 8h10a1 1 0 010 2H3a1 1 0 010-2z'/%3e%3c/svg%3e") !important;
+}
+
+/* Alternative approach: Force checkbox styling */
+.fi-ta-table input[type="checkbox"] {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    width: 16px !important;
+    height: 16px !important;
+    border: 2px solid #d1d5db !important;
+    border-radius: 4px !important;
+    background-color: white !important;
+    cursor: pointer !important;
+    position: relative !important;
+    transition: all 0.2s ease-in-out !important;
+}
+
+.fi-ta-table input[type="checkbox"]:checked {
+    background-color: #3b82f6 !important;
+    border-color: #3b82f6 !important;
+}
+
+.fi-ta-table input[type="checkbox"]:checked::after {
+    content: "" !important;
+    position: absolute !important;
+    left: 4px !important;
+    top: 1px !important;
+    width: 4px !important;
+    height: 8px !important;
+    border: solid white !important;
+    border-width: 0 2px 2px 0 !important;
+    transform: rotate(45deg) !important;
+}
+
+.fi-ta-table input[type="checkbox"]:hover {
+    border-color: #9ca3af !important;
+}
+
+.fi-ta-table input[type="checkbox"]:checked:hover {
+    background-color: #2563eb !important;
+    border-color: #2563eb !important;
+}
+
+.fi-ta-table input[type="checkbox"]:focus {
+    outline: 2px solid #3b82f6 !important;
+    outline-offset: 2px !important;
 }

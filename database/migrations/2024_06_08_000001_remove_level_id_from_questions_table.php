@@ -15,6 +15,7 @@ return new class extends Migration
             $table->unsignedBigInteger('subject_id');
             $table->unsignedBigInteger('question_type_id');
             $table->unsignedBigInteger('course_id');
+            $table->foreignId('test_id')->nullable()->constrained('tests')->onDelete('set null');
             $table->string('instruction');
             $table->json('question_data')->nullable();
             $table->json('answer_data')->nullable();

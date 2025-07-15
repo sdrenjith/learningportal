@@ -42,6 +42,9 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->darkMode(false)
             ->viteTheme('resources/css/filament/admin/theme.css')
+            ->assets([
+                Css::make('custom-checkbox-fix', 'resources/css/filament/admin/custom.css'),
+            ])
             ->brandName('Practice Platform')
             ->brandLogo(asset('images/logo.png'))
             ->favicon(asset('images/favicon.ico'))
@@ -62,6 +65,7 @@ class AdminPanelProvider extends PanelProvider
                 \App\Filament\Resources\QuestionMediaResource::class,
                 \App\Filament\Resources\OptionResource::class,
                 \App\Filament\Resources\DayResource::class,
+                \App\Filament\Resources\OpinionVerificationResource::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([

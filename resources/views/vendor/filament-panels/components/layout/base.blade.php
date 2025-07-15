@@ -138,7 +138,80 @@
 
         @stack('scripts')
 
-        {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::SCRIPTS_AFTER, scopes: $livewire->getRenderHookScopes()) }}
+        <script>
+        document.addEventListener('click', function () {
+            setTimeout(function () {
+                document.querySelectorAll('.fi-user-menu .fi-dropdown-panel').forEach(function(panel) {
+                    panel.style.background = 'black';
+                    panel.style.setProperty('background', 'black', 'important');
+                    panel.style.color = 'white';
+                });
+            }, 10);
+        });
+        </script>
+
+        <!-- Disable Inspect Element and Developer Tools -->
+        <script>
+        (function() {
+            // Disable right-click context menu
+            document.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+                return false;
+            });
+
+            // Disable keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                // F12 key
+                if (e.keyCode === 123) {
+                    e.preventDefault();
+                    return false;
+                }
+                
+                // Ctrl+Shift+I (Windows/Linux) or Cmd+Option+I (Mac)
+                if ((e.ctrlKey && e.shiftKey && e.keyCode === 73) || 
+                    (e.metaKey && e.altKey && e.keyCode === 73)) {
+                    e.preventDefault();
+                    return false;
+                }
+                
+                // Ctrl+Shift+C (Windows/Linux) or Cmd+Option+C (Mac)
+                if ((e.ctrlKey && e.shiftKey && e.keyCode === 67) || 
+                    (e.metaKey && e.altKey && e.keyCode === 67)) {
+                    e.preventDefault();
+                    return false;
+                }
+                
+                // Ctrl+U (View Source)
+                if (e.ctrlKey && e.keyCode === 85) {
+                    e.preventDefault();
+                    return false;
+                }
+                
+                // Ctrl+Shift+J (Console)
+                if (e.ctrlKey && e.shiftKey && e.keyCode === 74) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+
+            // Disable text selection (optional - uncomment if needed)
+            /*
+            document.addEventListener('selectstart', function(e) {
+                e.preventDefault();
+                return false;
+            });
+            */
+
+            // Disable drag and drop (optional - uncomment if needed)
+            /*
+            document.addEventListener('dragstart', function(e) {
+                e.preventDefault();
+                return false;
+            });
+            */
+
+        })();
+        </script>
 
         {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::BODY_END, scopes: $livewire->getRenderHookScopes()) }}
     </body>
